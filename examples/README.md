@@ -43,6 +43,7 @@ manim -pql examples/basics/signal_flow_demo.py SignalFlowDemo
 manim -pql examples/basics/clock_data_waveform.py ClockDataWaveformDemo
 manim -pql examples/protocol/spi_byte_transfer.py SPIByteTransferDemo
 manim -pql examples/protocol/uart_byte_transfer.py UARTByteTransferDemo
+manim -qm examples/basics/clock_data_waveform.py ClockDataWaveformDemo
 ```
 
 ## Full catalog
@@ -56,7 +57,8 @@ manim -pql examples/protocol/uart_byte_transfer.py UARTByteTransferDemo
 | `layout_two_resistors.py` | Grid placement + routing | `LayoutEngine`, `LayoutResult` |
 | `render_two_resistors.py` | Minimal renderer | `MinimalRenderer.render_layout` |
 | `signal_flow_demo.py` | Propagation animation | `SignalFlow` |
-| `clock_data_waveform.py` | Clock/data + waveform panel | `derive_bundle_from_signals`, `WaveformSync` |
+| `clock_data_waveform.py` | DRV–RCV clock/data + panel below wires | `render_topology`, `scene_frame_bounds`, `WaveformSync` |
+| `governance_acceptance.py` | R1–C1 governance acceptance render | `ManimRenderer`, `SignalFlow`, acceptance frames |
 
 See [basics/README.md](basics/README.md).
 
