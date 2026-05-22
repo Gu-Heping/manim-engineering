@@ -19,6 +19,8 @@ Add to the scene in order: **components → wires → waveform panel**.
 
 - `MinimalRenderer.render_layout` returns `VGroup(*placed, *wire_lines)`; scene code must not reorder wires above the panel.
 - `SignalFlow` must not mutate wire `Line` geometry — only overlays and highlights.
+- Renderer topology (`ManimRenderer.render_topology`) is **read-only** for animation; never pass wire `Line` instances to `ShowPassingFlash` or `MoveAlongPath` without `copy_for_animation()`.
+- Propagation motion paths and wire flashes live in a separate overlay group (`propagation_overlays`, higher `z_index`) — not fused into routed net geometry.
 - `CircuitGraph.connect()` must assign **deterministic** `connection_id` values (sorted port ids, not random UUIDs) so layout and visual regression replay identically.
 
 ## Golden guards

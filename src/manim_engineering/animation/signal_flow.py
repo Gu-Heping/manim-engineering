@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from manim import Animation, AnimationGroup, Dot, MoveAlongPath, ShowPassingFlash, VMobject
+from manim import Animation, AnimationGroup, Dot, MoveAlongPath, ShowPassingFlash, VGroup, VMobject
 
 from manim_engineering.animation.base import AnimationPlan, AnimationPrimitive
 from manim_engineering.animation.purpose import AnimationPurpose
@@ -17,12 +17,16 @@ from manim_engineering.animation.wires import (
 )
 from manim_engineering.layout.types import LayoutResult, Point2D
 from manim_engineering.renderers.minimal import theme
+from manim_engineering.renderers.minimal.immutable import copy_for_animation
 from manim_engineering.semantic.graph import CircuitGraph
 from manim_engineering.semantic.propagation import PropagationRecord
 from manim_engineering.semantic.signal import Signal
 
 # Normal transition band per docs/animation-timing.md
 DEFAULT_PROPAGATION_DURATION = 1.0
+
+# Above routed wires; below scene chrome if any.
+PROPAGATION_Z_INDEX = 2
 
 
 def _pin_coord_key(point: Point2D) -> tuple[float, float]:
@@ -36,6 +40,9 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
 
     Consumes an existing :class:`PropagationRecord` (or the latest history entry).
     Does not call :meth:`Signal.propagate` and does not change graph topology.
+
+    Topology VMobjects from the renderer are never mutated: motion paths and wire
+    flashes use detached copies in ``propagation_overlays``.
     """
 
     purpose = AnimationPurpose.PROPAGATION
@@ -85,31 +92,39 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
             record.to_pin_id,
         )
         path = path_mobject_from_points(points)
+        path.set_stroke(width=0, opacity=0)
 
         pulse = Dot(radius=0.04, color=theme.CLOCK_COLOR)
         pulse.move_to(path.point_from_proportion(0.0))
 
         pulse_motion = MoveAlongPath(pulse, path, run_time=self.duration)
-        wire_flash = self._wire_flash_animations()
-        if wire_flash:
-            animations: tuple[Animation, ...] = (AnimationGroup(pulse_motion, *wire_flash),)
+        flash_anims, flash_overlays = self._wire_flash_animations()
+        propagation_overlays: list[VMobject] = [path, *flash_overlays]
+
+        if flash_anims:
+            animations: tuple[Animation, ...] = (AnimationGroup(pulse_motion, *flash_anims),)
         else:
             animations = (pulse_motion,)
 
         return AnimationPlan(
             overlays=(pulse,),
+            propagation_overlays=tuple(propagation_overlays),
             animations=animations,
             run_time=self.duration,
         )
 
     def play(self, scene: object) -> None:
-        """Add overlays and play built animations on a Manim scene."""
+        """Add overlay groups and play built animations on a Manim scene."""
         plan = self.build()
         add = getattr(scene, "add", None)
         play = getattr(scene, "play", None)
         if add is None or play is None:
             msg = "scene must provide add() and play() like manim.Scene"
             raise TypeError(msg)
+        if plan.propagation_overlays:
+            propagation = VGroup(*plan.propagation_overlays)
+            propagation.set_z_index(PROPAGATION_Z_INDEX)
+            add(propagation)
         add(*plan.overlays)
         play(*plan.animations, run_time=plan.run_time)
 
@@ -143,10 +158,16 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
         msg = "unable to resolve connection for propagation record (pass graph=)"
         raise ValueError(msg)
 
-    def _wire_flash_animations(self) -> tuple[Animation, ...]:
+    def _wire_flash_animations(self) -> tuple[tuple[Animation, ...], tuple[VMobject, ...]]:
         if not self._wire_mobjects:
-            return ()
-        return tuple(
-            ShowPassingFlash(line, time_width=0.35, run_time=self.duration)
-            for line in self._wire_mobjects
-        )
+            return (), ()
+        animations: list[Animation] = []
+        overlays: list[VMobject] = []
+        for line in self._wire_mobjects:
+            flash_target = copy_for_animation(line)
+            flash_target.set_z_index(PROPAGATION_Z_INDEX)
+            overlays.append(flash_target)
+            animations.append(
+                ShowPassingFlash(flash_target, time_width=0.35, run_time=self.duration)
+            )
+        return tuple(animations), tuple(overlays)

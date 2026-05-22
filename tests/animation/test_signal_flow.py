@@ -96,6 +96,7 @@ def test_signal_flow_play_delegates_to_scene() -> None:
     graph, _, layout, signal = _propagated_fixture()
     scene = _RecordingScene()
     SignalFlow(signal, layout=layout, graph=graph, duration=0.9).play(scene)
-    assert len(scene.added) == 1
+    assert len(scene.added) == 2
+    assert any(getattr(m, "submobjects", None) for m in scene.added)
     assert len(scene.played) == 1
     assert scene.run_times[0] == pytest.approx(0.9)

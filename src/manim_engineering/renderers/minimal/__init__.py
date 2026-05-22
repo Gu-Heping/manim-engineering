@@ -1,5 +1,10 @@
 """Minimal renderer: simple symbols and semantic theme colors."""
 
+from manim_engineering.renderers.minimal.immutable import (
+    TopologyProjection,
+    copy_for_animation,
+    topology_from_render,
+)
 from manim_engineering.renderers.minimal.manim_renderer import ManimRenderer
 from manim_engineering.renderers.minimal.renderer import MinimalRenderer
 from manim_engineering.renderers.minimal.theme import (
@@ -34,6 +39,9 @@ __all__ = [
     "HELPER_STROKE_WIDTH",
     "ManimRenderer",
     "MinimalRenderer",
+    "TopologyProjection",
+    "copy_for_animation",
+    "topology_from_render",
     "WaveformPanelRenderer",
     "POWER_COLOR",
     "SIGNAL_COLOR",

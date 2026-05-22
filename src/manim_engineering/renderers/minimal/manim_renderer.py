@@ -9,6 +9,7 @@ from manim import VGroup
 from manim_engineering.components.element import CircuitElement
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
+from manim_engineering.renderers.minimal.immutable import TopologyProjection, topology_from_render
 from manim_engineering.renderers.minimal.renderer import MinimalRenderer
 
 
@@ -35,6 +36,21 @@ class ManimRenderer:
         Overlay waveform panels after wires in scene ``construct``.
         """
         return self._inner.render_circuit(circuit, layout, elements)
+
+    def render_topology(
+        self,
+        circuit: CircuitGraph,
+        layout: LayoutResult,
+        elements: Mapping[str, CircuitElement],
+    ) -> TopologyProjection:
+        """
+        Project circuit topology into immutable component and wire groups.
+
+        Animation receives read-only references; use overlay copies for motion paths
+        and ``ShowPassingFlash`` targets.
+        """
+        rendered = self.render(circuit, layout, elements)
+        return topology_from_render(rendered, layout)
 
     def render_circuit(
         self,

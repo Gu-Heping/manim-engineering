@@ -20,6 +20,7 @@ class AnimationPlan:
     overlays: tuple[VMobject, ...]
     animations: tuple[Animation, ...]
     run_time: float
+    propagation_overlays: tuple[VMobject, ...] = ()
 
 
 class AnimationPrimitive(ABC, Generic[SelfT]):
