@@ -11,11 +11,11 @@ requires-python = ">=3.10"
 dependencies = []
 
 [project.optional-dependencies]
-manim = ["manim>=0.18.0"]
+manim = ["manim==0.19.1"]
 dev = [
     "pytest>=8.0",
     "ruff>=0.4",
-    "manim>=0.18.0",
+    "manim==0.19.1",
 ]
 
 [project.urls]

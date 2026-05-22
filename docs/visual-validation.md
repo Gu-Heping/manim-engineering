@@ -60,7 +60,7 @@ Workflow job `visual-golden` (Ubuntu, Python 3.12):
 
 - Installs `manim==0.19.1` and pangocairo apt deps (same as main `test` job)
 - Runs `pytest tests/visual/`
-- Initially `continue-on-error: true` until goldens are stable across runners; then flip to blocking
+- **Blocking** (`continue-on-error` removed once goldens are stable on Ubuntu)
 
 Main `pytest` on 3.11/3.12 does not require visual goldens to pass when Manim is absent; dev extra includes Manim for local/optional runs.
 

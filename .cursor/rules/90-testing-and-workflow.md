@@ -39,14 +39,7 @@ Broken examples = broken API.
 
 **Task size**: one subsystem, abstraction, or feature group per change.
 
-**Implementation order**:
-
-1. semantic definition  
-2. component definition  
-3. rendering support  
-4. animation support  
-5. tests  
-6. examples  
+**Implementation order**: see `00-foundation.md` § Implementation Order.
 
 **Diff discipline**: minimal diffs; no unrelated formatting, renames, or broad refactors in feature work.
 
@@ -87,9 +80,42 @@ New abstractions require: immediate use case, layer justification, demonstrated 
 5. tests + minimal example  
 6. renderer/component independence  
 
+## Visual validation (executable gates)
+
+Golden tests guard **semantic → layout → render → frame** without changing semantics or animation APIs. Human overview: [docs/visual-validation.md](../../docs/visual-validation.md).
+
+**Run locally** (requires Manim, same pin as CI):
+
+```bash
+pip install -e ".[dev]"
+pytest tests/visual/ -v
+```
+
+Without Manim, visual tests are **skipped** (`requires_manim`), not failed.
+
+**Update goldens** after intentional visual change:
+
+```bash
+# Windows PowerShell
+$env:UPDATE_VISUAL_GOLDEN = "1"
+pytest tests/visual/ -v
+# Linux/macOS
+UPDATE_VISUAL_GOLDEN=1 pytest tests/visual/ -v
+```
+
+Commit updated files under `tests/visual/golden/` (`<scene>.dhash.txt`, optional `<scene>.geometry.txt`).
+
+**Gates**:
+
+- Perceptual compare: dHash Hamming distance **≤ 4** (`PHASH_HAMMING_TOLERANCE` in `tests/visual/conftest.py`).
+- When touching layout or waveform render paths: keep `tests/layout/test_scene_bbox.py` passing (`scene_bbox`, `MIN_WAVEFORM_GAP` separation).
+- Canonical scenes: `acceptance_three_layer`, `clock_data_waveform`, `power_rail_demo` (one acceptance scene per golden PNG).
+
+**Z-order** (waveform scenes): add **components → wires → waveform panel**; `SignalFlow` must not mutate wire `Line` geometry.
+
 ## CI
 
-Tests run in CI: imports, rendering stability, API compatibility, basic examples. Broken CI is blocking.
+Tests run in CI: imports, rendering stability, API compatibility, basic examples. Job `visual-golden` (Ubuntu, Python 3.12, `manim==0.19.1`) runs `pytest tests/visual/` and is **blocking**. Main matrix `pytest` skips visual tests when Manim is absent. Broken CI is blocking.
 
 ## Performance
 

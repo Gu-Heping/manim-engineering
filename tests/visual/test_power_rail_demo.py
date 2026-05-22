@@ -1,4 +1,4 @@
-"""Golden visual regression for examples/basics/acceptance_three_layer.AcceptanceScene."""
+"""Golden visual regression for examples/basics/power_rail_demo.PowerRailDemo."""
 
 from __future__ import annotations
 
@@ -9,17 +9,15 @@ from pathlib import Path
 
 import pytest
 from conftest import PHASH_HAMMING_TOLERANCE, requires_manim
-from hashing import dhash_hex, hamming_hex, stable_geometry_hash
+from hashing import dhash_hex, hamming_hex, layout_waveform_geometry_digest
 
 _GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
-_GOLDEN_NAME = "acceptance_three_layer.dhash.txt"
-_EXAMPLE = (
-    Path(__file__).resolve().parents[2] / "examples" / "basics" / "acceptance_three_layer.py"
-)
+_GOLDEN_NAME = "power_rail_demo.dhash.txt"
+_EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / "basics" / "power_rail_demo.py"
 
 
-def _load_acceptance_module():
-    spec = importlib.util.spec_from_file_location("acceptance_three_layer", _EXAMPLE)
+def _load_module():
+    spec = importlib.util.spec_from_file_location("power_rail_demo", _EXAMPLE)
     mod = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     spec.loader.exec_module(mod)
@@ -27,7 +25,7 @@ def _load_acceptance_module():
 
 
 def _render_last_frame_png() -> Path:
-    mod = _load_acceptance_module()
+    mod = _load_module()
     pytest.importorskip("manim")
     from manim import tempconfig
 
@@ -41,28 +39,23 @@ def _render_last_frame_png() -> Path:
             "save_last_frame": True,
         }
     ):
-        mod.AcceptanceScene().render()
+        mod.PowerRailDemo().render()
 
-    matches = sorted(Path(tmpdir).rglob("AcceptanceScene*.png"))
+    matches = sorted(Path(tmpdir).rglob("PowerRailDemo*.png"))
     if not matches:
-        raise FileNotFoundError(f"no AcceptanceScene PNG under {tmpdir}")
+        raise FileNotFoundError(f"no PowerRailDemo PNG under {tmpdir}")
     return matches[-1]
 
 
 def _geometry_hash_from_fixture() -> str:
-    """Stable point-geometry digest when scene raster is unavailable."""
-    mod = _load_acceptance_module()
-    pytest.importorskip("manim")
-    from manim_engineering.renderers.minimal import ManimRenderer
-
-    circuit, elements, layout, _signal = mod.build_fixture()
-    mob = ManimRenderer().render(circuit, layout, elements)
-    return stable_geometry_hash(mob)
+    mod = _load_module()
+    _graph, _elements, layout, _clk, _data, bundle = mod.build_fixture()
+    return layout_waveform_geometry_digest(layout, bundle)
 
 
 @requires_manim
-def test_acceptance_three_layer_last_frame_phash() -> None:
-    """Last frame of AcceptanceScene matches golden dHash (Hamming <= tolerance)."""
+def test_power_rail_demo_last_frame_phash() -> None:
+    """Last frame matches golden dHash (Hamming <= tolerance)."""
     png = _render_last_frame_png()
     actual = dhash_hex(png)
     golden_path = _GOLDEN_DIR / _GOLDEN_NAME
@@ -80,11 +73,10 @@ def test_acceptance_three_layer_last_frame_phash() -> None:
     )
 
 
-@requires_manim
-def test_acceptance_three_layer_geometry_hash_recorded() -> None:
-    """Point geometry hash is stable (guards layout/render without full raster)."""
+def test_power_rail_demo_geometry_hash_recorded() -> None:
+    """Point geometry hash is stable (layout + waveform panel)."""
     digest = _geometry_hash_from_fixture()
-    geom_path = _GOLDEN_DIR / "acceptance_three_layer.geometry.txt"
+    geom_path = _GOLDEN_DIR / "power_rail_demo.geometry.txt"
 
     if os.environ.get("UPDATE_VISUAL_GOLDEN"):
         geom_path.write_text(digest + "\n", encoding="utf-8")

@@ -30,8 +30,10 @@ Extended subsystems (owned by semantic or adjacent layers, never bypass semantic
 | `components/` | component | reusable objects, pins, metadata, layout hints |
 | `layout/` | component-adjacent | routing, alignment, spacing (no Manim, no animation) |
 | `protocol/` | semantic | UART/SPI/I2C/CAN semantics |
-| `waveform/` | semantic + render | timing traces derived from signal state |
-| `renderers/` | rendering | geometry, symbols, themes, labels |
+| `core/` | model | netlist topology only (`CircuitGraph`, ports, connections) — no signals |
+| `semantic/` | semantic | signals, buses, state, propagation, timing events (extends core) |
+| `waveform/` | semantic-adjacent | derive traces from signal/timing state (no Manim) |
+| `renderers/` | rendering | draw symbols, wires, waveform panels from layout + derived traces |
 | `animation/` | animation | motion, highlights, propagation visuals |
 
 **Forbidden dependencies**: semantic→rendering/animation; component→animation; rendering→semantic mutation; animation→topology ownership.
@@ -77,6 +79,17 @@ Before new systems:
 4. minimal architectural impact
 
 Refactors require explicit justification (simplification, deduplication, API stabilization).
+
+## Implementation Order
+
+1. semantic definition
+2. component definition
+3. rendering support
+4. animation support
+5. tests
+6. examples
+
+Never start from raw Manim geometry or decorative motion.
 
 ## Rule Precedence
 

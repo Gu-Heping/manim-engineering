@@ -18,7 +18,7 @@ On conflict, `.cursor/rules/` wins.
 | [component-api.md](component-api.md) | `CircuitElement` required API |
 | [visual-theme.md](visual-theme.md) | Semantic colors, backgrounds, line hierarchy |
 | [animation-timing.md](animation-timing.md) | Suggested animation durations and pacing |
-| [visual-validation.md](visual-validation.md) | Golden frame tests, CI, updating hashes |
+| [visual-validation.md](visual-validation.md) | Golden pipeline overview (executable gates in `90-testing-and-workflow.md`) |
 
 ## Removed / merged
 

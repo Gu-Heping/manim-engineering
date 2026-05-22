@@ -23,38 +23,11 @@ Do not re-derive architecture from `docs/` alone; rules are authoritative.
 | `60-renderer-philosophy.md` | Renderers, themes |
 | `70-component-authoring.md` | New components |
 | `80-animation-and-education.md` | Motion, scenes, pacing |
-| `90-testing-and-workflow.md` | Tests, examples, diff discipline |
+| `90-testing-and-workflow.md` | Tests, examples, diff discipline, visual goldens |
 
-## Long-task protocol
+## Workflow
 
-### Before starting
-
-- Confirm phase in `docs/ROADMAP.md` matches your work
-- Scope to **one** subsystem per session (one layer or one vertical slice)
-- List: semantic owner, files to touch, tests to add
-
-### Implementation order
-
-```text
-semantic → component → rendering → animation → tests → example
-```
-
-Never start from Manim geometry or decorative motion.
-
-### Per-task checklist
-
-- [ ] Correct layer; no forbidden imports
-- [ ] Reused existing abstractions (no duplicate systems)
-- [ ] Minimal diff; no unrelated refactors
-- [ ] Unit tests + minimal executable example
-- [ ] No `except: pass`; no `signal.color`, `NMOS(renderer=...)`, `component.animate_*`
-
-### Forbidden
-
-- Speculative abstractions without immediate use
-- Architecture rewrites in feature PRs
-- Bypassing semantic APIs for convenience
-- Giant demos mixing unrelated concepts
+Task sizing, implementation order, per-task checklist, and forbidden patterns: see [`.cursor/rules/90-testing-and-workflow.md`](.cursor/rules/90-testing-and-workflow.md).
 
 ## Human reference docs
 
@@ -64,6 +37,7 @@ Never start from Manim geometry or decorative motion.
 | [docs/component-api.md](docs/component-api.md) | `CircuitElement` contract |
 | [docs/visual-theme.md](docs/visual-theme.md) | Color/background constants |
 | [docs/animation-timing.md](docs/animation-timing.md) | Duration guidelines |
+| [docs/visual-validation.md](docs/visual-validation.md) | Golden pipeline overview (gates in rule 90) |
 
 ## Conflict resolution
 
