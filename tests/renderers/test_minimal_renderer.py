@@ -39,7 +39,7 @@ def test_render_resistor_deterministic_structure() -> None:
 
 def test_render_resistor_has_body_and_label() -> None:
     mob = MinimalRenderer().render(Resistor("r1", label="R1"))
-    assert len(mob.submobjects) == 2
+    assert len(mob.submobjects) == 3  # body, pin dots, label
 
 
 def test_render_layout_includes_components_and_wires() -> None:
@@ -69,7 +69,7 @@ def test_render_layout_separates_placed_components() -> None:
     by_id = {p.element_id: scene.submobjects[i] for i, p in enumerate(layout.placements)}
     c1_x = by_id["c1"].get_all_points()[:, 0]
     r1_x = by_id["r1"].get_all_points()[:, 0]
-    assert float(c1_x.max()) < float(r1_x.min()) - 0.1
+    assert float(r1_x.max()) < float(c1_x.min()) - 0.1
 
 
 def test_render_layout_deterministic_points() -> None:

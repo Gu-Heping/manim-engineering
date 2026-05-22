@@ -13,6 +13,7 @@ from manim_engineering.layout.exceptions import (
     UnknownElementError,
 )
 from manim_engineering.layout.grid import layout_bbox, occupancy_ratio, place_on_grid, scene_bbox
+from manim_engineering.layout.placement import placement_order_for_graph
 from manim_engineering.layout.routing import (
     merge_routing_hints,
     points_to_segments,
@@ -53,6 +54,7 @@ __all__ = [
     "pin_world_position",
     "port_world_position",
     "place_on_grid",
+    "placement_order_for_graph",
     "points_to_segments",
     "route_orthogonal",
 ]

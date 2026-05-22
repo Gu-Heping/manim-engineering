@@ -30,14 +30,12 @@ def place_on_grid(
 
         raise ValueError(msg)
 
-    sorted_elements: Sequence[CircuitElement] = tuple(
-        sorted(elements, key=lambda element: element.element_id)
-    )
+    ordered_elements: Sequence[CircuitElement] = tuple(elements)
 
-    if not sorted_elements:
+    if not ordered_elements:
         return ()
 
-    row_heights = [element.get_bounds().height for element in sorted_elements]
+    row_heights = [element.get_bounds().height for element in ordered_elements]
 
     row_height = max(row_heights)
 
@@ -47,13 +45,16 @@ def place_on_grid(
 
     x_cursor = 0.0
 
-    for element in sorted_elements:
+    pin_row_y = y_origin + row_height * 0.5
+
+    for element in ordered_elements:
         bounds = element.get_bounds()
+        origin_y = pin_row_y - 0.5 * bounds.height
 
         placements.append(
             ComponentPlacement(
                 element_id=element.element_id,
-                origin=Point2D(x_cursor, y_origin),
+                origin=Point2D(x_cursor, origin_y),
                 bounds=bounds,
             )
         )

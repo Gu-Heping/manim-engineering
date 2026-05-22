@@ -62,11 +62,20 @@ def scene_frame_bounds(
     trace_count: int,
     padding: float = 0.5,
     label_inset: float = 0.4,
+    target_fill: float | None = None,
 ) -> tuple[float, float]:
     """Nominal Manim frame (width, height) covering circuit, wires, and waveform panel."""
     scene = layout.scene_bbox
-    width = max(scene.width, panel_spec.width) + label_inset + 2 * padding
-    height = (scene.max_y - panel_spec.origin.y) + 2 * padding
+    content_w = max(scene.width, panel_spec.width) + label_inset
+    content_h = scene.max_y - panel_spec.origin.y
+    if target_fill is not None:
+        if not 0.0 < target_fill <= 1.0:
+            msg = f"target_fill must be in (0, 1], got {target_fill}"
+            raise ValueError(msg)
+        content_w /= target_fill
+        content_h /= target_fill
+    width = content_w + 2 * padding
+    height = content_h + 2 * padding
     return width, max(height, 1.0)
 
 

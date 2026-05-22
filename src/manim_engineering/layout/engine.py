@@ -11,6 +11,7 @@ from manim_engineering.core.exceptions import InvalidPortError
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.exceptions import UnknownElementError
 from manim_engineering.layout.grid import layout_bbox, occupancy_ratio, place_on_grid, scene_bbox
+from manim_engineering.layout.placement import placement_order_for_graph
 from manim_engineering.layout.routing import (
     merge_routing_hints,
     points_to_segments,
@@ -83,7 +84,8 @@ class LayoutEngine:
 
         ``elements`` maps node id → ``CircuitElement`` instance attached to the graph.
         """
-        ordered_elements = self._elements_for_graph(graph, elements)
+        self._elements_for_graph(graph, elements)
+        ordered_elements = placement_order_for_graph(graph, elements)
         placements = place_on_grid(
             ordered_elements,
             cell_gap=self._config.cell_gap,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from manim import BLUE_C, GREEN_C, GREY_C, ORANGE, RED_C, TEAL_C, YELLOW_C
+from manim import BLUE_C, GREEN_C, GREY_C, ORANGE, RED_C, TEAL_C, WHITE, YELLOW_C
 
 from manim_engineering.semantic.connection import Connection
 from manim_engineering.semantic.enums import SignalType
@@ -26,8 +26,9 @@ WIRE_STROKE_WIDTH = 2.5
 WAVEFORM_STROKE_WIDTH = 3.25
 HELPER_STROKE_WIDTH = 1.0
 
-_COMPONENT_STROKE_WIDTH = WIRE_STROKE_WIDTH
-_COMPONENT_COLOR = SIGNAL_COLOR
+_COMPONENT_STROKE_WIDTH = 3.75
+_PIN_DOT_RADIUS = 0.035
+_COMPONENT_COLOR = WHITE
 
 _SIGNAL_TYPE_COLORS: dict[SignalType, object] = {
     SignalType.POWER: POWER_COLOR,
@@ -65,3 +66,8 @@ def component_stroke_color() -> object:
 def component_stroke_width() -> float:
     """Default stroke width for component symbols."""
     return _COMPONENT_STROKE_WIDTH
+
+
+def pin_dot_radius() -> float:
+    """Radius for terminal markers at anchor points."""
+    return _PIN_DOT_RADIUS

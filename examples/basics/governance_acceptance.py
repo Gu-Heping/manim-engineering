@@ -15,7 +15,7 @@ from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.renderers.minimal import ManimRenderer, WaveformPanelRenderer
 from manim_engineering.semantic import LogicLevel, LogicState, Signal, SignalType
-from manim_engineering.waveform import derive_bundle_from_signals, scene_frame_bounds
+from manim_engineering.waveform import derive_bundle_from_signals
 
 
 def build_fixture():
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 try:
     from pathlib import Path
 
-    from manim import Scene, config
+    from manim import Scene, VGroup, config
     from PIL import Image
 
     _ACCEPTANCE_MEDIA = Path("media/videos/governance_acceptance")
@@ -84,13 +84,17 @@ try:
             topology = ManimRenderer().render_topology(circuit, layout, elements)
             panel_renderer = WaveformPanelRenderer()
             waveform_panel, panel_spec = panel_renderer.render_with_layout(bundle, layout)
-            frame_w, frame_h = scene_frame_bounds(
-                layout, panel_spec, trace_count=len(bundle.traces)
-            )
-            config.frame_width = max(4.0, frame_w)
-            config.frame_height = max(2.5, frame_h)
             # Z-order: components → wires → waveform panel (propagation overlays on top).
-            self.add(topology.components, topology.wires, waveform_panel)
+            content = VGroup(topology.components, topology.wires, waveform_panel)
+            self.add(content)
+            frame_pad = 0.35
+            target_fill = 0.70
+            config.frame_width = content.width / target_fill + 2 * frame_pad
+            config.frame_height = content.height / target_fill + 2 * frame_pad
+            self.camera.frame_width = config.frame_width
+            self.camera.frame_height = config.frame_height
+            center = content.get_center()
+            self.camera.frame_center = center[:2]
             self.wait(0.1)
             _save_camera_frame(self, _ACCEPTANCE_MEDIA / "acceptance_t0_frame.png")
             self.wait(2.9)

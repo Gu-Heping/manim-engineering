@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import numpy as np
-from manim import Line, Text, VGroup, VMobject
+from manim import Dot, Line, Text, VGroup, VMobject
 
 from manim_engineering.components.common import VCC, Ground
 from manim_engineering.components.element import CircuitElement
@@ -45,6 +45,8 @@ class MinimalRenderer:
             body = self._generic_box(component)
 
         group = VGroup(body)
+        if component.pins:
+            group.add(self._pin_dots(component))
         if component.label:
             bounds = component.get_bounds()
             label = Text(
@@ -105,25 +107,50 @@ class MinimalRenderer:
         mob.shift(np.array([placement.origin.x, placement.origin.y, 0.0]))
         return mob
 
+    def _pin_dots(self, component: CircuitElement) -> VGroup:
+        """Terminal markers at declared anchor points (excludes ``center``)."""
+        bounds = component.get_bounds()
+        stroke = theme.component_stroke_color()
+        radius = theme.pin_dot_radius()
+        dots: list[Dot] = []
+        for name, (ax, ay) in sorted(component.anchor_points.items()):
+            if name == "center":
+                continue
+            dots.append(
+                Dot(
+                    point=[ax * bounds.width, ay * bounds.height, 0.0],
+                    radius=radius,
+                    color=stroke,
+                )
+            )
+        return VGroup(*dots)
+
     def _resistor_symbol(self, component: Resistor) -> VGroup:
         bounds = component.get_bounds()
         w, h = bounds.width, bounds.height
         y = h * 0.5
-        zig = 0.12 * h
-        xs = (0.0, 0.2 * w, 0.4 * w, 0.6 * w, 0.8 * w, w)
+        lead_in = 0.12 * w
+        lead_out = 0.88 * w
+        zig = 0.22 * h
+        stroke_kw = {
+            "stroke_color": theme.component_stroke_color(),
+            "stroke_width": theme.component_stroke_width(),
+        }
+        xs = (lead_in, 0.28 * w, 0.44 * w, 0.56 * w, 0.72 * w, lead_out)
         ys = (y, y + zig, y - zig, y + zig, y - zig, y)
-        segments = VGroup(
-            *[
-                Line(
-                    [xs[i], ys[i], 0.0],
-                    [xs[i + 1], ys[i + 1], 0.0],
-                    stroke_color=theme.component_stroke_color(),
-                    stroke_width=theme.component_stroke_width(),
-                )
-                for i in range(len(xs) - 1)
-            ]
+        segments: list[Line] = [
+            Line([0.0, y, 0.0], [lead_in, y, 0.0], **stroke_kw),
+            Line([lead_out, y, 0.0], [w, y, 0.0], **stroke_kw),
+        ]
+        segments.extend(
+            Line(
+                [xs[i], ys[i], 0.0],
+                [xs[i + 1], ys[i + 1], 0.0],
+                **stroke_kw,
+            )
+            for i in range(len(xs) - 1)
         )
-        return segments
+        return VGroup(*segments)
 
     def _capacitor_symbol(self, component: Capacitor) -> VGroup:
         bounds = component.get_bounds()
