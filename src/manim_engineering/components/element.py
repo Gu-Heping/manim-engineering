@@ -9,7 +9,7 @@ from manim_engineering.components.types import Bounds
 from manim_engineering.core import CircuitGraph, Node, Port
 from manim_engineering.core.enums import PortDirection, SignalType
 from manim_engineering.core.exceptions import InvalidPortError
-from manim_engineering.semantic.exceptions import InvalidPinError
+from manim_engineering.core.exceptions import InvalidPortError as InvalidPinError
 
 AnchorPoint = tuple[float, float]
 

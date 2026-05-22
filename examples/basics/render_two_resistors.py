@@ -11,7 +11,7 @@ from __future__ import annotations
 from manim_engineering.components import Resistor
 from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.renderers.minimal import MinimalRenderer
+from manim_engineering.renderers.minimal import ManimRenderer
 
 
 def build_scene_mobject():
@@ -21,10 +21,11 @@ def build_scene_mobject():
     r2 = Resistor("r2", label="R2")
     circuit.add(r1)
     circuit.add(r2)
-    circuit.connect(r1.get_port("b"), r2.get_port("a"))
+    circuit.connect(r1.port_b, r2.port_a)
 
-    layout = LayoutEngine().solve(circuit, {"r1": r1, "r2": r2})
-    return MinimalRenderer().render_circuit(circuit, layout, {"r1": r1, "r2": r2})
+    elements = {"r1": r1, "r2": r2}
+    layout = LayoutEngine().solve(circuit, elements)
+    return ManimRenderer().render(circuit, layout, elements)
 
 
 def main() -> None:

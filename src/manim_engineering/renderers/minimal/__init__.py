@@ -1,5 +1,6 @@
 """Minimal renderer: simple symbols and semantic theme colors."""
 
+from manim_engineering.renderers.minimal.manim_renderer import ManimRenderer
 from manim_engineering.renderers.minimal.renderer import MinimalRenderer
 from manim_engineering.renderers.minimal.theme import (
     ANALOG_COLOR,
@@ -30,6 +31,7 @@ __all__ = [
     "DEFAULT_BACKGROUND",
     "GROUND_COLOR",
     "HELPER_STROKE_WIDTH",
+    "ManimRenderer",
     "MinimalRenderer",
     "WaveformPanelRenderer",
     "POWER_COLOR",

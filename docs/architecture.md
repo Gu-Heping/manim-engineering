@@ -9,7 +9,7 @@ The stable pipeline separates **topology**, **layout**, and **rendering**:
 ```text
 ┌─────────────────────────────────────────┐
 │  renderers/   Manim adapter only        │
-│  MinimalRenderer.render_circuit(...)    │
+│  ManimRenderer.render(circuit, layout)    │
 ├─────────────────────────────────────────┤
 │  layout/      placement + routing       │
 │  LayoutEngine.solve(circuit, elements)    │
@@ -41,20 +41,21 @@ semantic (signals, buses, propagation) extends core; animation consumes semantic
 from manim_engineering.components import Resistor
 from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.renderers.minimal import MinimalRenderer
+from manim_engineering.renderers.minimal import ManimRenderer
 
 circuit = CircuitGraph()
 r1 = Resistor("R1")
 r2 = Resistor("R2")
 circuit.add(r1)
 circuit.add(r2)
-circuit.connect(r1.get_port("b"), r2.get_port("a"))
+circuit.connect(r1.port_b, r2.port_a)
 
-layout = LayoutEngine().solve(circuit, {"R1": r1, "R2": r2})
-scene = MinimalRenderer().render_circuit(circuit, layout, {"R1": r1, "R2": r2})
+elements = {"R1": r1, "R2": r2}
+layout = LayoutEngine().solve(circuit, elements)
+scene = ManimRenderer().render(circuit, layout, elements)
 ```
 
-`Pin` / `get_pin` / `attach_to` / `render_layout` remain as backward-compatible aliases.
+`Pin` / `get_pin` / `attach_to` / `render_layout` / `MinimalRenderer` remain as backward-compatible aliases.
 
 ## Extended layer diagram (animation + semantic)
 

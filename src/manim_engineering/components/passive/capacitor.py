@@ -27,6 +27,16 @@ class Capacitor(CircuitElement):
     def bounds(self) -> Bounds:
         return _CAPACITOR_BOUNDS
 
+    @property
+    def port_a(self):
+        """Left terminal port ``a``."""
+        return self.get_port("a")
+
+    @property
+    def port_b(self):
+        """Right terminal port ``b``."""
+        return self.get_port("b")
+
     def _register_pins(self) -> None:
         for name in ("a", "b"):
             self._register_pin(
