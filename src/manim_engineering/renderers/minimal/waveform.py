@@ -1,0 +1,97 @@
+"""Minimal renderer: digital timing traces aligned with layout."""
+
+from __future__ import annotations
+
+from manim import Line, Text, VGroup
+
+from manim_engineering.layout.types import LayoutResult, Point2D
+from manim_engineering.renderers.minimal import theme
+from manim_engineering.waveform.layout import WaveformPanelSpec, panel_below_layout, step_polyline
+from manim_engineering.waveform.trace import WaveformBundle, WaveformTrace
+
+
+def _point3(p: Point2D) -> list[float]:
+    return [p.x, p.y, 0.0]
+
+
+def _trace_color(trace: WaveformTrace) -> object:
+    return theme.color_for_signal_type(trace.signal_type)
+
+
+class WaveformPanelRenderer:
+    """Draw discrete step traces in a panel region below the circuit."""
+
+    def panel_spec_for_layout(
+        self,
+        layout: LayoutResult,
+        bundle: WaveformBundle,
+        *,
+        trace_height: float = 0.25,
+        trace_gap: float = 0.12,
+        margin: float = 0.35,
+    ) -> WaveformPanelSpec:
+        return panel_below_layout(
+            layout,
+            trace_count=len(bundle.traces),
+            trace_height=trace_height,
+            trace_gap=trace_gap,
+            margin=margin,
+        )
+
+    def render_trace(
+        self,
+        trace: WaveformTrace,
+        spec: WaveformPanelSpec,
+        trace_index: int,
+    ) -> VGroup:
+        group = VGroup()
+        points = step_polyline(trace, spec, trace_index)
+        color = _trace_color(trace)
+        for start, end in zip(points, points[1:], strict=False):
+            group.add(
+                Line(
+                    _point3(start),
+                    _point3(end),
+                    stroke_color=color,
+                    stroke_width=theme.HELPER_STROKE_WIDTH + 0.5,
+                )
+            )
+        label = Text(
+            trace.signal_name,
+            font_size=0.16,
+            color=color,
+        )
+        label.move_to(
+            [
+                spec.origin.x - 0.35,
+                spec.trace_origin_y(trace_index) + spec.trace_height * 0.5,
+                0.0,
+            ]
+        )
+        group.add(label)
+        return group
+
+    def render_bundle(
+        self,
+        bundle: WaveformBundle,
+        spec: WaveformPanelSpec,
+    ) -> VGroup:
+        panel = VGroup()
+        for index, trace in enumerate(bundle.traces):
+            panel.add(self.render_trace(trace, spec, index))
+        axis = Line(
+            _point3(spec.origin),
+            _point3(Point2D(spec.origin.x + spec.width, spec.origin.y)),
+            stroke_color=theme.GROUND_COLOR,
+            stroke_width=theme.HELPER_STROKE_WIDTH,
+        )
+        panel.add(axis)
+        return panel
+
+    def render_with_layout(
+        self,
+        bundle: WaveformBundle,
+        layout: LayoutResult,
+    ) -> tuple[VGroup, WaveformPanelSpec]:
+        spec = self.panel_spec_for_layout(layout, bundle)
+        return self.render_bundle(bundle, spec), spec
