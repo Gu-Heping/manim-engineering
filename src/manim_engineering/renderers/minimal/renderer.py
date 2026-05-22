@@ -71,7 +71,13 @@ class MinimalRenderer:
         graph: CircuitGraph,
         elements: Mapping[str, CircuitElement],
     ) -> VGroup:
-        """Compose placed component bodies and routed wires from a layout result."""
+        """
+        Compose placed component bodies and routed wires from a layout result.
+
+        Submobject order (back → front): **components**, then **wires**.
+        Scenes with a waveform panel should add ``components``, ``wires``, then the
+        panel so nets stay under the timing strip.
+        """
         connections = {connection.id: connection for connection in graph.connections}
         placed: list[VMobject] = []
 

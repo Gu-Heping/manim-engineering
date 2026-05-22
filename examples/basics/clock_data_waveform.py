@@ -65,6 +65,9 @@ try:
         def construct(self) -> None:
             graph, elements, layout, clock, data, bundle = build_fixture()
             circuit = MinimalRenderer().render_layout(layout, graph, elements)
+            n_placed = len(layout.placements)
+            components = VGroup(*circuit.submobjects[:n_placed])
+            wires = VGroup(*circuit.submobjects[n_placed:])
             panel_renderer = WaveformPanelRenderer()
             waveform_panel, panel_spec = panel_renderer.render_with_layout(bundle, layout)
             frame_w, frame_h = scene_frame_bounds(
@@ -72,7 +75,8 @@ try:
             )
             config.frame_width = max(4.0, frame_w)
             config.frame_height = max(2.5, frame_h)
-            self.add(VGroup(circuit, waveform_panel))
+            # Z-order: components → wires → waveform panel (wires under panel).
+            self.add(components, wires, waveform_panel)
 
             SignalFlow(clock, layout=layout, graph=graph).play(self)
             WaveformSync(bundle, (clock, data), panel_spec=panel_spec).play(self)

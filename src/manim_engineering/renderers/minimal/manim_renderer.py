@@ -28,7 +28,12 @@ class ManimRenderer:
         layout: LayoutResult,
         elements: Mapping[str, CircuitElement],
     ) -> VGroup:
-        """Project circuit topology and layout into a static scene group."""
+        """
+        Project circuit topology and layout into a static scene group.
+
+        Child order matches :meth:`MinimalRenderer.render_layout`: components, then wires.
+        Overlay waveform panels after wires in scene ``construct``.
+        """
         return self._inner.render_circuit(circuit, layout, elements)
 
     def render_circuit(
