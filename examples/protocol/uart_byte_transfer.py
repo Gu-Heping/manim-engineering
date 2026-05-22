@@ -42,7 +42,10 @@ def build_fixture():
 def main() -> None:
     graph, elements, layout, binding, result, bundle = build_fixture()
     print(f"UART steps: {len(result.steps)}, timing events: {len(result.timing_events)}")
-    print(f"tx=0x{result.tx_byte:02X} fsm={result.final_fsm_state.value} bit_period={result.bit_period}")
+    print(
+        f"tx=0x{result.tx_byte:02X} fsm={result.final_fsm_state.value} "
+        f"bit_period={result.bit_period}"
+    )
     print(f"traces: {[t.signal_name for t in bundle.traces]}")
     print(f"connections: {len(graph.connections)}")
     flow = SignalFlow(binding.tx, layout=layout, graph=graph)
