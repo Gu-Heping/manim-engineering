@@ -54,13 +54,15 @@ if __name__ == "__main__":
 
 
 try:
-    from manim import Scene
+    from manim import Scene, config
 
     class AcceptanceScene(Scene):
         """Show R1–C1 layout, pause, then play propagation along the net."""
 
         def construct(self) -> None:
             circuit, elements, layout, signal = build_fixture()
+            config.frame_width = max(4.0, layout.layout_bbox.width + 1.0)
+            config.frame_height = max(2.0, layout.layout_bbox.height + 1.0)
             circuit_mob = ManimRenderer().render(circuit, layout, elements)
             self.add(circuit_mob)
             self.wait(1.5)

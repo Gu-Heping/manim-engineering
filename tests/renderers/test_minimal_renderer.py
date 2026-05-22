@@ -52,6 +52,26 @@ def test_render_layout_includes_components_and_wires() -> None:
     assert len(scene.submobjects) >= 3
 
 
+def test_render_layout_separates_placed_components() -> None:
+    from manim_engineering.components import Capacitor
+
+    graph = CircuitGraph()
+    r1 = Resistor("r1", label="R1")
+    c1 = Capacitor("c1", label="C1")
+    graph.add(r1)
+    graph.add(c1)
+    graph.connect(r1.port_b, c1.port_a)
+
+    elements = {"r1": r1, "c1": c1}
+    layout = LayoutEngine().solve(graph, elements)
+    scene = MinimalRenderer().render_layout(layout, graph, elements)
+
+    by_id = {p.element_id: scene.submobjects[i] for i, p in enumerate(layout.placements)}
+    c1_x = by_id["c1"].get_all_points()[:, 0]
+    r1_x = by_id["r1"].get_all_points()[:, 0]
+    assert float(c1_x.max()) < float(r1_x.min()) - 0.1
+
+
 def test_render_layout_deterministic_points() -> None:
     graph, r1, r2 = _two_resistor_graph()
     elements = {"r1": r1, "r2": r2}

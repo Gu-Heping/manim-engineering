@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import numpy as np
-from manim import DL, Line, Text, VGroup, VMobject
+from manim import Line, Text, VGroup, VMobject
 
 from manim_engineering.components.common import VCC, Ground
 from manim_engineering.components.element import CircuitElement
@@ -73,18 +73,18 @@ class MinimalRenderer:
     ) -> VGroup:
         """Compose placed component bodies and routed wires from a layout result."""
         connections = {connection.id: connection for connection in graph.connections}
-        scene = VGroup()
+        placed: list[VMobject] = []
 
         for placement in layout_result.placements:
             element = elements[placement.element_id]
-            local = self.render(element)
-            scene.add(self._place_at(local, placement))
+            placed.append(self._place_at(self.render(element), placement))
 
+        wire_lines: list[Line] = []
         for wire in layout_result.wires:
             connection = connections[wire.connection_id]
             wire_color = theme.color_for_connection(connection)
             for segment in wire.segments:
-                scene.add(
+                wire_lines.append(
                     _line_between(
                         segment.start,
                         segment.end,
@@ -92,13 +92,11 @@ class MinimalRenderer:
                         width=theme.WIRE_STROKE_WIDTH,
                     )
                 )
-        return scene
+        return VGroup(*placed, *wire_lines)
 
     def _place_at(self, mob: VMobject, placement: ComponentPlacement) -> VMobject:
         """Shift local geometry so bounds bottom-left sits at placement origin."""
-        bl = mob.get_corner(DL)
-        target = np.array([placement.origin.x, placement.origin.y, 0.0])
-        mob.shift(target - bl)
+        mob.shift(np.array([placement.origin.x, placement.origin.y, 0.0]))
         return mob
 
     def _resistor_symbol(self, component: Resistor) -> VGroup:
