@@ -9,6 +9,7 @@ from manim_engineering.waveform import (
     MIN_WAVEFORM_GAP,
     derive_bundle_from_signals,
     panel_below_layout,
+    step_polyline,
 )
 
 
@@ -46,3 +47,17 @@ def test_waveform_panel_separated_below_wires() -> None:
     assert max_wire_y - panel.origin.y >= MIN_WAVEFORM_GAP
     panel_top = panel.origin.y + panel.panel_height(len(bundle.traces))
     assert layout.scene_bbox.min_y - panel_top >= MIN_WAVEFORM_GAP
+
+
+def test_waveform_step_polylines_below_routed_wires() -> None:
+    """In world Y-up coords: lowest wire point sits MIN_WAVEFORM_GAP above waveform band."""
+    layout, bundle = _clock_data_fixture()
+    panel = panel_below_layout(layout, trace_count=len(bundle.traces))
+    min_wire_y = min(point.y for wire in layout.wires for point in wire.points)
+    polyline_ys: list[float] = []
+    for index, trace in enumerate(bundle.traces):
+        for pt in step_polyline(trace, panel, index):
+            polyline_ys.append(pt.y)
+    assert polyline_ys
+    max_polyline_y = max(polyline_ys)
+    assert min_wire_y - max_polyline_y >= MIN_WAVEFORM_GAP

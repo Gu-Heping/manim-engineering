@@ -19,6 +19,7 @@ Add to the scene in order: **components → wires → waveform panel**.
 
 - `MinimalRenderer.render_layout` returns `VGroup(*placed, *wire_lines)`; scene code must not reorder wires above the panel.
 - `SignalFlow` must not mutate wire `Line` geometry — only overlays and highlights.
+- `CircuitGraph.connect()` must assign **deterministic** `connection_id` values (sorted port ids, not random UUIDs) so layout and visual regression replay identically.
 
 ## Golden guards
 

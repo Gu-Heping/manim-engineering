@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 from conftest import PHASH_HAMMING_TOLERANCE, requires_manim
-from hashing import dhash_hex, hamming_hex, stable_geometry_hash
+from hashing import dhash_hex, hamming_hex, stable_geometry_hash_lines_only
 
 _GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 _GOLDEN_NAME = "acceptance_three_layer.dhash.txt"
@@ -57,7 +57,7 @@ def _geometry_hash_from_fixture() -> str:
 
     circuit, elements, layout, _signal = mod.build_fixture()
     mob = ManimRenderer().render(circuit, layout, elements)
-    return stable_geometry_hash(mob)
+    return stable_geometry_hash_lines_only(mob)
 
 
 @requires_manim

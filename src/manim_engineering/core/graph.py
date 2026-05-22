@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any
-from uuid import uuid4
 
 from manim_engineering.core.connection import Connection
 from manim_engineering.core.enums import ConnectionState, PortDirection
@@ -19,6 +18,12 @@ from manim_engineering.core.port import Port
 
 def _port_pair_key(port_a: Port, port_b: Port) -> tuple[str, str]:
     return tuple(sorted((port_a.id, port_b.id)))
+
+
+def _connection_id_for_ports(port_a: Port, port_b: Port) -> str:
+    """Deterministic connection id from sorted port ids (replay-stable)."""
+    a_id, b_id = sorted((port_a.id, port_b.id))
+    return f"conn-{a_id}--{b_id}"
 
 
 def _directions_compatible(port_a: Port, port_b: Port) -> bool:
@@ -89,7 +94,7 @@ class CircuitGraph:
         if pair_key in self._pair_index:
             raise InvalidConnectionError(f"ports already connected: {pair_key}")
 
-        connection_id = f"conn-{uuid4().hex[:12]}"
+        connection_id = _connection_id_for_ports(port_a, port_b)
         connection = Connection(id=connection_id, port_a=port_a, port_b=port_b)
         self._connections[connection_id] = connection
         self._pair_index[pair_key] = connection_id

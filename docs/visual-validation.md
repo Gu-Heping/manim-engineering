@@ -22,7 +22,11 @@ tests/visual golden dHash    →  Hamming distance vs stored hash
 
 **Z-order (examples with waveform):** add **components → wires → waveform panel** so routed nets stay under the timing panel. `MinimalRenderer.render_layout` already returns `VGroup(*placed, *wire_lines)`; scene code should not reorder wires above the panel.
 
-**Invariant:** `SignalFlow` must not mutate wire `Line` geometry—only overlays and highlights.
+**Invariants (governance Step 5):**
+
+- `CircuitGraph.connect()` assigns **deterministic** `connection_id` values from sorted port ids (`conn-<a>--<b>`), not random UUIDs, so layout and goldens replay identically (`tests/semantic/test_determinism.py`).
+- `SignalFlow` must not mutate wire `Line` geometry—only overlays and highlights (`tests/animation/test_signal_flow_ownership.py`).
+- Waveform panel and `step_polyline` bands stay at least `MIN_WAVEFORM_GAP` below routed wires (`tests/layout/test_scene_bbox.py`).
 
 ## Running locally
 
@@ -50,7 +54,8 @@ UPDATE_VISUAL_GOLDEN=1 pytest tests/visual/ -v
 Commit updated files under `tests/visual/golden/`:
 
 - `acceptance_three_layer.dhash.txt` — 64-bit dHash hex from last frame
-- `acceptance_three_layer.geometry.txt` — SHA-256 of `ManimRenderer` point data (optional guard)
+- `acceptance_three_layer.geometry.txt` — SHA-256 of routed `Line` points only (`stable_geometry_hash_lines_only`, excludes label tessellation)
+- `spi_byte_transfer.geometry.txt` — layout + waveform panel digest (`layout_waveform_geometry_digest`, no raster)
 
 **Tolerance:** perceptual compare uses **Hamming distance ≤ 4** on the dHash (`tests/visual/conftest.py`).
 

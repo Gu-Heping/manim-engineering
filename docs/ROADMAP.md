@@ -194,6 +194,13 @@ Deliverables:
 - [x] `Pin` / `get_pin` / `attach_to` backward-compatible aliases
 - [x] Architecture import tests include `core/` layer
 
+### Post-governance backlog (completed slices)
+
+- [x] Deterministic `connection_id` on `CircuitGraph.connect()` (sorted port ids)
+- [x] Layout guards: `scene_bbox`, `MIN_WAVEFORM_GAP`, waveform `step_polyline` separation
+- [x] `SignalFlow` wire ownership regression (`tests/animation/test_signal_flow_ownership.py`)
+- [x] Visual geometry goldens: `acceptance_three_layer` (lines-only), `spi_byte_transfer` (layout digest)
+
 ### Suggested next action
 
-Backlog: IEC renderer variant, `examples/analog/` scenes, UART protocol slice, digital gate `CircuitElement` + render symbols.
+Backlog: IEC renderer variant, `examples/analog/` scenes, UART protocol slice, digital gate `CircuitElement` + render symbols; Step 6 — expand protocol geometry goldens and optional AABB wire/waveform overlap guard.
