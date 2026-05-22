@@ -13,6 +13,7 @@ Foundation vertical slice: semantic graph → passive components → layout → 
 | `signal_flow_demo.py` | 5 | Highlight propagation along routed net | `SignalFlow`, `Signal.propagate` |
 | `clock_data_waveform.py` | 6 | Clock + data traces, panel, timing sync | `derive_bundle_from_signals`, `WaveformPanelRenderer`, `WaveformSync` |
 | `acceptance_three_layer.py` | 3-layer | R1–C1 port API, `solve`, `ManimRenderer`, `SignalFlow` | `CircuitGraph` (core), `LayoutEngine.solve`, `ManimRenderer.render` |
+| `governance_acceptance.py` | governance | R1–C1 + waveform band below wires + `SignalFlow` | `scene_frame_bounds`, z-order components → wires → panel |
 
 ## Run commands
 
@@ -26,6 +27,7 @@ python examples/basics/render_two_resistors.py
 python examples/basics/signal_flow_demo.py
 python examples/basics/clock_data_waveform.py
 python examples/basics/acceptance_three_layer.py
+python examples/basics/governance_acceptance.py
 ```
 
 Manim preview (install `pip install -e ".[manim]"` first):
@@ -35,12 +37,14 @@ manim -pql examples/basics/render_two_resistors.py RenderTwoResistors
 manim -pql examples/basics/signal_flow_demo.py SignalFlowDemo
 manim -pql examples/basics/clock_data_waveform.py ClockDataWaveformDemo
 manim -pql examples/basics/acceptance_three_layer.py AcceptanceScene
+manim -pql examples/basics/governance_acceptance.py GovernanceAcceptanceScene
 ```
 
 Low-quality render (no preview window):
 
 ```bash
 manim -ql examples/basics/acceptance_three_layer.py AcceptanceScene
+manim -ql examples/basics/governance_acceptance.py GovernanceAcceptanceScene
 ```
 
 `render_two_resistors.py` and `signal_flow_demo.py` also expose `main()` for structure checks without opening a preview window.
