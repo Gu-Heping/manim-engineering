@@ -38,7 +38,4 @@ Allowed: enlarged pins, simplified symbols, exaggerated spacing — clarity over
 
 ## Implementation Order
 
-1. confirm semantic and layout ownership
-2. reuse existing renderer patterns
-3. implement projection only
-4. add renderer tests
+See `00-foundation.md` § Implementation Order.

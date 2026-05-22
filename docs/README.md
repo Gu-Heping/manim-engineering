@@ -8,7 +8,7 @@
 | **Reference** (this folder) | `docs/*.md` | Diagrams, API contracts, theme constants |
 | **Tasks** | [ROADMAP.md](ROADMAP.md) | Phased implementation for long-running work |
 
-On conflict, `.cursor/rules/` wins.
+On conflict, `.cursor/rules/` wins. Visual geometry invariants: `31-visual-geometry.md`.
 
 ## Reference files
 

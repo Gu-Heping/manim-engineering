@@ -111,7 +111,7 @@ Commit updated files under `tests/visual/golden/` (`<scene>.dhash.txt`, optional
 - When touching layout or waveform render paths: keep `tests/layout/test_scene_bbox.py` passing (`scene_bbox`, `MIN_WAVEFORM_GAP` separation).
 - Canonical scenes: `acceptance_three_layer`, `clock_data_waveform`, `power_rail_demo` (one acceptance scene per golden PNG).
 
-**Z-order** (waveform scenes): add **components → wires → waveform panel**; `SignalFlow` must not mutate wire `Line` geometry.
+**Z-order / panel gap**: see `31-visual-geometry.md`.
 
 ## CI
 

@@ -20,6 +20,7 @@ Do not re-derive architecture from `docs/` alone; rules are authoritative.
 | `30-timing-waveform.md` | Clocks, traces, sync |
 | `40-protocol-modeling.md` | UART/SPI/I2C/CAN |
 | `50-layout-routing.md` | Placement, routing, occupancy |
+| `31-visual-geometry.md` | scene_bbox, waveform gap, z-order |
 | `60-renderer-philosophy.md` | Renderers, themes |
 | `70-component-authoring.md` | New components |
 | `80-animation-and-education.md` | Motion, scenes, pacing |

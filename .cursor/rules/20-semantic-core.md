@@ -75,17 +75,8 @@ Waveforms derive from `Signal` + `TimingEvent` + propagation — not hand-author
 
 Animations consume semantics; they do not define them.
 
-```python
-SignalFlow(signal)   # correct
-signal.animate()     # forbidden
-```
+Use `SignalFlow(signal)` — not `signal.animate()`. Forbidden patterns: `10-engineering-standards.md` § Architecture Violations.
 
 ## Implementation Order
 
-1. engineering meaning and ownership
-2. topology and propagation rules
-3. timing and synchronization
-4. rendering
-5. animation
-
-Never start from raw Manim geometry or pulse effects.
+See `00-foundation.md` § Implementation Order.

@@ -32,7 +32,8 @@ semantic (signals, buses, propagation) extends core; animation consumes semantic
 | **Model** | `components/` | `CircuitElement`, footprints, port definitions |
 | **Solver** | `layout/` | `LayoutEngine`, placements, wire paths |
 | **Adapter** | `renderers/` | Manim `VGroup` projection from layout output |
-| **Semantic+** | `semantic/`, `protocol/`, `waveform/` | signals, propagation, timing (no Manim) |
+| **Semantic+** | `semantic/`, `protocol/` | signals, propagation, timing (no Manim) |
+| **Derived** | `waveform/` | traces derived from signal state (no Manim); drawn in `renderers/` |
 | **Motion** | `animation/` | scenes, highlights, `SignalFlow`, `WaveformSync` |
 
 ## Target circuit API
@@ -71,7 +72,7 @@ scene = ManimRenderer().render(circuit, layout, elements)
 │  core/        topology graph              │
 │  semantic/    signals, state, propagation │
 │  protocol/    bus protocols (semantic)    │
-│  waveform/    timing traces (derived)     │
+│  waveform/    timing traces (derived)     │  ← draw in renderers/
 └─────────────────────────────────────────┘
 ```
 

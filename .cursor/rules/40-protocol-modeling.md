@@ -40,8 +40,4 @@ Protocol waveforms MUST reflect semantic state, ownership, and timing events (se
 
 ## Implementation Order
 
-1. semantic ownership and timing
-2. synchronization and arbitration behavior
-3. waveform linkage
-4. rendering
-5. animation
+See `00-foundation.md` § Implementation Order.

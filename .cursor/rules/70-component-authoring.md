@@ -50,10 +50,7 @@ Expose semantic state (logic level, enable, selected channel) explicitly. No hid
 
 ## Implementation Order
 
-1. semantic role and pins
-2. signal relationships and layout hints
-3. renderer support
-4. tests and minimal example
+See `00-foundation.md` § Implementation Order.
 
 ## Tests (per component)
 
