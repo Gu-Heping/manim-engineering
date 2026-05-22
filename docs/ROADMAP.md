@@ -194,13 +194,24 @@ Deliverables:
 - [x] `Pin` / `get_pin` / `attach_to` backward-compatible aliases
 - [x] Architecture import tests include `core/` layer
 
-### Post-governance backlog (completed slices)
+### Governance execution (Steps 1–6)
+
+**Steps 1–5 (complete):** deterministic `connection_id`, `scene_bbox` / `MIN_WAVEFORM_GAP`, `SignalFlow` wire ownership, visual golden pipeline (dHash + geometry), CI `visual-golden` job.
+
+**Step 6 (complete):**
+
+- [x] AABB wire/waveform overlap guards (`tests/layout/test_geometry_overlap.py`, `layout/aabb.py`)
+- [x] SPI dHash golden (`tests/visual/test_spi_byte_transfer_golden.py`)
+- [x] Protocol geometry goldens: `spi_byte_transfer`, `uart_byte_transfer` (digest only)
+- [x] Rule/doc cross-ref (`90-testing-and-workflow.md` § Visual validation)
+
+### Post-governance backlog
 
 - [x] Deterministic `connection_id` on `CircuitGraph.connect()` (sorted port ids)
 - [x] Layout guards: `scene_bbox`, `MIN_WAVEFORM_GAP`, waveform `step_polyline` separation
 - [x] `SignalFlow` wire ownership regression (`tests/animation/test_signal_flow_ownership.py`)
-- [x] Visual geometry goldens: `acceptance_three_layer` (lines-only), `spi_byte_transfer` (layout digest)
+- [x] Visual geometry goldens: `acceptance_three_layer`, `spi_byte_transfer`, `uart_byte_transfer`
 
 ### Suggested next action
 
-Backlog: IEC renderer variant, `examples/analog/` scenes, UART protocol slice, digital gate `CircuitElement` + render symbols; Step 6 — expand protocol geometry goldens and optional AABB wire/waveform overlap guard.
+Backlog: IEC renderer variant, `examples/analog/` scenes, digital gate `CircuitElement` + render symbols; Step 7 — expand protocol dHash goldens (UART raster), analog examples, optional layout occupancy stress fixtures.

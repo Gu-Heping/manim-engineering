@@ -55,7 +55,9 @@ Commit updated files under `tests/visual/golden/`:
 
 - `acceptance_three_layer.dhash.txt` — 64-bit dHash hex from last frame
 - `acceptance_three_layer.geometry.txt` — SHA-256 of routed `Line` points only (`stable_geometry_hash_lines_only`, excludes label tessellation)
+- `spi_byte_transfer.dhash.txt` — SPI demo last frame (Hamming ≤ 4)
 - `spi_byte_transfer.geometry.txt` — layout + waveform panel digest (`layout_waveform_geometry_digest`, no raster)
+- `uart_byte_transfer.geometry.txt` — UART layout + waveform digest (no raster)
 
 **Tolerance:** perceptual compare uses **Hamming distance ≤ 4** on the dHash (`tests/visual/conftest.py`).
 

@@ -108,8 +108,13 @@ Commit updated files under `tests/visual/golden/` (`<scene>.dhash.txt`, optional
 **Gates**:
 
 - Perceptual compare: dHash Hamming distance **≤ 4** (`PHASH_HAMMING_TOLERANCE` in `tests/visual/conftest.py`).
-- When touching layout or waveform render paths: keep `tests/layout/test_scene_bbox.py` passing (`scene_bbox`, `MIN_WAVEFORM_GAP` separation).
-- Canonical scenes: `acceptance_three_layer`, `clock_data_waveform`, `power_rail_demo` (one acceptance scene per golden PNG).
+- When touching **layout**, **waveform**, or **animation** paths, keep these passing before merge:
+  - `tests/layout/test_scene_bbox.py` — `scene_bbox`, `MIN_WAVEFORM_GAP` point separation
+  - `tests/layout/test_geometry_overlap.py` — wire vs waveform AABB band/segment guards
+  - `tests/animation/test_signal_flow_ownership.py` — `SignalFlow` must not mutate wire geometry
+  - `tests/semantic/test_determinism.py` — deterministic `connection_id` / replay
+  - `tests/visual/` — dHash and geometry goldens (`@requires_manim` for raster tests)
+- Canonical scenes: `acceptance_three_layer`, `clock_data_waveform`, `power_rail_demo`, `spi_byte_transfer` (one acceptance scene per golden PNG).
 
 **Z-order / panel gap**: see `31-visual-geometry.md`.
 
