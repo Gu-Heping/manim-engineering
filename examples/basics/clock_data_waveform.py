@@ -13,7 +13,7 @@ from manim_engineering.components import Resistor
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.renderers.minimal import MinimalRenderer, WaveformPanelRenderer
 from manim_engineering.semantic import CircuitGraph, LogicLevel, LogicState, Signal, SignalType
-from manim_engineering.waveform import derive_bundle_from_signals
+from manim_engineering.waveform import derive_bundle_from_signals, scene_frame_bounds
 
 
 def build_fixture():
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
 
 try:
-    from manim import Scene, VGroup
+    from manim import Scene, VGroup, config
 
     class ClockDataWaveformDemo(Scene):
         """Circuit + waveform panel with propagation and timing sync."""
@@ -67,6 +67,11 @@ try:
             circuit = MinimalRenderer().render_layout(layout, graph, elements)
             panel_renderer = WaveformPanelRenderer()
             waveform_panel, panel_spec = panel_renderer.render_with_layout(bundle, layout)
+            frame_w, frame_h = scene_frame_bounds(
+                layout, panel_spec, trace_count=len(bundle.traces)
+            )
+            config.frame_width = max(4.0, frame_w)
+            config.frame_height = max(2.5, frame_h)
             self.add(VGroup(circuit, waveform_panel))
 
             SignalFlow(clock, layout=layout, graph=graph).play(self)

@@ -12,7 +12,7 @@ from manim_engineering.layout.exceptions import (
     RoutingError,
     UnknownElementError,
 )
-from manim_engineering.layout.grid import layout_bbox, occupancy_ratio, place_on_grid
+from manim_engineering.layout.grid import layout_bbox, occupancy_ratio, place_on_grid, scene_bbox
 from manim_engineering.layout.routing import (
     merge_routing_hints,
     points_to_segments,
@@ -47,6 +47,7 @@ __all__ = [
     "UnknownElementError",
     "WirePath",
     "layout_bbox",
+    "scene_bbox",
     "merge_routing_hints",
     "occupancy_ratio",
     "pin_world_position",

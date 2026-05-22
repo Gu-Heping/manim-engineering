@@ -41,6 +41,12 @@ Grouped layout: shared direction, synchronization visible, hierarchy clear.
 
 Traces align with related signals, buses, and protocol events.
 
+## Scene geometry (executable)
+
+- `scene_bbox(placements, wires)` unions component footprints **and** all routed wire points; `LayoutResult.scene_bbox` must be populated by `LayoutEngine`.
+- `panel_below_layout` places the waveform band using `scene_bbox.min_y`, not `layout_bbox` alone (wires may extend below components).
+- Minimum vertical gap between the lowest routed wire and the waveform panel top: **`MIN_WAVEFORM_GAP = 0.35`** (world units). Tests assert this for the clock/data fixture.
+
 ## Auto-layout
 
 Predictable, explainable, overrideable — no magical placement.

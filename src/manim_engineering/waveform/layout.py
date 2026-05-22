@@ -8,6 +8,8 @@ from manim_engineering.layout.types import LayoutResult, Point2D
 from manim_engineering.semantic.enums import LogicLevel
 from manim_engineering.waveform.trace import WaveformSample, WaveformTrace
 
+MIN_WAVEFORM_GAP = 0.35
+
 
 @dataclass(frozen=True)
 class WaveformPanelSpec:
@@ -36,20 +38,36 @@ def panel_below_layout(
     trace_count: int,
     trace_height: float = 0.25,
     trace_gap: float = 0.12,
-    margin: float = 0.35,
+    margin: float = MIN_WAVEFORM_GAP,
     width: float | None = None,
 ) -> WaveformPanelSpec:
-    """Place waveform panel under the circuit layout bounding box."""
-    panel_width = width if width is not None else max(layout.layout_bbox.width, 1.5)
+    """Place waveform panel under the circuit scene bounding box (components + wires)."""
+    bounds = layout.scene_bbox
+    panel_width = width if width is not None else max(bounds.width, 1.5)
     below = panel_height(trace_count, trace_height, trace_gap)
-    origin_y = layout.layout_bbox.min_y - margin - below
+    origin_y = bounds.min_y - margin - below
     return WaveformPanelSpec(
-        origin=Point2D(layout.layout_bbox.min_x, origin_y),
+        origin=Point2D(bounds.min_x, origin_y),
         width=panel_width,
         trace_height=trace_height,
         trace_gap=trace_gap,
         time_scale=1.0,
     )
+
+
+def scene_frame_bounds(
+    layout: LayoutResult,
+    panel_spec: WaveformPanelSpec,
+    *,
+    trace_count: int,
+    padding: float = 0.5,
+    label_inset: float = 0.4,
+) -> tuple[float, float]:
+    """Nominal Manim frame (width, height) covering circuit, wires, and waveform panel."""
+    scene = layout.scene_bbox
+    width = max(scene.width, panel_spec.width) + label_inset + 2 * padding
+    height = (scene.max_y - panel_spec.origin.y) + 2 * padding
+    return width, max(height, 1.0)
 
 
 def panel_height(trace_count: int, trace_height: float, trace_gap: float) -> float:

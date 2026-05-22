@@ -60,7 +60,7 @@ class WirePath:
 
 @dataclass(frozen=True)
 class LayoutBBox:
-    """Axis-aligned bounding box of all placed components."""
+    """Axis-aligned bounding box in layout world coordinates."""
 
     min_x: float
 
@@ -101,3 +101,5 @@ class LayoutResult:
     occupancy_ratio: float
 
     layout_bbox: LayoutBBox
+
+    scene_bbox: LayoutBBox

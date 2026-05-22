@@ -6,7 +6,12 @@ from manim import Line, Text, VGroup
 
 from manim_engineering.layout.types import LayoutResult, Point2D
 from manim_engineering.renderers.minimal import theme
-from manim_engineering.waveform.layout import WaveformPanelSpec, panel_below_layout, step_polyline
+from manim_engineering.waveform.layout import (
+    MIN_WAVEFORM_GAP,
+    WaveformPanelSpec,
+    panel_below_layout,
+    step_polyline,
+)
 from manim_engineering.waveform.trace import WaveformBundle, WaveformTrace
 
 
@@ -28,7 +33,7 @@ class WaveformPanelRenderer:
         *,
         trace_height: float = 0.25,
         trace_gap: float = 0.12,
-        margin: float = 0.35,
+        margin: float = MIN_WAVEFORM_GAP,
     ) -> WaveformPanelSpec:
         return panel_below_layout(
             layout,
@@ -53,7 +58,7 @@ class WaveformPanelRenderer:
                     _point3(start),
                     _point3(end),
                     stroke_color=color,
-                    stroke_width=theme.HELPER_STROKE_WIDTH + 0.5,
+                    stroke_width=theme.WAVEFORM_STROKE_WIDTH,
                 )
             )
         label = Text(

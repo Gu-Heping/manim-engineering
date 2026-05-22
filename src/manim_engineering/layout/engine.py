@@ -10,7 +10,7 @@ from manim_engineering.components.types import Bounds
 from manim_engineering.core.exceptions import InvalidPortError
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.exceptions import UnknownElementError
-from manim_engineering.layout.grid import layout_bbox, occupancy_ratio, place_on_grid
+from manim_engineering.layout.grid import layout_bbox, occupancy_ratio, place_on_grid, scene_bbox
 from manim_engineering.layout.routing import (
     merge_routing_hints,
     points_to_segments,
@@ -115,6 +115,7 @@ class LayoutEngine:
             )
 
         bbox = layout_bbox(placements)
+        scene = scene_bbox(placements, tuple(wires))
         ratio = occupancy_ratio(bbox, self._config.nominal_frame)
 
         return LayoutResult(
@@ -124,6 +125,7 @@ class LayoutEngine:
             frame=self._config.nominal_frame,
             occupancy_ratio=ratio,
             layout_bbox=bbox,
+            scene_bbox=scene,
         )
 
     def _elements_for_graph(

@@ -6,7 +6,7 @@ from collections.abc import Iterable, Sequence
 
 from manim_engineering.components.element import CircuitElement
 from manim_engineering.components.types import Bounds
-from manim_engineering.layout.types import ComponentPlacement, LayoutBBox, Point2D
+from manim_engineering.layout.types import ComponentPlacement, LayoutBBox, Point2D, WirePath
 
 
 def place_on_grid(
@@ -77,6 +77,24 @@ def layout_bbox(placements: Sequence[ComponentPlacement]) -> LayoutBBox:
 
     max_y = max(p.origin.y + p.bounds.height for p in placements)
 
+    return LayoutBBox(min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y)
+
+
+def scene_bbox(
+    placements: Sequence[ComponentPlacement],
+    wires: Sequence[WirePath],
+) -> LayoutBBox:
+    """Union of component footprints and all routed wire segment points."""
+    bbox = layout_bbox(placements)
+    if not wires:
+        return bbox
+    min_x, min_y, max_x, max_y = bbox.min_x, bbox.min_y, bbox.max_x, bbox.max_y
+    for wire in wires:
+        for point in wire.points:
+            min_x = min(min_x, point.x)
+            min_y = min(min_y, point.y)
+            max_x = max(max_x, point.x)
+            max_y = max(max_y, point.y)
     return LayoutBBox(min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y)
 
 
