@@ -9,6 +9,8 @@ Protocol-layer semantics with layout, waveforms, and animation sync (SPI and UAR
 | `spi_byte_transfer.py` | 7 | Mode-0 byte transfer, FSM, clk/mosi/miso/cs waveforms | `SPIBusBinding`, `SPIController.transfer_byte`, `SPIMaster`, `SPISlave`, `derive_bundle_from_signals`, `SignalFlow`, `WaveformSync` |
 | `uart_byte_transfer.py` | 9 | 8N1 byte TX, start/data/stop framing, LSB-first | `UARTBinding`, `UARTController.transmit_byte`, `UARTPort`, `derive_bundle_from_signals`, `SignalFlow`, `WaveformSync` |
 
+Visual goldens: `spi_byte_transfer` and `uart_byte_transfer` last-frame **dHash** (Hamming ≤ 4) plus layout/waveform **geometry** digests under `tests/visual/golden/`.
+
 ## Run commands
 
 Smoke (no video):

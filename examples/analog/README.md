@@ -1,19 +1,23 @@
 # Analog examples
 
-**Status:** deferred — no analog-specific example scripts yet.
+Passive analog-style chains using existing `Resistor` / `Capacitor` stubs — semantic graph and layout only (no SPICE).
 
-Planned content (post–Phase 8 backlog):
+## Table
 
-- Op-amp or RC network as `CircuitElement` stubs
-- Semantic nodes for analog nets (voltage as state, not SPICE)
-- Layout + minimal render once analog symbols exist in `renderers/minimal/`
+| File | Concept | Key abstractions |
+|------|---------|------------------|
+| `rc_step_response.py` | R1–C1 chain, layout.solve, one propagate edge | `CircuitGraph`, `Resistor`, `Capacitor`, `LayoutEngine`, `Signal.propagate` |
 
-## Related today
+## Run commands
 
-Passive symbols used in basics (`Resistor`, `Capacitor` in `components/passive/`) appear in:
+Smoke (no video):
 
-- `examples/basics/two_resistors_graph.py`
-- `examples/basics/layout_two_resistors.py`
-- `examples/basics/render_two_resistors.py`
+```bash
+python examples/analog/rc_step_response.py
+```
 
-Those illustrate component + layout patterns that analog scenes will reuse.
+Expected output: node/connection counts, occupancy ratio, and per-component placement origins.
+
+## Related
+
+Basics examples (`examples/basics/`) use the same passive symbols for layout and render demos. Protocol and waveform examples add timing panels on top of the same layout engine.

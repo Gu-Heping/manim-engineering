@@ -205,6 +205,13 @@ Deliverables:
 - [x] Protocol geometry goldens: `spi_byte_transfer`, `uart_byte_transfer` (digest only)
 - [x] Rule/doc cross-ref (`90-testing-and-workflow.md` § Visual validation)
 
+**Step 7 (complete):**
+
+- [x] UART dHash golden (`tests/visual/test_uart_byte_transfer_golden.py`, `golden/uart_byte_transfer.dhash.txt`)
+- [x] UART geometry golden retained (`tests/visual/test_uart_byte_transfer.py`)
+- [x] Minimal analog example (`examples/analog/rc_step_response.py`) + geometry smoke (`tests/visual/test_analog_example_geometry.py`)
+- [x] Layout stress fixture (`tests/layout/test_layout_stress.py`) — 5-passive chain, occupancy band, wire AABB, replay hash
+
 ### Post-governance backlog
 
 - [x] Deterministic `connection_id` on `CircuitGraph.connect()` (sorted port ids)
@@ -214,4 +221,4 @@ Deliverables:
 
 ### Suggested next action
 
-Backlog: IEC renderer variant, `examples/analog/` scenes, digital gate `CircuitElement` + render symbols; Step 7 — expand protocol dHash goldens (UART raster), analog examples, optional layout occupancy stress fixtures.
+Backlog: IEC renderer variant; I2C/CAN geometry goldens; digital gate `CircuitElement` + render symbols; optional rule 6-file merge.

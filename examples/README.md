@@ -7,7 +7,7 @@ Runnable scripts that demonstrate **one concept each**, aligned with [docs/ROADM
 | Directory | Focus | Phase |
 |-----------|-------|-------|
 | [basics/](basics/) | Graph, components, layout, render, animation, waveform | 1–6 |
-| [analog/](analog/) | Analog circuits (placeholder) | — |
+| [analog/](analog/) | Passive RC chain (layout smoke) | `rc_step_response.py` |
 | [digital/](digital/) | Digital topology and propagation | 1, 8 |
 | [protocol/](protocol/) | SPI/UART bus timing | 7–9 |
 | [waveform/](waveform/) | Waveform traces and sync (index) | 6 |
@@ -79,5 +79,5 @@ See [protocol/README.md](protocol/README.md).
 
 ### analog/ · waveform/
 
-Analog component examples are deferred — see [analog/README.md](analog/README.md).  
+Analog smoke: [analog/rc_step_response.py](analog/rc_step_response.py) (R1–C1 layout + propagate). See [analog/README.md](analog/README.md).  
 Waveform-focused runs are indexed in [waveform/README.md](waveform/README.md) (canonical script: `basics/clock_data_waveform.py`).
