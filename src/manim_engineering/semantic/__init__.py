@@ -1,5 +1,6 @@
 """Semantic layer: topology, signals, buses, state, propagation, timing events."""
 
+from manim_engineering.core.exceptions import InvalidPortError
 from manim_engineering.semantic.bus import Bus
 from manim_engineering.semantic.connection import Connection
 from manim_engineering.semantic.enums import (
@@ -20,7 +21,7 @@ from manim_engineering.semantic.exceptions import (
 )
 from manim_engineering.semantic.graph import CircuitGraph
 from manim_engineering.semantic.node import Node
-from manim_engineering.semantic.pin import Pin
+from manim_engineering.semantic.pin import Pin, Port
 from manim_engineering.semantic.propagation import (
     PropagationRecord,
     apply_level_between_pins,
@@ -36,10 +37,12 @@ __all__ = [
     "ConnectionState",
     "InvalidConnectionError",
     "InvalidPinError",
+    "InvalidPortError",
     "LogicLevel",
     "LogicState",
     "Node",
     "Pin",
+    "Port",
     "PinDirection",
     "PropagationError",
     "PropagationRecord",

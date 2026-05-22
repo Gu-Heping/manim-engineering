@@ -10,9 +10,9 @@ from manim import DL, Line, Text, VGroup, VMobject
 from manim_engineering.components.common import VCC, Ground
 from manim_engineering.components.element import CircuitElement
 from manim_engineering.components.passive import Capacitor, Resistor
+from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import ComponentPlacement, LayoutResult, Point2D
 from manim_engineering.renderers.minimal import theme
-from manim_engineering.semantic.graph import CircuitGraph
 
 
 def _point3(p: Point2D) -> list[float]:
@@ -55,6 +55,15 @@ class MinimalRenderer:
             label.move_to(np.array([bounds.width * 0.5, bounds.height + 0.1, 0.0]))
             group.add(label)
         return group
+
+    def render_circuit(
+        self,
+        graph: CircuitGraph,
+        layout_result: LayoutResult,
+        elements: Mapping[str, CircuitElement],
+    ) -> VGroup:
+        """Compose placed component bodies and routed wires from graph + layout."""
+        return self.render_layout(layout_result, graph, elements)
 
     def render_layout(
         self,

@@ -1,7 +1,5 @@
 """Grid placement and occupancy metric tests."""
 
-
-
 from __future__ import annotations
 
 from manim_engineering.components import Resistor
@@ -34,9 +32,6 @@ def test_place_on_grid_deterministic() -> None:
     assert first[1].origin.x == first[0].bounds.width + 0.5
 
 
-
-
-
 def test_two_resistor_fixture_occupancy_in_target_band() -> None:
 
     placements = place_on_grid((Resistor("r1"), Resistor("r2")))
@@ -46,5 +41,3 @@ def test_two_resistor_fixture_occupancy_in_target_band() -> None:
     ratio = occupancy_ratio(bbox, DEFAULT_NOMINAL_FRAME)
 
     assert OCCUPANCY_TARGET_MIN <= ratio <= OCCUPANCY_TARGET_MAX
-
-

@@ -12,6 +12,16 @@ PACKAGE_ROOT = "manim_engineering"
 
 # Forbidden import prefixes per layer (lower must not depend on upper).
 LAYER_FORBIDDEN_PREFIXES: dict[str, tuple[str, ...]] = {
+    "core": (
+        "manim",
+        f"{PACKAGE_ROOT}.components",
+        f"{PACKAGE_ROOT}.layout",
+        f"{PACKAGE_ROOT}.protocol",
+        f"{PACKAGE_ROOT}.waveform",
+        f"{PACKAGE_ROOT}.renderers",
+        f"{PACKAGE_ROOT}.animation",
+        f"{PACKAGE_ROOT}.semantic",
+    ),
     "semantic": (
         "manim",
         f"{PACKAGE_ROOT}.components",
@@ -44,9 +54,7 @@ LAYER_FORBIDDEN_PREFIXES: dict[str, tuple[str, ...]] = {
         "manim",
         f"{PACKAGE_ROOT}.animation",
     ),
-    "renderers": (
-        f"{PACKAGE_ROOT}.animation",
-    ),
+    "renderers": (f"{PACKAGE_ROOT}.animation",),
     "animation": (),
 }
 
@@ -96,3 +104,12 @@ def test_layer_packages_importable() -> None:
 
     for layer in LAYER_FORBIDDEN_PREFIXES:
         importlib.import_module(f"{PACKAGE_ROOT}.{layer}")
+
+
+def test_core_is_topology_only_entry() -> None:
+    """Core public API exposes graph model without semantic signal types."""
+    from manim_engineering import core
+
+    assert hasattr(core, "CircuitGraph")
+    assert hasattr(core, "Port")
+    assert not hasattr(core, "Signal")

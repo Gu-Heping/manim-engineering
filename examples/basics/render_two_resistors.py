@@ -9,22 +9,22 @@ Optional preview: ``manim -pql examples/basics/render_two_resistors.py RenderTwo
 from __future__ import annotations
 
 from manim_engineering.components import Resistor
+from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.renderers.minimal import MinimalRenderer
-from manim_engineering.semantic import CircuitGraph
 
 
 def build_scene_mobject():
     """Return a static VGroup for the two-resistor fixture (no Scene required)."""
-    graph = CircuitGraph()
+    circuit = CircuitGraph()
     r1 = Resistor("r1", label="R1")
     r2 = Resistor("r2", label="R2")
-    r1.attach_to(graph)
-    r2.attach_to(graph)
-    graph.connect(r1.get_pin("b"), r2.get_pin("a"))
+    circuit.add(r1)
+    circuit.add(r2)
+    circuit.connect(r1.get_port("b"), r2.get_port("a"))
 
-    layout = LayoutEngine().layout(graph, {"r1": r1, "r2": r2})
-    return MinimalRenderer().render_layout(layout, graph, {"r1": r1, "r2": r2})
+    layout = LayoutEngine().solve(circuit, {"r1": r1, "r2": r2})
+    return MinimalRenderer().render_circuit(circuit, layout, {"r1": r1, "r2": r2})
 
 
 def main() -> None:

@@ -43,9 +43,5 @@ def test_apply_level_arbitrary_sequence() -> None:
         LogicLevel.HIGH,
         graph=graph,
     )
-    levels = [
-        r.new_value.level
-        for r in signal.propagation_history
-        if r.new_value is not None
-    ]
+    levels = [r.new_value.level for r in signal.propagation_history if r.new_value is not None]
     assert levels == [LogicLevel.LOW, LogicLevel.HIGH]

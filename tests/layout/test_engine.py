@@ -1,7 +1,5 @@
 """LayoutEngine integration tests with CircuitGraph."""
 
-
-
 from __future__ import annotations
 
 import pytest
@@ -35,9 +33,6 @@ def _two_resistor_graph() -> tuple[CircuitGraph, Resistor, Resistor]:
     return graph, r1, r2
 
 
-
-
-
 def test_layout_engine_deterministic() -> None:
 
     graph, r1, r2 = _two_resistor_graph()
@@ -57,9 +52,6 @@ def test_layout_engine_deterministic() -> None:
     assert first.wires == second.wires
 
 
-
-
-
 def test_layout_routes_between_pin_positions() -> None:
 
     graph, r1, r2 = _two_resistor_graph()
@@ -75,15 +67,10 @@ def test_layout_routes_between_pin_positions() -> None:
     assert wire.points[-1] == result.pin_positions["r2.a"]
 
     for segment in wire.segments:
-
         assert segment.start.x == segment.end.x or segment.start.y == segment.end.y
 
 
-
-
-
 def test_layout_wire_does_not_use_bounds_overlap_heuristic() -> None:
-
     """Routing keys off pin world positions, not component bbox intersection."""
 
     graph, r1, r2 = _two_resistor_graph()
@@ -97,23 +84,15 @@ def test_layout_wire_does_not_use_bounds_overlap_heuristic() -> None:
     assert wire.points[0].x < wire.points[-1].x
 
 
-
-
-
 def test_layout_occupancy_documented_for_fixture() -> None:
 
     graph, r1, r2 = _two_resistor_graph()
 
     result = LayoutEngine(LayoutConfig(nominal_frame=DEFAULT_NOMINAL_FRAME)).layout(
-
         graph, {"r1": r1, "r2": r2}
-
     )
 
     assert OCCUPANCY_TARGET_MIN <= result.occupancy_ratio <= OCCUPANCY_TARGET_MAX
-
-
-
 
 
 def test_unknown_element_raises() -> None:
@@ -121,7 +100,4 @@ def test_unknown_element_raises() -> None:
     graph, r1, _r2 = _two_resistor_graph()
 
     with pytest.raises(UnknownElementError):
-
         LayoutEngine().layout(graph, {"r1": r1})
-
-

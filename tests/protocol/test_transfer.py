@@ -31,9 +31,7 @@ def test_transfer_is_deterministic() -> None:
         binding = SPIBusBinding.create_bus(CircuitGraph())
         result = SPIController(binding).transfer_byte(0x5A, rx_byte=0xA5)
         mosi_levels = tuple(
-            r.new_value.level
-            for r in binding.mosi.propagation_history
-            if r.new_value is not None
+            r.new_value.level for r in binding.mosi.propagation_history if r.new_value is not None
         )
         return (len(result.steps), len(result.timing_events), len(mosi_levels))
 

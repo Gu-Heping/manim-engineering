@@ -37,10 +37,7 @@ def test_bus_propagate_all_deterministic_order() -> None:
         for bit in ("d0", "d1")
     )
     bus = Bus.from_signals("data_bus", pairs)
-    edges = tuple(
-        (driver.get_pin(bit), receiver.get_pin(bit))
-        for bit in ("d0", "d1")
-    )
+    edges = tuple((driver.get_pin(bit), receiver.get_pin(bit)) for bit in ("d0", "d1"))
     records = bus.propagate_all(edges, graph=graph)
     assert len(records) == 2
     assert records[0].to_pin_id == "rcv.d0"

@@ -82,9 +82,7 @@ def apply_level_between_pins(
     Used by protocol FSMs that need arbitrary bit sequences (not only LOW→HIGH toggle).
     """
     if graph is not None and not graph.are_connected(from_pin, to_pin):
-        raise PropagationError(
-            f"no topology connection between {from_pin.id} and {to_pin.id}"
-        )
+        raise PropagationError(f"no topology connection between {from_pin.id} and {to_pin.id}")
 
     previous = signal.value
     new_value = LogicState(level=level, voltage=voltage)
@@ -119,9 +117,7 @@ def propagate_between_pins(
     Validates optional graph connectivity. Updates signal value and endpoints.
     """
     if graph is not None and not graph.are_connected(from_pin, to_pin):
-        raise PropagationError(
-            f"no topology connection between {from_pin.id} and {to_pin.id}"
-        )
+        raise PropagationError(f"no topology connection between {from_pin.id} and {to_pin.id}")
 
     previous = signal.value
     new_value = _resolve_propagated_value(previous, signal.signal_type)

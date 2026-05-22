@@ -2,7 +2,61 @@
 
 Human-readable layer map. Enforced rules: [`.cursor/rules/00-foundation.md`](../.cursor/rules/00-foundation.md).
 
-## Layer diagram
+## Three-layer model (refactor target)
+
+The stable pipeline separates **topology**, **layout**, and **rendering**:
+
+```text
+┌─────────────────────────────────────────┐
+│  renderers/   Manim adapter only        │
+│  MinimalRenderer.render_circuit(...)    │
+├─────────────────────────────────────────┤
+│  layout/      placement + routing       │
+│  LayoutEngine.solve(circuit, elements)    │
+├─────────────────────────────────────────┤
+│  core/        CircuitGraph netlist      │
+│  components/  pure CircuitElement data  │
+└─────────────────────────────────────────┘
+```
+
+**Dependency direction** (lower must not import upper):
+
+```text
+core → components → layout → renderers → animation
+semantic (signals, buses, propagation) extends core; animation consumes semantic
+```
+
+| Layer | Package | Owns |
+|-------|---------|------|
+| **Model** | `core/` | `CircuitGraph`, `Node`, `Port`, `Connection` |
+| **Model** | `components/` | `CircuitElement`, footprints, port definitions |
+| **Solver** | `layout/` | `LayoutEngine`, placements, wire paths |
+| **Adapter** | `renderers/` | Manim `VGroup` projection from layout output |
+| **Semantic+** | `semantic/`, `protocol/`, `waveform/` | signals, propagation, timing (no Manim) |
+| **Motion** | `animation/` | scenes, highlights, `SignalFlow`, `WaveformSync` |
+
+## Target circuit API
+
+```python
+from manim_engineering.components import Resistor
+from manim_engineering.core import CircuitGraph
+from manim_engineering.layout import LayoutEngine
+from manim_engineering.renderers.minimal import MinimalRenderer
+
+circuit = CircuitGraph()
+r1 = Resistor("R1")
+r2 = Resistor("R2")
+circuit.add(r1)
+circuit.add(r2)
+circuit.connect(r1.get_port("b"), r2.get_port("a"))
+
+layout = LayoutEngine().solve(circuit, {"R1": r1, "R2": r2})
+scene = MinimalRenderer().render_circuit(circuit, layout, {"R1": r1, "R2": r2})
+```
+
+`Pin` / `get_pin` / `attach_to` / `render_layout` remain as backward-compatible aliases.
+
+## Extended layer diagram (animation + semantic)
 
 ```text
 ┌─────────────────────────────────────────┐
@@ -10,27 +64,21 @@ Human-readable layer map. Enforced rules: [`.cursor/rules/00-foundation.md`](../
 ├─────────────────────────────────────────┤
 │  renderers/   geometry, symbols, theme    │
 ├─────────────────────────────────────────┤
-│  components/  CircuitElement, pins        │
+│  components/  CircuitElement, layout hints│
 │  layout/      routing, placement          │
 ├─────────────────────────────────────────┤
-│  semantic/    topology, signals, state  │
+│  core/        topology graph              │
+│  semantic/    signals, state, propagation │
 │  protocol/    bus protocols (semantic)    │
 │  waveform/    timing traces (derived)     │
 └─────────────────────────────────────────┘
 ```
 
-**Dependency direction** (lower must not import upper):
-
-```text
-semantic → component → rendering → animation
-```
-
-`layout/`, `protocol/`, `waveform/` sit adjacent to semantic/component; they must not import `animation/` or Manim scenes.
-
-## Directory map (target)
+## Directory map
 
 ```text
 src/manim_engineering/
+    core/              # graph model only
     semantic/
     components/
         passive/
@@ -43,26 +91,11 @@ src/manim_engineering/
     waveform/
     renderers/
         minimal/
-        ieee/          # later
-        iec/           # later
     animation/
-        signal/
-        focus/
-        timing/
-        protocol/
 
 examples/
-    basics/
-    analog/
-    digital/
-    protocol/
-    waveform/
-
 tests/
-    semantic/
-    components/
-    renderers/
-    animation/
+    core/
     architecture/
 ```
 
@@ -70,10 +103,12 @@ tests/
 
 | Pattern | Why |
 |---------|-----|
+| `core` imports Manim or renderers | Model stays pure |
 | `semantic` imports Manim | Geometry belongs in renderers |
 | `component` owns `scene.play` | Scenes orchestrate |
 | `signal.color = ...` | Theme belongs in renderer |
 | `NMOS(renderer="ieee")` | Renderer selection external |
+| Layout logic inside `renderers/` | Use `LayoutEngine` output |
 | Geometry-based connectivity | Topology must be explicit |
 
 ## Scenes

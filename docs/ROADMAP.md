@@ -2,7 +2,7 @@
 
 Phased plan for long-running implementation. Each phase completes with **tests + one minimal example** before the next.
 
-**Status**: Phase 8 complete — example library layout, per-directory READMEs, master index. Next: backlog (IEC renderer, analog examples, UART, gate components).
+**Status**: Phase 8 complete — example library layout, per-directory READMEs, master index. **3-layer refactor complete** (`core/` graph model, `LayoutEngine.solve`, `MinimalRenderer.render_circuit`, `Port` API with `Pin` aliases). Next: backlog (IEC renderer, analog examples, UART, gate components).
 
 ---
 
@@ -184,6 +184,15 @@ Deliverables:
 2. Unit tests (+ regression if bugfix)
 3. Minimal example under `examples/`
 4. No new rule violations (see `10-engineering-standards.md`)
+
+### 3-layer refactor (complete)
+
+- [x] `core/` — `CircuitGraph`, `Node`, `Port`, `Connection` (topology only)
+- [x] `CircuitGraph.add(element)`, `connect(port_a, port_b)`
+- [x] `LayoutEngine.solve` alias; layout stays Manim-free
+- [x] `MinimalRenderer.render_circuit(circuit, layout, elements)`
+- [x] `Pin` / `get_pin` / `attach_to` backward-compatible aliases
+- [x] Architecture import tests include `core/` layer
 
 ### Suggested next action
 

@@ -30,9 +30,7 @@ def test_transfer_is_deterministic() -> None:
         binding = UARTBinding.create_bus(CircuitGraph())
         result = UARTController(binding).transmit_byte(0x5A)
         levels = tuple(
-            r.new_value.level
-            for r in binding.tx.propagation_history
-            if r.new_value is not None
+            r.new_value.level for r in binding.tx.propagation_history if r.new_value is not None
         )
         return (len(result.steps), len(result.timing_events), len(levels))
 
@@ -68,9 +66,7 @@ def test_step_fsm_sequence() -> None:
 def test_bit_index_metadata_lsb_first() -> None:
     binding = _binding()
     result = UARTController(binding).transmit_byte(0xAA)
-    data_events = [
-        e for e in result.timing_events if e.metadata.get("phase") == 1.0
-    ]
+    data_events = [e for e in result.timing_events if e.metadata.get("phase") == 1.0]
     assert len(data_events) == 8
     indices = [int(e.metadata["bit_index"]) for e in data_events]
     assert indices == list(range(8))
