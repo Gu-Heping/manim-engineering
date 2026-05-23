@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import pytest
-
 from examples.protocol.spi_byte_transfer import build_spi_fixture as spi_fixture
+
 from manim_engineering.animation.scene import resolve_scene_camera
 from manim_engineering.renderers.minimal import WaveformPanelRenderer
 

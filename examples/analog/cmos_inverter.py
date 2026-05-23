@@ -37,7 +37,7 @@ Render: ``manim -qh examples/analog/cmos_inverter.py CMOSInverterDemo``
 
 from __future__ import annotations
 
-from manim_engineering.components import VCC, Ground, InputDriver, NMOS, PMOS
+from manim_engineering.components import NMOS, PMOS, VCC, Ground, InputDriver
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.layout.types import Point2D
@@ -48,10 +48,10 @@ from manim_engineering.semantic.teaching_edges import record_falling_edge, recor
 # All five MOSFET/rail right-side pins share x=0.5 so wires form a single
 # vertical bus; in_drv sits to the left at the midpoint between the two gates.
 INVERTER_OVERRIDES: dict[str, Point2D] = {
-    "vcc1":   Point2D(0.3, 3.0),
-    "pm1":    Point2D(-0.5, 2.0),
-    "nm1":    Point2D(-0.5, 0.2),
-    "gnd1":   Point2D(0.3, -0.2),
+    "vcc1": Point2D(0.3, 3.0),
+    "pm1": Point2D(-0.5, 2.0),
+    "nm1": Point2D(-0.5, 0.2),
+    "gnd1": Point2D(0.3, -0.2),
     "in_drv": Point2D(-3.0, 1.4),
 }
 
@@ -128,8 +128,7 @@ def main() -> None:
     )
     for placement in layout.placements:
         print(
-            f"{placement.element_id}: "
-            f"origin=({placement.origin.x:.3f}, {placement.origin.y:.3f})"
+            f"{placement.element_id}: origin=({placement.origin.x:.3f}, {placement.origin.y:.3f})"
         )
     for label, sig in signals.items():
         last = sig.propagation_history[-1]
@@ -141,7 +140,7 @@ if __name__ == "__main__":
 
 
 try:
-    from manim import DOWN, UP, FadeIn, FadeOut, LaggedStart, Scene, Text, VGroup
+    from manim import DOWN, FadeIn, FadeOut, LaggedStart, Scene, Text, VGroup
 
     from manim_engineering.animation import (
         BEAT_GAP,

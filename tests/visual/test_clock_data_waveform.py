@@ -13,9 +13,7 @@ from hashing import dhash_hex, hamming_hex, layout_waveform_geometry_digest
 
 _GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 _GOLDEN_NAME = "clock_data_waveform.dhash.txt"
-_EXAMPLE = (
-    Path(__file__).resolve().parents[2] / "examples" / "basics" / "clock_data_waveform.py"
-)
+_EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / "basics" / "clock_data_waveform.py"
 
 
 def _load_module():

@@ -5,8 +5,8 @@ from __future__ import annotations
 import numpy as np
 from manim import VMobject
 
-from manim_engineering.layout.types import LayoutResult, Point2D, WirePath
 from manim_engineering.core.graph import CircuitGraph
+from manim_engineering.layout.types import LayoutResult, Point2D, WirePath
 
 
 def connection_id_for_pins(

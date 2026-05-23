@@ -121,8 +121,7 @@ class LayoutEngine:
         )
 
         placement_by_id = {
-            placement.element_id: placement
-            for placement in (*grid_placements, *manual_placements)
+            placement.element_id: placement for placement in (*grid_placements, *manual_placements)
         }
         placements = tuple(placement_by_id[element.element_id] for element in ordered_elements)
 

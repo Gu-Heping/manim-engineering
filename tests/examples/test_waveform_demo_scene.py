@@ -188,7 +188,7 @@ def test_caption_track_ignores_empty_caption() -> None:
 
 
 def test_caption_track_removes_previous_mobject() -> None:
-    from manim import FadeIn, Scene, Text
+    from manim import Scene, Text
 
     fixture = _minimal_fixture()
     sig = fixture.signals[0]

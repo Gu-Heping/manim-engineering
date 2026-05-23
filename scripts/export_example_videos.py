@@ -23,12 +23,42 @@ os.environ.setdefault("ME_SUPPRESS_FADE", "1")
 
 # (output stem, example path relative to examples, scene class, manim quality flag)
 SCENES: tuple[tuple[str, str, str, str], ...] = (
-    ("acceptance_three_layer", "basics/acceptance_three_layer.py", "AcceptanceScene", "medium_quality"),
-    ("clock_data_waveform", "basics/clock_data_waveform.py", "ClockDataWaveformDemo", "medium_quality"),
-    ("signal_chain_demo", "basics/signal_chain_demo.py", "SignalChainDemo", "medium_quality"),
-    ("governance_acceptance", "basics/governance_acceptance.py", "GovernanceAcceptanceScene", "medium_quality"),
-    ("spi_byte_transfer", "protocol/spi_byte_transfer.py", "SPIByteTransferDemo", "medium_quality"),
-    ("uart_byte_transfer", "protocol/uart_byte_transfer.py", "UARTByteTransferDemo", "medium_quality"),
+    (
+        "acceptance_three_layer",
+        "basics/acceptance_three_layer.py",
+        "AcceptanceScene",
+        "medium_quality",
+    ),
+    (
+        "clock_data_waveform",
+        "basics/clock_data_waveform.py",
+        "ClockDataWaveformDemo",
+        "medium_quality",
+    ),
+    (
+        "signal_chain_demo",
+        "basics/signal_chain_demo.py",
+        "SignalChainDemo",
+        "medium_quality",
+    ),
+    (
+        "governance_acceptance",
+        "basics/governance_acceptance.py",
+        "GovernanceAcceptanceScene",
+        "medium_quality",
+    ),
+    (
+        "spi_byte_transfer",
+        "protocol/spi_byte_transfer.py",
+        "SPIByteTransferDemo",
+        "medium_quality",
+    ),
+    (
+        "uart_byte_transfer",
+        "protocol/uart_byte_transfer.py",
+        "UARTByteTransferDemo",
+        "medium_quality",
+    ),
     ("cmos_inverter", "analog/cmos_inverter.py", "CMOSInverterDemo", "high_quality"),
 )
 
@@ -94,10 +124,7 @@ def main() -> None:
                 "",
                 "| File | Source |",
                 "|------|--------|",
-                *(
-                    f"| `{stem}.mp4` | `examples/{rel}` → `{cls}` |"
-                    for stem, rel, cls, _ in SCENES
-                ),
+                *(f"| `{stem}.mp4` | `examples/{rel}` → `{cls}` |" for stem, rel, cls, _ in SCENES),
                 "",
             ]
         )

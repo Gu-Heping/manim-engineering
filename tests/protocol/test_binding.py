@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from manim_engineering.components import SPIMaster, SPISlave
-from manim_engineering.protocol.spi import SPIBusBinding
 from manim_engineering.core import CircuitGraph
+from manim_engineering.protocol.spi import SPIBusBinding
 
 
 def test_from_graph_nodes_connects_four_lines() -> None:

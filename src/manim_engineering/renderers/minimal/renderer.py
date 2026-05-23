@@ -577,4 +577,3 @@ def _channel_arrow(channel_x: float, y: float, w: float, *, inward: bool) -> Pol
         fill_color=theme.color_for_signal_type(SignalType.ANALOG),
         fill_opacity=1.0,
     )
-

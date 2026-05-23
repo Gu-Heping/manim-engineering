@@ -6,7 +6,7 @@ physics; visual symbol coverage lives in tests/renderers/test_minimal_renderer.
 
 from __future__ import annotations
 
-from manim_engineering.components import InputDriver, NMOS, PMOS
+from manim_engineering.components import NMOS, PMOS, InputDriver
 from manim_engineering.core import CircuitGraph, PinDirection, SignalType
 
 

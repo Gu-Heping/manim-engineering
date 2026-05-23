@@ -13,9 +13,7 @@ from hashing import dhash_hex, hamming_hex
 
 _GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 _GOLDEN_NAME = "uart_byte_transfer.dhash.txt"
-_EXAMPLE = (
-    Path(__file__).resolve().parents[2] / "examples" / "protocol" / "uart_byte_transfer.py"
-)
+_EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / "protocol" / "uart_byte_transfer.py"
 
 
 def _load_module():

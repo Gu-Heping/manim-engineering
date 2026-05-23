@@ -16,9 +16,9 @@ from dataclasses import dataclass
 from manim_engineering.animation.beat import play_propagation_beat
 from manim_engineering.animation.focus import dim_topology, restore_topology
 from manim_engineering.animation.pacing import BEAT_CAPTION_HOLD, BEAT_DURATION, BEAT_GAP
+from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
 from manim_engineering.renderers.minimal.immutable import TopologyProjection
-from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.semantic.propagation import PropagationRecord
 from manim_engineering.semantic.signal import Signal
 from manim_engineering.waveform.layout import WaveformPanelSpec

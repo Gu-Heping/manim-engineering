@@ -16,9 +16,13 @@ DHASH_BITS = 64
 
 def dhash_hex(image_path: Path, hash_size: int = 8) -> str:
     """Difference hash (dHash) as 16-char hex (64 bits)."""
-    img = Image.open(image_path).convert("L").resize(
-        (hash_size + 1, hash_size),
-        Image.Resampling.LANCZOS,
+    img = (
+        Image.open(image_path)
+        .convert("L")
+        .resize(
+            (hash_size + 1, hash_size),
+            Image.Resampling.LANCZOS,
+        )
     )
     pixels = list(img.get_flattened_data())
     bits: list[str] = []
@@ -87,6 +91,7 @@ def layout_waveform_geometry_digest(layout, bundle) -> str:
                 placement.bounds.height,
             ]
         )
+
     def _wire_sort_key(wire) -> tuple[float, ...]:
         if not wire.points:
             return ()

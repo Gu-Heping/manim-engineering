@@ -19,6 +19,7 @@ def _suppress_scene_final_fade(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     monkeypatch.setenv("ME_SUPPRESS_FADE", "1")
 
+
 try:
     import manim  # noqa: F401
 

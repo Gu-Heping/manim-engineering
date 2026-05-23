@@ -46,12 +46,8 @@ def test_resolve_topology_camera_fits_scene_bbox() -> None:
     assert camera.frame_height >= min_h - 1e-9
 
 
-@pytest.mark.parametrize(
-    "pixel_width,pixel_height", [(1280, 720), (1920, 1080), (854, 480)]
-)
-def test_resolve_topology_camera_respects_pixel_aspect(
-    pixel_width: int, pixel_height: int
-) -> None:
+@pytest.mark.parametrize("pixel_width,pixel_height", [(1280, 720), (1920, 1080), (854, 480)])
+def test_resolve_topology_camera_respects_pixel_aspect(pixel_width: int, pixel_height: int) -> None:
     layout = _two_resistor_layout()
     camera = resolve_topology_scene_camera(
         layout,
@@ -114,14 +110,10 @@ def test_configure_topology_camera_mutates_scene_camera(monkeypatch: Any) -> Non
         pixel_width = 1920
         pixel_height = 1080
 
-    import manim_engineering.animation.scene as scene_mod
-
     def _fake_import():
         return _Cfg
 
-    monkeypatch.setattr(
-        "manim.config", _Cfg, raising=False
-    )
+    monkeypatch.setattr("manim.config", _Cfg, raising=False)
     camera = configure_topology_scene_camera(
         scene,
         layout,

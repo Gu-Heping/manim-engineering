@@ -32,7 +32,7 @@ edge) and the channel is not crossed by a horizontal segment at gate height
 
 from __future__ import annotations
 
-from manim_engineering.components import Capacitor, InputDriver, NMOS, Resistor
+from manim_engineering.components import NMOS, Capacitor, InputDriver, Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine, Point2D
 from manim_engineering.semantic import LogicLevel, LogicState, Signal
@@ -100,8 +100,7 @@ def main() -> None:
     print(f"layout occupancy: {layout.occupancy_ratio:.1%}")
     for placement in layout.placements:
         print(
-            f"{placement.element_id}: "
-            f"origin=({placement.origin.x:.3f}, {placement.origin.y:.3f})"
+            f"{placement.element_id}: origin=({placement.origin.x:.3f}, {placement.origin.y:.3f})"
         )
 
 

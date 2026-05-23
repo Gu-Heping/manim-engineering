@@ -9,9 +9,7 @@ from conftest import assert_or_update_golden_text
 from hashing import layout_waveform_geometry_digest
 
 _GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
-_EXAMPLE = (
-    Path(__file__).resolve().parents[2] / "examples" / "protocol" / "spi_byte_transfer.py"
-)
+_EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / "protocol" / "spi_byte_transfer.py"
 
 
 def _load_module():

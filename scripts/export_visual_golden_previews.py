@@ -128,12 +128,8 @@ def main() -> None:
         "|-----|----------------|",
     ]
     for stem, _, _ in DHASH_SCENES:
-        lines.append(
-            f"| `{stem}_last_frame.png` | `{stem}.dhash.txt`, `{stem}.geometry.txt` |"
-        )
-    lines.append(
-        "| `rc_step_response_layout_preview.png` | `rc_step_response.geometry.txt` only |"
-    )
+        lines.append(f"| `{stem}_last_frame.png` | `{stem}.dhash.txt`, `{stem}.geometry.txt` |")
+    lines.append("| `rc_step_response_layout_preview.png` | `rc_step_response.geometry.txt` only |")
     lines.append("")
     lines.append("## Stored hashes (for cross-check)")
     lines.append("")

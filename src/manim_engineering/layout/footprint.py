@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from manim_engineering.layout.types import ComponentPlacement, LayoutResult, Point2D, Segment
+from manim_engineering.layout.types import ComponentPlacement, LayoutResult, Segment
 
 _INTERIOR_EPS = 1e-4
 

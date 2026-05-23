@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from manim_engineering.components import Resistor
+from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.layout.aabb import (
     aabb_overlap,
@@ -12,7 +13,6 @@ from manim_engineering.layout.aabb import (
 )
 from manim_engineering.layout.routing import points_to_segments
 from manim_engineering.layout.types import Segment
-from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.semantic import LogicLevel, LogicState, Signal
 from manim_engineering.waveform import (
     MIN_WAVEFORM_GAP,

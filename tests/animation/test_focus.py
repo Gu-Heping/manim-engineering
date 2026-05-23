@@ -20,9 +20,7 @@ from manim_engineering.renderers.minimal.immutable import TopologyProjection
 
 def _filled_vmob() -> VMobject:
     mob = VMobject()
-    mob.set_points_as_corners(
-        [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0]]
-    )
+    mob.set_points_as_corners([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0]])
     mob.set_stroke(opacity=1.0)
     return mob
 
@@ -59,8 +57,8 @@ def test_propagation_sequence_dim_inactive_restores_between_beats() -> None:
     """Sequence with ``dim_inactive=True`` must dim *after* every beat except the last."""
     from manim_engineering.animation import BEAT_DURATION, BeatSpec, PropagationSequence
     from manim_engineering.components import Resistor
-    from manim_engineering.layout import LayoutEngine
     from manim_engineering.core import CircuitGraph, SignalType
+    from manim_engineering.layout import LayoutEngine
     from manim_engineering.semantic import LogicLevel, LogicState, Signal
 
     graph = CircuitGraph()
@@ -126,18 +124,12 @@ def test_dim_topology_does_not_mutate_points() -> None:
     component_points_before = [
         mob.get_all_points().copy() for mob in projection.components.submobjects
     ]
-    wire_points_before = [
-        mob.get_all_points().copy() for mob in projection.wires.submobjects
-    ]
+    wire_points_before = [mob.get_all_points().copy() for mob in projection.wires.submobjects]
 
     dim_topology(projection)
 
-    for before, mob in zip(
-        component_points_before, projection.components.submobjects, strict=True
-    ):
+    for before, mob in zip(component_points_before, projection.components.submobjects, strict=True):
         assert mob.get_all_points().shape == before.shape
         assert (mob.get_all_points() == before).all()
-    for before, mob in zip(
-        wire_points_before, projection.wires.submobjects, strict=True
-    ):
+    for before, mob in zip(wire_points_before, projection.wires.submobjects, strict=True):
         assert (mob.get_all_points() == before).all()

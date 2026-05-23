@@ -11,9 +11,9 @@ from manim import Line
 
 from manim_engineering.animation import SignalFlow
 from manim_engineering.components import Resistor
+from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.renderers.minimal import ManimRenderer
-from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.semantic import LogicLevel, LogicState, Signal
 
 

@@ -12,9 +12,9 @@ from manim_engineering.animation import BEAT_DURATION, play_propagation_beat
 from manim_engineering.animation.signal_flow import SignalFlow
 from manim_engineering.animation.waveform_sync import WaveformSync
 from manim_engineering.components import Resistor
+from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.renderers.minimal import WaveformPanelRenderer
-from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.semantic import LogicLevel, LogicState, Signal
 from manim_engineering.waveform import derive_bundle_from_signals
 

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from manim_engineering.protocol.spi import SPIBusBinding, SPIController
 from manim_engineering.core import CircuitGraph
+from manim_engineering.protocol.spi import SPIBusBinding, SPIController
 from manim_engineering.semantic.enums import LogicLevel
 from manim_engineering.waveform import derive_bundle_from_signals, level_from_value
 

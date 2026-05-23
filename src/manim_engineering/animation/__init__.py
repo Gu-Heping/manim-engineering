@@ -31,17 +31,17 @@ from manim_engineering.animation.propagation_sequence import (
     PropagationSequence,
 )
 from manim_engineering.animation.purpose import AnimationPurpose
+from manim_engineering.animation.registry import (
+    get_primitive,
+    register_primitive,
+    registered_primitives,
+)
 from manim_engineering.animation.scene import (
     SceneCamera,
     configure_topology_scene_camera,
     configure_waveform_scene_camera,
     resolve_scene_camera,
     resolve_topology_scene_camera,
-)
-from manim_engineering.animation.registry import (
-    get_primitive,
-    register_primitive,
-    registered_primitives,
 )
 from manim_engineering.animation.signal_flow import (
     DEFAULT_PROPAGATION_DURATION,

@@ -140,6 +140,5 @@ def test_deleted_semantic_topology_modules_stay_dead(module: str) -> None:
             if imported == module or imported.startswith(f"{module}."):
                 violations.append(f"{rel}: imports {imported}")
     assert not violations, (
-        f"{module} is a deleted shim; topology lives in core. Violations:\n"
-        + "\n".join(violations)
+        f"{module} is a deleted shim; topology lives in core. Violations:\n" + "\n".join(violations)
     )

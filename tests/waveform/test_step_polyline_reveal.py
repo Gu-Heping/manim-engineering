@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from manim_engineering.core.enums import SignalType
+from manim_engineering.semantic.enums import LogicLevel
 from manim_engineering.waveform.layout import WaveformPanelSpec, step_polyline
 from manim_engineering.waveform.trace import WaveformTrace
-from manim_engineering.semantic.enums import LogicLevel
-from manim_engineering.core.enums import SignalType
 
 
 def _trace() -> WaveformTrace:

@@ -8,9 +8,9 @@ import pytest
 pytest.importorskip("manim")
 
 from manim_engineering.components import Resistor
+from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.renderers.minimal import MinimalRenderer
-from manim_engineering.core import CircuitGraph
 
 
 def _two_resistor_graph() -> tuple[CircuitGraph, Resistor, Resistor]:
@@ -162,7 +162,7 @@ def test_vcc_symbol_stroke_meets_bottom_anchor() -> None:
 
     vcc = VCC("vcc1")
     body = MinimalRenderer().render(vcc).submobjects[0]
-    w, h = vcc.get_bounds().width, vcc.get_bounds().height
+    w, _h = vcc.get_bounds().width, vcc.get_bounds().height
     cx = w * 0.5
     coords = _body_endpoint_coords(body)
     assert (round(cx, 4), 0.0) in coords
@@ -195,7 +195,7 @@ def test_spi_master_pin_labels_outside_body() -> None:
     from manim_engineering.components import SPIMaster
 
     master = SPIMaster("mcu", label="MCU")
-    w, h = master.get_bounds().width, master.get_bounds().height
+    w, _h = master.get_bounds().width, master.get_bounds().height
     mob = MinimalRenderer().render(master)
     pin_texts = [t for t in _all_text_submobjects(mob) if t.text in master.pins]
     assert len(pin_texts) == 4  # clk, mosi, cs left + miso right (slave skips miso)
@@ -221,7 +221,6 @@ def test_uart_port_pin_labels_outside_body() -> None:
 
     port = UARTPort("host", label="HOST")
     mob = MinimalRenderer().render(port)
-    w = port.get_bounds().width
     pin_texts = [t for t in _all_text_submobjects(mob) if t.text in port.pins]
     for label in pin_texts:
         if label.text in ("tx", "rx"):
@@ -253,9 +252,10 @@ def test_spi_master_uses_hollow_interface_outline() -> None:
     assert len(outline.submobjects) == 4
     assert all(isinstance(edge, Line) for edge in outline.submobjects)
     assert outline.submobjects[0].get_stroke_width() == theme.interface_box_stroke_width()
-    assert str(outline.submobjects[0].get_stroke_color()).lower() == str(
-        theme.interface_box_stroke_color()
-    ).lower()
+    assert (
+        str(outline.submobjects[0].get_stroke_color()).lower()
+        == str(theme.interface_box_stroke_color()).lower()
+    )
 
 
 def test_spi_master_no_pin_label_inside_box_interior() -> None:
@@ -288,8 +288,9 @@ def test_interface_labeled_pins_skip_direction_stubs() -> None:
 
 
 def test_stroke_only_refresh_preserves_dimmed_fill() -> None:
-    from manim_engineering.renderers.minimal.labels import label_text, refresh_label_strokes
     from manim import VGroup
+
+    from manim_engineering.renderers.minimal.labels import label_text, refresh_label_strokes
 
     label = label_text("cs", font_size=12, color="#58C4DD")
     group = VGroup(label)
@@ -303,8 +304,9 @@ def test_stroke_only_refresh_preserves_dimmed_fill() -> None:
 
 
 def test_refresh_label_strokes_fixes_glyphs_under_partial_opacity() -> None:
-    from manim_engineering.renderers.minimal.labels import label_text, refresh_label_strokes
     from manim import VGroup
+
+    from manim_engineering.renderers.minimal.labels import label_text, refresh_label_strokes
 
     label = label_text("cs", font_size=12, color="#58C4DD")
     group = VGroup(label)
@@ -320,9 +322,9 @@ def test_refresh_label_strokes_fixes_glyphs_under_partial_opacity() -> None:
 
 def test_fade_in_opacity_on_components_then_normalize_fixes_pin_labels() -> None:
     """Intro ``FadeIn(topology.components)`` leaves white glyph strokes until refreshed."""
+    from manim_engineering.animation.focus import normalize_topology_labels
     from manim_engineering.components import SPIMaster, SPISlave
     from manim_engineering.core import CircuitGraph
-    from manim_engineering.animation.focus import normalize_topology_labels
     from manim_engineering.layout import LayoutConfig, LayoutEngine
     from manim_engineering.renderers.minimal import ManimRenderer
 
@@ -337,11 +339,7 @@ def test_fade_in_opacity_on_components_then_normalize_fixes_pin_labels() -> None
     topology.components.set_opacity(0.0)
     topology.components.set_opacity(1.0)
     normalize_topology_labels(topology)
-    topo_pins = [
-        t
-        for t in _all_text_submobjects(topology.components)
-        if t.text in master.pins
-    ]
+    topo_pins = [t for t in _all_text_submobjects(topology.components) if t.text in master.pins]
     assert topo_pins
     for label in topo_pins:
         for sub in label.get_family():
@@ -368,11 +366,7 @@ def test_dim_topology_keeps_pin_labels_at_dim_opacity() -> None:
     layout = LayoutEngine(LayoutConfig(cell_gap=0.85)).layout(graph, elements)
     topology = ManimRenderer().render_topology(graph, layout, elements)
     dim_topology(topology)
-    topo_pins = [
-        t
-        for t in _all_text_submobjects(topology.components)
-        if t.text in master.pins
-    ]
+    topo_pins = [t for t in _all_text_submobjects(topology.components) if t.text in master.pins]
     assert topo_pins
     for label in topo_pins:
         for sub in label.get_family():
@@ -384,9 +378,9 @@ def test_dim_topology_keeps_pin_labels_at_dim_opacity() -> None:
 
 
 def test_dim_restore_topology_keeps_pin_labels_without_stroke() -> None:
+    from manim_engineering.animation.focus import dim_topology, restore_topology
     from manim_engineering.components import SPIMaster, SPISlave
     from manim_engineering.core import CircuitGraph
-    from manim_engineering.animation.focus import dim_topology, restore_topology
     from manim_engineering.layout import LayoutConfig, LayoutEngine
     from manim_engineering.renderers.minimal import ManimRenderer
 
@@ -400,11 +394,7 @@ def test_dim_restore_topology_keeps_pin_labels_without_stroke() -> None:
     topology = ManimRenderer().render_topology(graph, layout, elements)
     dim_topology(topology)
     restore_topology(topology)
-    topo_pins = [
-        t
-        for t in _all_text_submobjects(topology.components)
-        if t.text in master.pins
-    ]
+    topo_pins = [t for t in _all_text_submobjects(topology.components) if t.text in master.pins]
     assert topo_pins
     for label in topo_pins:
         for sub in label.get_family():

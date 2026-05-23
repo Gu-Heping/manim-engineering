@@ -10,9 +10,7 @@ import pytest
 from hashing import layout_geometry_digest
 
 _GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
-_EXAMPLE = (
-    Path(__file__).resolve().parents[2] / "examples" / "analog" / "rc_step_response.py"
-)
+_EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / "analog" / "rc_step_response.py"
 
 
 def _load_module():

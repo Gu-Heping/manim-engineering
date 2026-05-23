@@ -25,9 +25,9 @@ from manim_engineering.semantic.propagation import (
     apply_level_between_pins,
     propagate_between_pins,
 )
-from manim_engineering.semantic.teaching_edges import record_falling_edge, record_rising_edge
 from manim_engineering.semantic.signal import Signal
 from manim_engineering.semantic.state import LogicState, TimingEvent
+from manim_engineering.semantic.teaching_edges import record_falling_edge, record_rising_edge
 
 __all__ = [
     "Bus",

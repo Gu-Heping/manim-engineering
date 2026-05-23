@@ -19,10 +19,10 @@ from manim_engineering.animation.wires import (
     wire_path_for_connection,
     wire_path_length,
 )
+from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import LayoutResult, Point2D
 from manim_engineering.renderers.minimal import theme
 from manim_engineering.renderers.minimal.immutable import copy_for_animation
-from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.semantic.propagation import PropagationRecord
 from manim_engineering.semantic.signal import Signal
 

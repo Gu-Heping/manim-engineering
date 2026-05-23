@@ -1,6 +1,5 @@
 """Layout layer: placement, routing, spacing (no Manim, no animation)."""
 
-from manim_engineering.layout.footprint import assert_wires_avoid_footprints, wires_avoid_footprints
 from manim_engineering.layout.engine import (
     LayoutConfig,
     LayoutEngine,
@@ -13,6 +12,7 @@ from manim_engineering.layout.exceptions import (
     RoutingError,
     UnknownElementError,
 )
+from manim_engineering.layout.footprint import assert_wires_avoid_footprints, wires_avoid_footprints
 from manim_engineering.layout.grid import layout_bbox, occupancy_ratio, place_on_grid, scene_bbox
 from manim_engineering.layout.placement import placement_order_for_graph
 from manim_engineering.layout.routing import (

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from manim_engineering.layout.types import LayoutResult, Point2D
 from manim_engineering.semantic.enums import LogicLevel
-from manim_engineering.waveform.trace import WaveformSample, WaveformTrace
+from manim_engineering.waveform.trace import WaveformBundle, WaveformSample, WaveformTrace
 
 MIN_WAVEFORM_GAP = 0.35
 

@@ -35,7 +35,9 @@ def _load(name: str, path: Path):
 
 
 @requires_manim
-@pytest.mark.parametrize("name,path,scene_cls", _SCENES, ids=lambda x: x if isinstance(x, str) else "")
+@pytest.mark.parametrize(
+    "name,path,scene_cls", _SCENES, ids=lambda x: x if isinstance(x, str) else ""
+)
 def test_scene_camera_matches_pixel_aspect(name: str, path: Path, scene_cls: str) -> None:
     """After ``construct`` runs, scene.camera frame aspect == pixel aspect."""
     pytest.importorskip("manim")

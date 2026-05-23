@@ -6,10 +6,10 @@ import pytest
 
 pytest.importorskip("manim")
 
-from manim import BLUE_C, GREEN_C, GREY_C, ORANGE, RED_C, TEAL_C, YELLOW_C
+from manim import BLUE_C, GREEN_C, ORANGE, RED_C, TEAL_C, YELLOW_C
 
-from manim_engineering.renderers.minimal import theme
 from manim_engineering.core.enums import SignalType
+from manim_engineering.renderers.minimal import theme
 
 
 def test_semantic_color_constants_match_visual_theme_doc() -> None:

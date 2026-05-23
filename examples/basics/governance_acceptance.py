@@ -49,9 +49,9 @@ try:
     from manim_engineering.animation import (
         BEAT_DURATION,
         BEAT_GAP,
-        BeatSpec,
         INTRO_PAUSE,
         OUTRO_PAUSE,
+        BeatSpec,
         PropagationSequence,
         WaveformRevealTracker,
         configure_waveform_scene_camera,
@@ -80,9 +80,7 @@ try:
             waveform_panel, panel_spec = panel_renderer.render_with_layout(
                 bundle, layout, idle_only=True
             )
-            reveal = WaveformRevealTracker(
-                waveform_panel, bundle, panel_spec, panel_renderer
-            )
+            reveal = WaveformRevealTracker(waveform_panel, bundle, panel_spec, panel_renderer)
             content = VGroup(topology.components, topology.wires, waveform_panel)
             self.add(content)
             configure_waveform_scene_camera(self, layout, panel_spec, bundle)

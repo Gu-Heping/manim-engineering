@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from manim import Line, VGroup
 
 from manim_engineering.layout.types import LayoutResult, Point2D
 from manim_engineering.renderers.minimal import theme
 from manim_engineering.renderers.minimal.labels import label_text
-from dataclasses import replace
-
 from manim_engineering.waveform.layout import (
     MIN_WAVEFORM_GAP,
     WaveformPanelSpec,

@@ -71,8 +71,7 @@ def test_core_owns_all_topology_names() -> None:
 
     for name in TOPOLOGY_NAMES:
         assert hasattr(core, name), (
-            f"core is missing {name!r}; topology types must live in core "
-            f"and only there."
+            f"core is missing {name!r}; topology types must live in core and only there."
         )
 
 
@@ -111,5 +110,5 @@ def test_no_topology_test_files_remain_in_semantic() -> None:
     assert not offenders, (
         "Files in tests/semantic/ that do not import from "
         "manim_engineering.semantic are topology tests; move them to "
-        f"tests/core/:\n  - " + "\n  - ".join(offenders)
+        "tests/core/:\n  - " + "\n  - ".join(offenders)
     )

@@ -16,7 +16,6 @@ from manim_engineering.animation import BEAT_DURATION, BeatSpec
 from manim_engineering.components import Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.renderers.minimal import WaveformPanelRenderer
 from manim_engineering.semantic import LogicLevel, LogicState, Signal
 from manim_engineering.semantic.teaching_edges import record_falling_edge, record_rising_edge
 from manim_engineering.waveform import derive_bundle_from_signals
@@ -54,7 +53,6 @@ def main() -> None:
     print(f"traces: {[t.signal_name for t in bundle.traces]}")
     print(f"connections: {len(graph.connections)}")
     print(f"clock transitions: {len(clock.propagation_history)}")
-    panel_spec = WaveformPanelRenderer().panel_spec_for_layout(layout, bundle)
     print(f"beat_duration={BEAT_DURATION}s, traces={[t.signal_name for t in bundle.traces]}")
 
 

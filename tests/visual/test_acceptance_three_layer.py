@@ -13,9 +13,7 @@ from hashing import dhash_hex, hamming_hex, stable_geometry_hash_lines_only
 
 _GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 _GOLDEN_NAME = "acceptance_three_layer.dhash.txt"
-_EXAMPLE = (
-    Path(__file__).resolve().parents[2] / "examples" / "basics" / "acceptance_three_layer.py"
-)
+_EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / "basics" / "acceptance_three_layer.py"
 
 
 def _load_acceptance_module():

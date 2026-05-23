@@ -10,8 +10,8 @@ from manim_engineering.animation.wires import (
     wire_path_for_connection,
 )
 from manim_engineering.components import Resistor
-from manim_engineering.layout import LayoutEngine
 from manim_engineering.core import CircuitGraph
+from manim_engineering.layout import LayoutEngine
 
 
 def test_connection_id_for_pins() -> None:

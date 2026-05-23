@@ -7,9 +7,7 @@ from pathlib import Path
 
 _PIN_EPSILON = 1e-6
 
-_EXAMPLE = (
-    Path(__file__).resolve().parents[2] / "examples" / "basics" / "governance_acceptance.py"
-)
+_EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / "basics" / "governance_acceptance.py"
 
 
 def _load_fixture():

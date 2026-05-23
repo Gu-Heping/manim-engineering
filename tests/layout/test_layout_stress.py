@@ -8,6 +8,7 @@ import numpy as np
 
 from manim_engineering.components import Capacitor, Resistor
 from manim_engineering.components.types import Bounds
+from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import (
     OCCUPANCY_TARGET_MAX,
     OCCUPANCY_TARGET_MIN,
@@ -16,7 +17,6 @@ from manim_engineering.layout import (
 )
 from manim_engineering.layout.aabb import aabb_overlap, segment_bbox
 from manim_engineering.layout.types import DEFAULT_NOMINAL_FRAME
-from manim_engineering.core import CircuitGraph
 
 # Five-passive chain: widened nominal frame targets 60–75% (see place_on_grid span).
 _STRESS_NOMINAL = Bounds(width=8.0, height=0.55)
@@ -93,16 +93,13 @@ def test_layout_stress_wire_segments_no_illegal_overlap() -> None:
                 or box_b.min_y == box_a.max_y
             )
             assert shared_corner, (
-                "wire segment AABBs overlap without shared endpoint "
-                f"({box_a}, {box_b})"
+                f"wire segment AABBs overlap without shared endpoint ({box_a}, {box_b})"
             )
 
 
 def test_layout_stress_wire_replay_hash_deterministic() -> None:
     _graph, elements, layout_a = _five_passive_chain_fixture()
-    layout_b = LayoutEngine(
-        LayoutConfig(nominal_frame=_STRESS_NOMINAL)
-    ).layout(_graph, elements)
+    layout_b = LayoutEngine(LayoutConfig(nominal_frame=_STRESS_NOMINAL)).layout(_graph, elements)
     digest_a = _wire_replay_digest(layout_a)
     digest_b = _wire_replay_digest(layout_b)
     assert digest_a == digest_b

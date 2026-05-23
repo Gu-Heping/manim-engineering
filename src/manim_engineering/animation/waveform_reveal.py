@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from manim import Line, VGroup
+from manim import VGroup
 
 from manim_engineering.renderers.minimal.waveform import WaveformPanelRenderer
 from manim_engineering.semantic.signal import Signal
@@ -25,9 +25,7 @@ class WaveformRevealTracker:
         self._spec = spec
         self._renderer = renderer or WaveformPanelRenderer()
         self._axis_index = len(bundle.traces)
-        self._revealed: dict[str, int] = {
-            trace.signal_name: -1 for trace in bundle.traces
-        }
+        self._revealed: dict[str, int] = {trace.signal_name: -1 for trace in bundle.traces}
 
     @property
     def panel(self) -> VGroup:

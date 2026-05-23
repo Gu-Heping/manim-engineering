@@ -44,18 +44,18 @@ try:
         sys.path.insert(0, str(_EXAMPLES))
 
     from _shared import CaptionTrack  # noqa: E402
+    from manim import FadeIn, Scene
+
     from manim_engineering.animation import (
         BEAT_DURATION,
+        HUD_Z_INDEX,
         BeatSpec,
         PropagationSequence,
         configure_topology_scene_camera,
         subtitle_text,
     )
-    from manim_engineering.animation import HUD_Z_INDEX
     from manim_engineering.renderers.minimal import ManimRenderer
     from manim_engineering.waveform.layout import hud_text_y
-
-    from manim import FadeIn, Scene
 
     class AcceptanceScene(Scene):
         """RC edge path with two propagation beats (charge plate + return)."""

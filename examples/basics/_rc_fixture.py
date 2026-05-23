@@ -7,7 +7,7 @@ from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.layout.types import LayoutResult
 from manim_engineering.semantic import LogicLevel, LogicState, Signal
-from manim_engineering.semantic.teaching_edges import record_falling_edge, record_rising_edge
+from manim_engineering.semantic.teaching_edges import record_rising_edge
 from manim_engineering.waveform import derive_bundle_from_signals
 from manim_engineering.waveform.trace import WaveformBundle
 

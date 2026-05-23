@@ -10,8 +10,8 @@ from manim_engineering.animation.layers import PROPAGATION_Z_INDEX, PULSE_Z_INDE
 from manim_engineering.animation.pacing import BEAT_DURATION, OVERLAY_FADE_OUT
 from manim_engineering.animation.signal_flow import SignalFlow
 from manim_engineering.animation.waveform_sync import WaveformSync
-from manim_engineering.layout.types import LayoutResult
 from manim_engineering.core.graph import CircuitGraph
+from manim_engineering.layout.types import LayoutResult
 from manim_engineering.semantic.propagation import PropagationRecord
 from manim_engineering.semantic.signal import Signal
 from manim_engineering.waveform.layout import WaveformPanelSpec

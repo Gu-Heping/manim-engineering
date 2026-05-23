@@ -5,9 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from manim_engineering.core.enums import SignalType
-from manim_engineering.semantic.enums import PropagationState, SignalDirection
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.core.port import Pin
+from manim_engineering.semantic.enums import PropagationState, SignalDirection
 from manim_engineering.semantic.propagation import PropagationRecord, propagate_between_pins
 from manim_engineering.semantic.state import LogicState
 

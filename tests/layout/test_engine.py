@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from manim_engineering.components import Resistor
+from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import (
     OCCUPANCY_TARGET_MAX,
     OCCUPANCY_TARGET_MIN,
@@ -13,7 +14,6 @@ from manim_engineering.layout import (
     UnknownElementError,
 )
 from manim_engineering.layout.types import DEFAULT_NOMINAL_FRAME, Point2D
-from manim_engineering.core import CircuitGraph
 
 
 def _two_resistor_graph() -> tuple[CircuitGraph, Resistor, Resistor]:

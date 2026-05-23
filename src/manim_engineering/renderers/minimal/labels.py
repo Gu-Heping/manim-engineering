@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Literal
 
 import numpy as np
-from manim import ManimColor, Mobject, Text, VMobject
+from manim import ManimColor, Mobject, Text
 
 # Nets are pushed below component bodies; glyph paths must stay on top at pin rows.
 WIRE_Z_INDEX = -1

@@ -37,9 +37,9 @@ to ``sys.path`` and import ``_shared`` by bare name.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Mapping
 
 from manim import FadeIn, FadeOut, LaggedStart, Scene, Text, VGroup
 
@@ -168,8 +168,8 @@ def capture_camera_frame(scene: Scene, path: Path) -> None:
     if hasattr(frame, "save"):
         frame.save(path)
         return
-    from PIL import Image
     import numpy as np
+    from PIL import Image
 
     Image.fromarray(np.asarray(frame)).save(path)
 

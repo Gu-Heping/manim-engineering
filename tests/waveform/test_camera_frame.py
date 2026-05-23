@@ -6,7 +6,9 @@ import pytest
 
 pytest.importorskip("manim")
 
-from examples.protocol.spi_byte_transfer import SPI_SUBTITLE_BAND, build_spi_fixture as build_fixture
+from examples.protocol.spi_byte_transfer import SPI_SUBTITLE_BAND
+from examples.protocol.spi_byte_transfer import build_spi_fixture as build_fixture
+
 from manim_engineering.animation.pacing import subtitle_text
 from manim_engineering.animation.scene import resolve_scene_camera
 from manim_engineering.renderers.minimal import WaveformPanelRenderer
@@ -14,7 +16,6 @@ from manim_engineering.waveform import (
     camera_frame_center,
     frame_size_for_pixel_aspect,
     hud_text_y,
-    time_scale_for_bundle,
 )
 from manim_engineering.waveform.layout import step_polyline
 

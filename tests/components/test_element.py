@@ -97,7 +97,7 @@ def test_input_driver_fanouts_to_two_gates() -> None:
     IN pins (gates). Guards the canonical inverter topology against accidental
     re-tightening of the connection-direction rules.
     """
-    from manim_engineering.components import InputDriver, NMOS, PMOS
+    from manim_engineering.components import NMOS, PMOS, InputDriver
 
     graph = CircuitGraph()
     drv = InputDriver("in1")
