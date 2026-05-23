@@ -4,27 +4,30 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from manim import Animation, AnimationGroup, Dot, Indicate
+from manim import Animation, AnimationGroup, ShowPassingFlash
 
 from manim_engineering.animation.base import AnimationPlan, AnimationPrimitive
+from manim_engineering.animation.layers import TIMING_Z_INDEX
+from manim_engineering.animation.pacing import BEAT_DURATION
 from manim_engineering.animation.purpose import AnimationPurpose
 from manim_engineering.animation.registry import register_primitive
-from manim_engineering.animation.signal_flow import DEFAULT_PROPAGATION_DURATION
+from manim_engineering.animation.wires import path_mobject_from_points
 from manim_engineering.renderers.minimal import theme
+from manim_engineering.renderers.minimal.immutable import copy_for_animation
 from manim_engineering.semantic.signal import Signal
-from manim_engineering.waveform.layout import WaveformPanelSpec, transition_point_for_beat
+from manim_engineering.waveform.layout import WaveformPanelSpec, transition_segment_for_beat
 from manim_engineering.waveform.trace import WaveformBundle, WaveformTrace
 
-DEFAULT_TIMING_DURATION = DEFAULT_PROPAGATION_DURATION
+DEFAULT_TIMING_DURATION = BEAT_DURATION
 
 
 @register_primitive("waveform_sync")
 class WaveformSync(AnimationPrimitive["WaveformSync"]):
     """
-    Highlight trace transitions on the same beat as :class:`SignalFlow`.
+    Highlight trace edge transitions on the same beat as :class:`SignalFlow`.
 
-    Consumes a :class:`WaveformBundle` derived from semantic signals; does not
-    propagate or mutate topology.
+    Uses detached segment copies with ``ShowPassingFlash``; does not mutate
+    renderer waveform geometry.
     """
 
     purpose = AnimationPurpose.TIMING
@@ -37,12 +40,14 @@ class WaveformSync(AnimationPrimitive["WaveformSync"]):
         panel_spec: WaveformPanelSpec,
         beat: int | None = None,
         duration: float = DEFAULT_TIMING_DURATION,
+        active_signal: Signal | None = None,
     ) -> None:
         super().__init__(duration=duration)
         self._bundle = bundle
         self._signals = tuple(signals)
         self._panel_spec = panel_spec
         self._beat = beat
+        self._active_signal = active_signal
 
     @property
     def bundle(self) -> WaveformBundle:
@@ -58,24 +63,45 @@ class WaveformSync(AnimationPrimitive["WaveformSync"]):
 
     def build(self) -> AnimationPlan:
         beat = self.resolved_beat()
-        overlays: list[Dot] = []
         animations: list[Animation] = []
+        propagation_overlays: list[object] = []
 
         for trace_index, trace in enumerate(self._bundle.traces):
-            point = transition_point_for_beat(trace, beat, self._panel_spec, trace_index)
-            if point is None:
+            if self._active_signal is not None:
+                if trace.signal_name != self._active_signal.name:
+                    continue
+            segment = transition_segment_for_beat(
+                trace,
+                beat,
+                self._panel_spec,
+                trace_index,
+            )
+            if segment is None or len(segment) < 2:
                 continue
-            marker = Dot(radius=0.05, color=_trace_color(trace))
-            marker.move_to([point.x, point.y, 0.0])
-            overlays.append(marker)
-            animations.append(Indicate(marker, color=theme.WARNING_COLOR, scale_factor=1.4))
+            path = path_mobject_from_points(segment)
+            path.set_stroke(
+                color=_trace_color(trace),
+                width=theme.WAVEFORM_STROKE_WIDTH,
+                opacity=1.0,
+            )
+            flash_target = copy_for_animation(path)
+            flash_target.set_z_index(TIMING_Z_INDEX)
+            propagation_overlays.append(flash_target)
+            animations.append(
+                ShowPassingFlash(
+                    flash_target,
+                    time_width=0.65,
+                    run_time=self.duration,
+                )
+            )
 
         if not animations:
             return AnimationPlan(overlays=(), animations=(), run_time=self.duration)
 
         group = AnimationGroup(*animations) if len(animations) > 1 else animations[0]
         return AnimationPlan(
-            overlays=tuple(overlays),
+            overlays=(),
+            propagation_overlays=tuple(propagation_overlays),
             animations=(group,),
             run_time=self.duration,
         )
@@ -87,6 +113,12 @@ class WaveformSync(AnimationPrimitive["WaveformSync"]):
         if add is None or play is None:
             msg = "scene must provide add() and play() like manim.Scene"
             raise TypeError(msg)
+        if plan.propagation_overlays:
+            from manim import VGroup
+
+            timing = VGroup(*plan.propagation_overlays)
+            timing.set_z_index(TIMING_Z_INDEX)
+            add(timing)
         add(*plan.overlays)
         play(*plan.animations, run_time=plan.run_time)
 

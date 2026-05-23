@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from manim_engineering.semantic.enums import LogicLevel, SignalType
+from manim_engineering.core.enums import SignalType
+from manim_engineering.semantic.enums import LogicLevel
 
 
 @dataclass(frozen=True)

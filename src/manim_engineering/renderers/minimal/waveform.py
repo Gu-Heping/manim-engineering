@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-from manim import Line, Text, VGroup
+from manim import Line, VGroup
 
 from manim_engineering.layout.types import LayoutResult, Point2D
 from manim_engineering.renderers.minimal import theme
+from manim_engineering.renderers.minimal.labels import label_text
+from dataclasses import replace
+
 from manim_engineering.waveform.layout import (
     MIN_WAVEFORM_GAP,
     WaveformPanelSpec,
     panel_below_layout,
     step_polyline,
+    time_scale_for_bundle,
 )
 from manim_engineering.waveform.trace import WaveformBundle, WaveformTrace
 
@@ -35,12 +39,16 @@ class WaveformPanelRenderer:
         trace_gap: float = 0.12,
         margin: float = MIN_WAVEFORM_GAP,
     ) -> WaveformPanelSpec:
-        return panel_below_layout(
+        spec = panel_below_layout(
             layout,
             trace_count=len(bundle.traces),
             trace_height=trace_height,
             trace_gap=trace_gap,
             margin=margin,
+        )
+        return replace(
+            spec,
+            time_scale=time_scale_for_bundle(bundle, spec.width),
         )
 
     def render_trace(
@@ -48,9 +56,18 @@ class WaveformPanelRenderer:
         trace: WaveformTrace,
         spec: WaveformPanelSpec,
         trace_index: int,
+        *,
+        max_beat: int | None = None,
+        idle_only: bool = False,
     ) -> VGroup:
         group = VGroup()
-        points = step_polyline(trace, spec, trace_index)
+        points = step_polyline(
+            trace,
+            spec,
+            trace_index,
+            max_beat=max_beat,
+            idle_only=idle_only,
+        )
         color = _trace_color(trace)
         for start, end in zip(points, points[1:], strict=False):
             group.add(
@@ -61,9 +78,9 @@ class WaveformPanelRenderer:
                     stroke_width=theme.WAVEFORM_STROKE_WIDTH,
                 )
             )
-        label = Text(
+        label = label_text(
             trace.signal_name,
-            font_size=0.16,
+            font_size=theme.WAVEFORM_LABEL_FONT_SIZE,
             color=color,
         )
         label.move_to(
@@ -80,10 +97,19 @@ class WaveformPanelRenderer:
         self,
         bundle: WaveformBundle,
         spec: WaveformPanelSpec,
+        *,
+        idle_only: bool = False,
     ) -> VGroup:
         panel = VGroup()
         for index, trace in enumerate(bundle.traces):
-            panel.add(self.render_trace(trace, spec, index))
+            panel.add(
+                self.render_trace(
+                    trace,
+                    spec,
+                    index,
+                    idle_only=idle_only,
+                )
+            )
         axis = Line(
             _point3(spec.origin),
             _point3(Point2D(spec.origin.x + spec.width, spec.origin.y)),
@@ -97,6 +123,8 @@ class WaveformPanelRenderer:
         self,
         bundle: WaveformBundle,
         layout: LayoutResult,
+        *,
+        idle_only: bool = False,
     ) -> tuple[VGroup, WaveformPanelSpec]:
         spec = self.panel_spec_for_layout(layout, bundle)
-        return self.render_bundle(bundle, spec), spec
+        return self.render_bundle(bundle, spec, idle_only=idle_only), spec

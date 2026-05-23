@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from manim_engineering.components import SPIMaster, SPISlave
 from manim_engineering.protocol.spi import SPIBusBinding
-from manim_engineering.semantic import CircuitGraph
+from manim_engineering.core import CircuitGraph
 
 
 def test_from_graph_nodes_connects_four_lines() -> None:

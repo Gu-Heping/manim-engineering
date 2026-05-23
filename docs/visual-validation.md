@@ -24,7 +24,7 @@ tests/visual golden dHash    →  Hamming distance vs stored hash
 
 **Invariants (governance Step 5):**
 
-- `CircuitGraph.connect()` assigns **deterministic** `connection_id` values from sorted port ids (`conn-<a>--<b>`), not random UUIDs, so layout and goldens replay identically (`tests/semantic/test_determinism.py`).
+- `CircuitGraph.connect()` assigns **deterministic** `connection_id` values from sorted port ids (`conn-<a>--<b>`), not random UUIDs, so layout and goldens replay identically (`tests/core/test_graph_determinism.py`).
 - `SignalFlow` must not mutate wire `Line` geometry—only overlays and highlights (`tests/animation/test_signal_flow_ownership.py`).
 - Waveform panel and `step_polyline` bands stay at least `MIN_WAVEFORM_GAP` below routed wires (`tests/layout/test_scene_bbox.py`).
 
@@ -62,6 +62,29 @@ Commit updated files under `tests/visual/golden/`:
 - `rc_step_response.geometry.txt` — analog R1–C1 layout digest (`layout_geometry_digest`, no raster)
 
 **Tolerance:** perceptual compare uses **Hamming distance ≤ 4** on the dHash (`tests/visual/conftest.py`).
+
+## What goldens do *not* guarantee
+
+- **dHash** compares a downscaled last frame; it does not assert pedagogical readability (label placement, wire-vs-symbol overlap, or interface box crowding).
+- **Geometry digests** hash layout coordinates and waveform polyline points only — not Manim `Text` tessellation or pin labels.
+- **Footprint clearance** is enforced separately in `tests/layout/test_footprint.py` via `assert_wires_avoid_footprints` (wire segment midpoints must not lie inside component interiors). Governance R1–C1 gap wiring remains in `tests/layout/test_governance_acceptance_wiring.py`.
+
+Manual review PNGs: run `python scripts/export_visual_golden_previews.py` → `tests/visual/golden/previews/`.
+
+Acceptance MP4s (same `ME_SUPPRESS_FADE=1`, medium quality except CMOS inverter at high quality):
+
+```bash
+python scripts/export_example_videos.py
+```
+
+Output: `media/videos/examples/*.mp4` (see `media/videos/examples/README.md`).
+
+**Intro/dim contract:** waveform demos fade in symbol bodies while `label_text` pin
+labels are hidden then revealed (`hide_labels` / `show_labels` in
+`examples/_shared.py`). Beat-interval dim uses `stroke_only` label refresh so
+labels dim with symbols. See [animation-timing.md](animation-timing.md) troubleshooting table.
+HUD scenes must reserve subtitle band (`subtitle_band` or default HUD band in
+`WaveformDemoScene`) to avoid intro/caption overlap with topology.
 
 ## CI
 

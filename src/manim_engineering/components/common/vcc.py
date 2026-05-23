@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from manim_engineering.components.element import AnchorPoint, CircuitElement
 from manim_engineering.components.types import Bounds
-from manim_engineering.semantic.enums import PinDirection, SignalType
+from manim_engineering.core.enums import PinDirection, SignalType
 
 _VCC_BOUNDS = Bounds(width=0.4, height=0.4)
 _VCC_ANCHORS: dict[str, AnchorPoint] = {
-    "vcc": (0.5, 1.0),
+    # Bottom-centre: vertical-stack schematics connect downward from VCC.
+    "vcc": (0.5, 0.0),
     "center": (0.5, 0.5),
 }
 

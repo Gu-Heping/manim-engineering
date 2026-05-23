@@ -51,7 +51,7 @@ def _render_last_frame_png() -> Path:
 
 def _geometry_hash_from_fixture() -> str:
     mod = _load_module()
-    _graph, _elements, layout, _clock, _data, bundle = mod.build_fixture()
+    _graph, _elements, layout, _clock, _data, bundle = mod.build_clock_data_fixture()
     return layout_waveform_geometry_digest(layout, bundle)
 
 

@@ -32,23 +32,70 @@ Decorative motion without a tag is disallowed.
 5. timing nuance  
 6. edge cases  
 
-## Reusable primitives (target names)
+## Reusable primitives
 
 ```python
-SignalFlow(signal)
-CurrentPulse(node)
-VoltageGlow(node)
-LogicTransition(gate)
-WaveformSync(traces)
+from manim_engineering.animation import (
+    play_propagation_beat,
+    PropagationSequence,
+    BEAT_DURATION,
+    BEAT_GAP,
+    INTRO_PAUSE,
+    OUTRO_PAUSE,
+)
+
+play_propagation_beat(scene, clk, layout=layout, graph=graph,
+    duration=BEAT_DURATION, bundle=bundle, signals=(clk, data),
+    panel_spec=panel_spec, beat=0)
+
+PropagationSequence(clk, layout=layout, graph=graph, max_beats=8,
+    bundle=bundle, sync_signals=(clk, mosi), panel_spec=panel_spec).play(scene)
 ```
+
+Legacy per-primitive `SignalFlow(...).play(scene)` then `WaveformSync(...).play(scene)` is discouraged — it serializes motion and breaks sync.
 
 ## Waveform sync
 
-When semantic signal state changes, update in the same beat:
+When semantic signal state changes, update in the **same beat** (one `scene.play`, one `run_time`):
 
-- wire highlight  
-- waveform trace  
-- dependent component state  
+- propagation pulse along wire copy  
+- waveform edge segment flash (`ShowPassingFlash` on trace copy)  
+- dependent component state (when modeled)  
+
+### Progressive reveal
+
+Waveform panels in teaching scenes (`WaveformDemoScene` in `examples/_shared.py`)
+start with **idle-only** traces (one horizontal segment per signal). Before each
+propagation pulse, `WaveformRevealTracker` extends the panel to include the edge
+for that beat; `WaveformSync` then flashes that segment while the pulse travels.
+
+Intro must not draw full signal history upfront; that reads as static parallel lines.
+
+### Per-signal flash isolation
+
+`WaveformSync(..., active_signal=beat_signal)` flashes only the trace whose
+`signal_name` matches the current beat's signal. Multi-trace scenes (SPI CS/CLK/MOSI,
+clock+data) therefore do not cross-flash unrelated lines on CS assert or clk edges.
+
+`play_propagation_beat` passes `active_signal=` automatically from the beat signal.
+
+### Propagation path clipping
+
+`oriented_wire_points` trims routed polylines to the span between pin anchors so
+pulses stop at footprint edges and do not interpolate through resistor/capacitor
+symbol bodies.
+
+### HUD subtitle-band contract
+
+Scenes that return `hud_texts(...)` should reserve a top band so title/caption do
+not overlap topology. `WaveformDemoScene` applies `DEFAULT_HUD_SUBTITLE_BAND`
+when `subtitle_band` is unset; protocol demos may override this explicitly.
+
+`CaptionTrack.swap` now ignores empty captions (`None` / `""`) so intro text is
+not replaced by an empty `Text` mobject during sparse-caption beat lists.
+
+After each caption `FadeOut`, the previous `Text` is **removed** from the scene
+(no parallel crossfade stacking that leaves ghost glyphs).
 
 ## Teaching density
 
@@ -57,3 +104,118 @@ At most **2** concepts per scene moment; **1** preferred.
 ## Educational scaling
 
 Allowed: exaggerated delay, slowed clock, enlarged pulse — semantic ordering must stay correct.
+
+## Pacing constants (`manim_engineering.animation.pacing`)
+
+These are the **single source of truth** for scene pacing. Examples must
+import them rather than redefining literals (e.g. ``SPI_BEAT_DURATION``).
+
+| Constant | Default | Use |
+|----------|---------|-----|
+| `INTRO_PAUSE` | 1.8s | static topology before first beat (after intro fade-in) |
+| `BEAT_DURATION` | 1.2s | single propagation + waveform beat |
+| `BEAT_GAP` | 0.5s | comprehension pause between beats |
+| `BEAT_CAPTION_HOLD` | 0.4s | reading pause after caption FadeIn, before pulse (auto-applied by `PropagationSequence`) |
+| `OUTRO_PAUSE` | 1.5s | hold final frame before close |
+| `SCENE_FADE_OUT` | 0.8s | length of closing `FadeOut(*self.mobjects)` |
+| `OVERLAY_FADE_OUT` | 0.15s | fade before removing propagation/timing overlays each beat |
+| `CAPTION_CROSSFADE` | 0.45s | HUD intro → beat caption crossfade |
+
+`SignalFlow`, `WaveformSync`, and `play_propagation_beat` all default to
+`BEAT_DURATION`. Pre-2025 code referenced `DEFAULT_PROPAGATION_DURATION` and
+`DEFAULT_TIMING_DURATION`; those names now alias `BEAT_DURATION` and exist
+only for backwards compatibility.
+
+## Multi-beat protocol scenes
+
+For SPI / UART / clock-data, use `PropagationSequence(beats=...)` with
+explicit `BeatSpec` entries so each beat advances the correct semantic
+signal and caption. The sequence handles `BEAT_GAP` between beats; pair it
+with `subtitle_text(..., role=...)` and a `caption_callback` for HUD swaps.
+
+```python
+from manim_engineering.animation import (
+    BEAT_GAP,
+    BeatSpec,
+    PropagationSequence,
+    subtitle_text,
+)
+
+beats = (
+    BeatSpec(signal=binding.cs, record=cs_record, wave_beat=0, caption="① CS↓"),
+    BeatSpec(signal=binding.clk, record=clk_history[0], wave_beat=0, caption="② CLK↑ 位 7"),
+    # ...
+)
+
+PropagationSequence(
+    layout=layout,
+    graph=graph,
+    beats=beats,
+    bundle=bundle,
+    sync_signals=binding.signals(),
+    panel_spec=panel_spec,
+    beat_gap=BEAT_GAP,
+    caption_callback=swap_caption,
+    dim_inactive=True,        # requires topology= (ValueError otherwise)
+    topology=topology,
+).play(scene)
+```
+
+`PropagationSequence` waits `BEAT_CAPTION_HOLD` between every captioned beat's
+`caption_callback` invocation and its propagation pulse, so the viewer always
+gets time to read the caption before the action starts. Do not also hand-roll
+a `self.wait()` between caption and beat — it doubles the gap.
+
+## 3B1B-style entry and exit
+
+Examples (`examples/protocol/*.py`, `examples/basics/*.py`) follow the same
+opening / closing template:
+
+```python
+from manim import FadeIn, FadeOut, LaggedStart, Write
+from manim_engineering.animation import SCENE_FADE_OUT, scene_final_fade_enabled
+
+# Entry — add content first; hide pin/trace labels, FadeIn bodies, then reveal labels:
+# (WaveformDemoScene in examples/_shared.py implements this via hide_labels / show_labels.)
+self.add(content)
+self.play(
+    LaggedStart(
+        FadeIn(topology.components, shift=0.15, run_time=0.7),
+        FadeIn(topology.wires, run_time=0.5),
+        FadeIn(waveform_panel, run_time=0.6),
+        lag_ratio=0.25,
+    ),
+    run_time=1.4,
+)
+# show_labels(topology.components); show_labels(waveform_panel)
+self.play(Write(title), run_time=0.9)
+self.play(FadeIn(intro, shift=0.15), run_time=0.55)
+self.wait(INTRO_PAUSE - 0.6)
+
+# ... beats ...
+
+# Exit — gated so visual golden tests still see content:
+if scene_final_fade_enabled():
+    self.wait(max(OUTRO_PAUSE - SCENE_FADE_OUT, 0.2))
+    self.play(FadeOut(*self.mobjects, run_time=SCENE_FADE_OUT))
+else:
+    self.wait(OUTRO_PAUSE)
+```
+
+`scene_final_fade_enabled()` returns `False` when the env var
+`ME_SUPPRESS_FADE=1` is set (visual tests use this automatically via
+`tests/visual/conftest.py`).
+
+## Renderer vs animation (troubleshooting abrupt appear/disappear)
+
+| Symptom | Layer | Typical cause |
+|---------|-------|----------------|
+| Pin label white halo | Renderer + scene | `FadeIn` / `set_opacity` on a parent of `label_text`; fix with body-only intro fade and `refresh_label_strokes(..., mode="stroke_only")` after dim |
+| Symbol dims but labels stay bright | Animation | `dim_topology` followed by full label refresh; use `stroke_only` during dim |
+| Pulse or trace flash vanishes instantly | Animation | Overlay removed after beat; `OVERLAY_FADE_OUT` softens removal |
+| Static intro caption disappears at beat 0 | Scene glue | `CaptionTrack.swap` crossfade; tune `CAPTION_CROSSFADE` |
+| Wrong symbol shape or wire color | Renderer / layout | Not an animation timing issue |
+
+Static appearance is owned by `MinimalRenderer`; time-axis emphasis is owned by
+`PropagationSequence`, `play_propagation_beat`, and `WaveformDemoScene` in
+`examples/_shared.py`.

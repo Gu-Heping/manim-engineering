@@ -10,7 +10,7 @@ pytest.importorskip("manim")
 from manim_engineering.components import Resistor
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.renderers.minimal import MinimalRenderer
-from manim_engineering.semantic import CircuitGraph
+from manim_engineering.core import CircuitGraph
 
 
 def _two_resistor_graph() -> tuple[CircuitGraph, Resistor, Resistor]:
@@ -40,6 +40,20 @@ def test_render_resistor_deterministic_structure() -> None:
 def test_render_resistor_has_body_and_label() -> None:
     mob = MinimalRenderer().render(Resistor("r1", label="R1"))
     assert len(mob.submobjects) == 3  # body, pin dots, label
+
+
+def test_component_label_font_size_uses_point_scale() -> None:
+    from manim_engineering.renderers.minimal import theme
+
+    assert isinstance(theme.COMPONENT_LABEL_FONT_SIZE, int)
+    assert theme.COMPONENT_LABEL_FONT_SIZE >= 16
+
+
+def test_resistor_label_world_height_readable() -> None:
+    """Regression: microscopic font_size (e.g. 0.18 pt) yields near-zero height."""
+    mob = MinimalRenderer().render(Resistor("r1", label="R1"))
+    label = mob.submobjects[-1]
+    assert label.height > 0.12
 
 
 def test_render_layout_includes_components_and_wires() -> None:
@@ -80,3 +94,379 @@ def test_render_layout_deterministic_points() -> None:
     first = renderer.render_layout(layout, graph, elements)
     second = renderer.render_layout(layout, graph, elements)
     assert np.allclose(first.get_all_points(), second.get_all_points())
+
+
+def _analog_render_smoke(component) -> None:
+    """Shared analog symbol contract: VGroup, body subgroup non-empty,
+    deterministic submobject count across repeated renders."""
+    renderer = MinimalRenderer()
+    first = renderer.render(component)
+    second = renderer.render(component)
+    assert len(first.submobjects) > 0
+    assert len(first.submobjects) == len(second.submobjects)
+    # Body subgroup (first child) must contain at least 1 stroke primitive.
+    body = first.submobjects[0]
+    assert len(body.submobjects) > 0
+
+
+def test_renders_nmos_symbol_returns_vgroup() -> None:
+    from manim_engineering.components import NMOS
+
+    _analog_render_smoke(NMOS("m1", label="M1"))
+
+
+def test_renders_pmos_symbol_returns_vgroup() -> None:
+    from manim_engineering.components import PMOS
+
+    _analog_render_smoke(PMOS("p1", label="P1"))
+
+
+def test_renders_diode_symbol_returns_vgroup() -> None:
+    from manim_engineering.components import Diode
+
+    _analog_render_smoke(Diode("d1", label="D1"))
+
+
+def test_renders_op_amp_symbol_returns_vgroup() -> None:
+    from manim_engineering.components import OpAmp
+
+    _analog_render_smoke(OpAmp("u1", label="U1"))
+
+
+def test_renders_input_driver_symbol_returns_vgroup() -> None:
+    from manim_engineering.components import InputDriver
+
+    _analog_render_smoke(InputDriver("in1", label="IN"))
+
+
+def test_input_driver_symbol_label_renders() -> None:
+    """Body wedge + label text (no pin dots for io markers)."""
+    from manim_engineering.components import InputDriver
+
+    mob = MinimalRenderer().render(InputDriver("in1", label="IN"))
+    assert len(mob.submobjects) == 2
+
+
+def _body_endpoint_coords(body) -> set[tuple[float, float]]:
+    """Collect all polyline vertex coordinates from a symbol body VGroup."""
+    coords: set[tuple[float, float]] = set()
+    for sub in body.submobjects:
+        pts = sub.get_all_points()
+        for pt in pts:
+            coords.add((round(float(pt[0]), 4), round(float(pt[1]), 4)))
+    return coords
+
+
+def test_vcc_symbol_stroke_meets_bottom_anchor() -> None:
+    from manim_engineering.components import VCC
+
+    vcc = VCC("vcc1")
+    body = MinimalRenderer().render(vcc).submobjects[0]
+    w, h = vcc.get_bounds().width, vcc.get_bounds().height
+    cx = w * 0.5
+    coords = _body_endpoint_coords(body)
+    assert (round(cx, 4), 0.0) in coords
+
+
+def test_pmos_symbol_strokes_end_at_source_and_drain_anchors() -> None:
+    from manim_engineering.components import PMOS
+
+    pmos = PMOS("p1")
+    body = MinimalRenderer().render(pmos).submobjects[0]
+    w, h = pmos.get_bounds().width, pmos.get_bounds().height
+    coords = _body_endpoint_coords(body)
+    assert (round(w, 4), round(h, 4)) in coords
+    assert (round(w, 4), 0.0) in coords
+
+
+def _all_text_submobjects(mob) -> list:
+    from manim import Text
+
+    found: list = []
+    for sub in mob.submobjects:
+        if isinstance(sub, Text):
+            found.append(sub)
+        elif hasattr(sub, "submobjects"):
+            found.extend(_all_text_submobjects(sub))
+    return found
+
+
+def test_spi_master_pin_labels_outside_body() -> None:
+    from manim_engineering.components import SPIMaster
+
+    master = SPIMaster("mcu", label="MCU")
+    w, h = master.get_bounds().width, master.get_bounds().height
+    mob = MinimalRenderer().render(master)
+    pin_texts = [t for t in _all_text_submobjects(mob) if t.text in master.pins]
+    assert len(pin_texts) == 4  # clk, mosi, cs left + miso right (slave skips miso)
+    for label in pin_texts:
+        cx = float(label.get_center()[0])
+        if label.text in ("clk", "mosi", "cs"):
+            assert cx < 0.0, f"{label.text} center should be left of body (cx={cx})"
+        elif label.text == "miso":
+            assert cx > w, f"miso should be right of body (cx={cx}, w={w})"
+
+
+def test_spi_slave_skips_miso_pin_label() -> None:
+    from manim_engineering.components import SPISlave
+
+    mob = MinimalRenderer().render(SPISlave("slv"))
+    pin_texts = [t.text for t in _all_text_submobjects(mob) if t.text in SPISlave("x").pins]
+    assert "miso" not in pin_texts
+    assert set(pin_texts) == {"clk", "mosi", "cs"}
+
+
+def test_uart_port_pin_labels_outside_body() -> None:
+    from manim_engineering.components import UARTPort
+
+    port = UARTPort("host", label="HOST")
+    mob = MinimalRenderer().render(port)
+    w = port.get_bounds().width
+    pin_texts = [t for t in _all_text_submobjects(mob) if t.text in port.pins]
+    for label in pin_texts:
+        if label.text in ("tx", "rx"):
+            assert float(label.get_center()[0]) < 0.0
+        elif label.text == "gnd":
+            assert float(label.get_center()[1]) < 0.0
+
+
+def test_uart_role_glyph_is_single_letter() -> None:
+    from manim_engineering.components import UARTPort
+
+    mob = MinimalRenderer().render(UARTPort("u1"))
+    role_texts = [t.text for t in _all_text_submobjects(mob) if t.text in ("U", "UART")]
+    assert role_texts == ["U"]
+
+
+def test_spi_master_uses_hollow_interface_outline() -> None:
+    from manim import Line, Rectangle, VGroup
+
+    from manim_engineering.components import SPIMaster
+    from manim_engineering.renderers.minimal import theme
+
+    mob = MinimalRenderer().render(SPIMaster("mcu"))
+    body = mob.submobjects[0]
+    assert isinstance(body.submobjects[0], Rectangle)
+    assert str(body.submobjects[0].get_fill_color()).lower() == theme.INTERFACE_PANEL_FILL.lower()
+    outline = body.submobjects[1]
+    assert isinstance(outline, VGroup)
+    assert len(outline.submobjects) == 4
+    assert all(isinstance(edge, Line) for edge in outline.submobjects)
+    assert outline.submobjects[0].get_stroke_width() == theme.interface_box_stroke_width()
+    assert str(outline.submobjects[0].get_stroke_color()).lower() == str(
+        theme.interface_box_stroke_color()
+    ).lower()
+
+
+def test_spi_master_no_pin_label_inside_box_interior() -> None:
+    from manim_engineering.components import SPIMaster
+
+    master = SPIMaster("mcu")
+    w, h = master.get_bounds().width, master.get_bounds().height
+    mob = MinimalRenderer().render(master)
+    for label in _all_text_submobjects(mob):
+        if label.text not in master.pins:
+            continue
+        cx, cy = float(label.get_center()[0]), float(label.get_center()[1])
+        inside = 0.0 < cx < w and 0.0 < cy < h
+        assert not inside, f"{label.text} at ({cx},{cy}) inside box interior"
+
+
+def test_interface_labeled_pins_skip_direction_stubs() -> None:
+    """Short direction ticks beside pin names read as glyph halos on dark frames."""
+    from manim import Line
+
+    from manim_engineering.components import SPIMaster
+
+    master = SPIMaster("mcu")
+    mob = MinimalRenderer().render(master)
+    body = mob.submobjects[0]
+    short_lines = [
+        sub for sub in body.submobjects if isinstance(sub, Line) and sub.get_length() < 0.2
+    ]
+    assert not short_lines
+
+
+def test_stroke_only_refresh_preserves_dimmed_fill() -> None:
+    from manim_engineering.renderers.minimal.labels import label_text, refresh_label_strokes
+    from manim import VGroup
+
+    label = label_text("cs", font_size=12, color="#58C4DD")
+    group = VGroup(label)
+    group.set_opacity(0.35)
+    refresh_label_strokes(group, mode="stroke_only")
+    for sub in label.get_family():
+        if len(sub.points) == 0:
+            continue
+        assert sub.get_stroke_opacity() == 0.0
+        assert float(sub.get_fill_opacity()) == pytest.approx(0.35, abs=0.05)
+
+
+def test_refresh_label_strokes_fixes_glyphs_under_partial_opacity() -> None:
+    from manim_engineering.renderers.minimal.labels import label_text, refresh_label_strokes
+    from manim import VGroup
+
+    label = label_text("cs", font_size=12, color="#58C4DD")
+    group = VGroup(label)
+    group.set_opacity(0.35)
+    refresh_label_strokes(group, mode="full")
+    for sub in label.get_family():
+        if len(sub.points) == 0:
+            continue
+        assert sub.get_stroke_opacity() == 0.0
+        assert sub.get_stroke_rgbas()[0, 3] == 0.0
+        assert str(sub.get_fill_color()).lower() != "#ffffff"
+
+
+def test_fade_in_opacity_on_components_then_normalize_fixes_pin_labels() -> None:
+    """Intro ``FadeIn(topology.components)`` leaves white glyph strokes until refreshed."""
+    from manim_engineering.components import SPIMaster, SPISlave
+    from manim_engineering.core import CircuitGraph
+    from manim_engineering.animation.focus import normalize_topology_labels
+    from manim_engineering.layout import LayoutConfig, LayoutEngine
+    from manim_engineering.renderers.minimal import ManimRenderer
+
+    graph = CircuitGraph()
+    master = SPIMaster("master")
+    slave = SPISlave("slave")
+    master.attach_to(graph)
+    slave.attach_to(graph)
+    elements = {"master": master, "slave": slave}
+    layout = LayoutEngine(LayoutConfig(cell_gap=0.85)).layout(graph, elements)
+    topology = ManimRenderer().render_topology(graph, layout, elements)
+    topology.components.set_opacity(0.0)
+    topology.components.set_opacity(1.0)
+    normalize_topology_labels(topology)
+    topo_pins = [
+        t
+        for t in _all_text_submobjects(topology.components)
+        if t.text in master.pins
+    ]
+    assert topo_pins
+    for label in topo_pins:
+        for sub in label.get_family():
+            if len(sub.points) == 0:
+                continue
+            assert sub.get_stroke_opacity() == 0.0
+            assert str(sub.get_fill_color()).lower() != "#ffffff"
+
+
+def test_dim_topology_keeps_pin_labels_at_dim_opacity() -> None:
+    """stroke_only refresh must not pop label fill back to 1.0 while dimmed."""
+    from manim_engineering.animation.focus import DEFAULT_DIM_OPACITY, dim_topology
+    from manim_engineering.components import SPIMaster, SPISlave
+    from manim_engineering.core import CircuitGraph
+    from manim_engineering.layout import LayoutConfig, LayoutEngine
+    from manim_engineering.renderers.minimal import ManimRenderer
+
+    graph = CircuitGraph()
+    master = SPIMaster("master")
+    slave = SPISlave("slave")
+    master.attach_to(graph)
+    slave.attach_to(graph)
+    elements = {"master": master, "slave": slave}
+    layout = LayoutEngine(LayoutConfig(cell_gap=0.85)).layout(graph, elements)
+    topology = ManimRenderer().render_topology(graph, layout, elements)
+    dim_topology(topology)
+    topo_pins = [
+        t
+        for t in _all_text_submobjects(topology.components)
+        if t.text in master.pins
+    ]
+    assert topo_pins
+    for label in topo_pins:
+        for sub in label.get_family():
+            if len(sub.points) == 0:
+                continue
+            fill_alpha = float(sub.get_fill_opacity())
+            assert fill_alpha == pytest.approx(DEFAULT_DIM_OPACITY, abs=0.05)
+            assert sub.get_stroke_opacity() == 0.0
+
+
+def test_dim_restore_topology_keeps_pin_labels_without_stroke() -> None:
+    from manim_engineering.components import SPIMaster, SPISlave
+    from manim_engineering.core import CircuitGraph
+    from manim_engineering.animation.focus import dim_topology, restore_topology
+    from manim_engineering.layout import LayoutConfig, LayoutEngine
+    from manim_engineering.renderers.minimal import ManimRenderer
+
+    graph = CircuitGraph()
+    master = SPIMaster("master")
+    slave = SPISlave("slave")
+    master.attach_to(graph)
+    slave.attach_to(graph)
+    elements = {"master": master, "slave": slave}
+    layout = LayoutEngine(LayoutConfig(cell_gap=0.85)).layout(graph, elements)
+    topology = ManimRenderer().render_topology(graph, layout, elements)
+    dim_topology(topology)
+    restore_topology(topology)
+    topo_pins = [
+        t
+        for t in _all_text_submobjects(topology.components)
+        if t.text in master.pins
+    ]
+    assert topo_pins
+    for label in topo_pins:
+        for sub in label.get_family():
+            if len(sub.points) == 0:
+                continue
+            assert sub.get_stroke_opacity() == 0.0
+            assert sub.get_stroke_rgbas()[0, 3] == 0.0
+            assert str(sub.get_fill_color()).lower() != "#ffffff"
+
+
+def test_interface_pin_labels_have_no_text_stroke() -> None:
+    from manim_engineering.components import SPIMaster
+    from manim_engineering.renderers.minimal.labels import LABEL_Z_INDEX
+
+    mob = MinimalRenderer().render(SPIMaster("mcu"))
+    pin_texts = [
+        t
+        for t in _all_text_submobjects(mob)
+        if t.text in SPIMaster("x").pins  # same pin names
+    ]
+    assert pin_texts
+    for label in pin_texts:
+        assert label.get_stroke_width() == 0.0
+        assert label.get_stroke_opacity() == 0.0
+        glyph_subs = [s for s in label.get_family() if len(s.points) > 0]
+        assert glyph_subs
+        for sub in glyph_subs:
+            assert sub.get_z_index() == LABEL_Z_INDEX
+            assert sub.get_stroke_width() == 0.0
+            assert sub.get_stroke_opacity() == 0.0
+
+
+def test_spi_master_mcu_label_clear_of_pin_labels() -> None:
+    from manim_engineering.components import SPIMaster
+
+    master = SPIMaster("mcu", label="MCU")
+    mob = MinimalRenderer().render(master)
+    mcu = next(t for t in _all_text_submobjects(mob) if t.text == "MCU")
+    pin_labels = [t for t in _all_text_submobjects(mob) if t.text in master.pins]
+    assert pin_labels
+    highest_pin_top = max(float(t.get_top()[1]) for t in pin_labels)
+    mcu_bottom = float(mcu.get_bottom()[1])
+    assert mcu_bottom - highest_pin_top >= 0.05, (
+        f"MCU label should clear pin labels (gap={mcu_bottom - highest_pin_top:.3f})"
+    )
+
+
+def test_interface_skips_pin_dots() -> None:
+    from manim import Dot
+
+    from manim_engineering.components import SPIMaster
+
+    mob = MinimalRenderer().render(SPIMaster("mcu", label="MCU"))
+    assert not any(isinstance(s, Dot) for s in mob.submobjects)
+
+
+def test_nmos_symbol_strokes_end_at_drain_and_source_anchors() -> None:
+    from manim_engineering.components import NMOS
+
+    nmos = NMOS("m1")
+    body = MinimalRenderer().render(nmos).submobjects[0]
+    w, h = nmos.get_bounds().width, nmos.get_bounds().height
+    coords = _body_endpoint_coords(body)
+    assert (round(w, 4), round(h, 4)) in coords
+    assert (round(w, 4), 0.0) in coords

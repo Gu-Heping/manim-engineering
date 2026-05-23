@@ -10,7 +10,8 @@ from manim_engineering.animation import SignalFlow
 from manim_engineering.components import Resistor
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.renderers.minimal import ManimRenderer
-from manim_engineering.semantic import CircuitGraph, LogicLevel, LogicState, Signal, SignalType
+from manim_engineering.core import CircuitGraph, SignalType
+from manim_engineering.semantic import LogicLevel, LogicState, Signal
 
 
 def _propagated_fixture():
@@ -51,6 +52,6 @@ def test_wire_flash_targets_are_copies_when_wire_mobjects_passed() -> None:
         wire_mobjects=wire_lines,
     ).build()
     assert len(plan.propagation_overlays) >= 2
-    flash_targets = plan.propagation_overlays[1:]
-    for target, source in zip(flash_targets, wire_lines, strict=True):
+    wire_flash_targets = plan.propagation_overlays[-len(wire_lines) :]
+    for target, source in zip(wire_flash_targets, wire_lines, strict=True):
         assert id(target) != id(source)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from manim_engineering.protocol.uart import UARTBinding, UARTController
-from manim_engineering.semantic import CircuitGraph
+from manim_engineering.core import CircuitGraph
 from manim_engineering.waveform import derive_bundle_from_signals, level_from_value
 
 

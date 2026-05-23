@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from manim_engineering.components.element import AnchorPoint, CircuitElement
 from manim_engineering.components.types import Bounds
-from manim_engineering.semantic.enums import PinDirection, SignalType
+from manim_engineering.core.enums import PinDirection, SignalType
 
 _GROUND_BOUNDS = Bounds(width=0.4, height=0.4)
 _GROUND_ANCHORS: dict[str, AnchorPoint] = {
-    "gnd": (0.5, 0.0),
+    # Top-centre: vertical-stack schematics connect upward into GND.
+    "gnd": (0.5, 1.0),
     "center": (0.5, 0.5),
 }
 

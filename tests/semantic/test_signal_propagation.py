@@ -4,17 +4,19 @@ from __future__ import annotations
 
 import pytest
 
-from manim_engineering.semantic import (
+from manim_engineering.core import (
     CircuitGraph,
-    LogicLevel,
-    LogicState,
     Node,
     PinDirection,
+    SignalType,
+)
+from manim_engineering.semantic import (
+    LogicLevel,
+    LogicState,
     PropagationError,
     PropagationState,
     Signal,
     SignalDirection,
-    SignalType,
 )
 
 
@@ -88,3 +90,31 @@ def test_propagation_history_is_ordered() -> None:
     sig.propagate(src.get_pin("out"), dst.get_pin("in"), graph=graph)
     assert len(sig.propagation_history) == 2
     assert sig.propagation_history[0].from_pin_id == "src.out"
+
+
+def test_repeated_propagation_same_result() -> None:
+    """Migrated from tests/semantic/test_determinism.py (E-1 split).
+
+    Determinism of ``Signal.propagate`` itself belongs with the other
+    propagation tests; the graph-iteration / connection-id determinism that
+    used to share that file moved to ``tests/core/test_graph_determinism.py``.
+    """
+    graph = CircuitGraph()
+    a = Node(id="a")
+    b = Node(id="b")
+    a.add_pin("out", direction=PinDirection.OUT, signal_type=SignalType.DIGITAL)
+    b.add_pin("in", direction=PinDirection.IN, signal_type=SignalType.DIGITAL)
+    graph.add_node(a)
+    graph.add_node(b)
+    graph.connect(a.get_pin("out"), b.get_pin("in"))
+
+    def run_once() -> str:
+        sig = Signal(
+            name="s",
+            signal_type=SignalType.DIGITAL,
+            value=LogicState(level=LogicLevel.LOW),
+        )
+        rec = sig.propagate(a.get_pin("out"), b.get_pin("in"), graph=graph)
+        return rec.state_transition
+
+    assert run_once() == run_once()

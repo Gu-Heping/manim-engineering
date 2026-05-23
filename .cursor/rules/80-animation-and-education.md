@@ -16,6 +16,34 @@ Visualize semantic propagation metadata (source→destination). Techniques: trav
 
 Forbidden: visual-only propagation without semantic backing.
 
+### Propagation beat (required API)
+
+- Use `play_propagation_beat` (single beat) or `PropagationSequence(beats=...)` (multi-beat with explicit `BeatSpec`) so **SignalFlow and WaveformSync share one `AnimationGroup` and one `run_time`** on each teaching beat. The sequence handles `BEAT_GAP`, optional `dim_inactive`, and an optional `caption_callback(BeatSpec, index)` for HUD swaps.
+- Pulse color **must** come from `theme.color_for_signal_type(signal.signal_type)` — never hard-code a single wire color for all signals.
+- Wire `ShowPassingFlash` on renderer paths is opt-in only; default propagation uses detached path copies + semantic-colored pulse.
+- Z-order constants live in `manim_engineering.animation.layers` (`TIMING_Z_INDEX=2 < PROPAGATION_Z_INDEX=3 < PULSE_Z_INDEX=4 < HUD_Z_INDEX=10`). Do not redefine.
+
+### HUD subtitles
+
+- Use `subtitle_text(label, role="title|intro|caption")` from `manim_engineering.animation.pacing` for any on-screen text so font (CJK fallback stack), color, and size stay consistent. Position via `hud_text_y(camera.frame_cy, camera.frame_height, row=...)`.
+- Caption transitions between beats: `FadeOut(prev) + FadeIn(next)` over ~0.30s — never `ReplacementTransform` on long Chinese strings (the morph is illegible).
+- `PropagationSequence` automatically waits `BEAT_CAPTION_HOLD` after every captioned beat's `caption_callback` so the viewer reads the caption before the pulse fires. Do not also hand-roll an extra `self.wait()` between caption and beat — it doubles the gap.
+
+### Camera framing
+
+- All waveform-aware scenes go through `configure_waveform_scene_camera(self, layout, panel_spec, bundle, subtitle_band=...)`. It internally calls `scene_frame_bounds`, `frame_size_for_pixel_aspect`, and `camera_frame_center` in one step and writes only `self.camera.frame_*` (no global `config.frame_*` writes that bleed across scenes). It also applies the 3B1B dark background `#1e1e2e` (override with `apply_background=False` if you need a different colour).
+
+### 3B1B-style scene framing (mandatory for examples)
+
+Per the project animation style brief (see also `docs/animation-timing.md`):
+
+1. **Background**: `configure_waveform_scene_camera` already sets `#1e1e2e`. Never let a scene render on pure black.
+2. **Entry**: no bare `self.add(topology, hud)` in the first frame. Use `LaggedStart(FadeIn(components), FadeIn(wires), FadeIn(waveform_panel))` for the stage, `Write(title)` for the title, `FadeIn(intro, shift=…)` for the subtitle.
+3. **Body**: every captioned beat is a crossfade (`FadeOut(prev) + FadeIn(next)`) followed by `BEAT_CAPTION_HOLD` (built into `PropagationSequence`), then the propagation pulse.
+4. **Exit**: gate the closing animation with `scene_final_fade_enabled()` so visual golden tests (which set `ME_SUPPRESS_FADE=1`) can still capture a content-bearing last frame, but CLI renders end with `self.play(FadeOut(*self.mobjects, run_time=SCENE_FADE_OUT))`.
+5. **Pulse styling**: pulses keep their semantic core colour but wear a warm-gold halo (`theme.HIGHLIGHT_COLOR = "#FFCB6B"`). Never use pure `WHITE` for transient emphasis — too clinical.
+6. **`dim_inactive`**: only meaningful with `topology=…` passed in. Passing `dim_inactive=True` without `topology` raises `ValueError` by design; do not catch it.
+
 ## Motion Hierarchy
 
 1. active signal  
@@ -47,7 +75,7 @@ Educational simplification allowed: exaggerated delay, enlarged pulses, simplifi
 
 Orchestrate: pacing, focus order, abstraction transitions.
 
-Must compose reusable primitives (`SignalFlow`, `WaveformSync`, `VoltagePulse`) — no duplicated animation logic or hidden timing hacks.
+Must compose reusable primitives (`play_propagation_beat`, `PropagationSequence`, `SignalFlow`, `WaveformSync`, `VoltagePulse`) — no duplicated animation logic or hidden timing hacks. Import pacing from `manim_engineering.animation.pacing` (`INTRO_PAUSE`, `BEAT_DURATION`, `BEAT_GAP`, `OUTRO_PAUSE`) instead of magic numbers.
 
 ## Camera
 

@@ -25,6 +25,12 @@ def _prefer_horizontal_first(hints: tuple[str, ...]) -> bool:
 
     hint_set = {hint.lower() for hint in hints}
 
+    # Mixed horizontal + vertical (e.g. resistor → NMOS drain): route vertical
+    # first so the bend does not cut through the channel at gate height.
+    if "horizontal" in hint_set and "vertical" in hint_set:
+        if "up" in hint_set or "down" in hint_set:
+            return False
+
     if "horizontal" in hint_set:
         return True
 

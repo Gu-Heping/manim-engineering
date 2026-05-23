@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from manim_engineering.core.exceptions import TopologyError
-from manim_engineering.semantic.graph import CircuitGraph
-from manim_engineering.semantic.pin import Pin
+from manim_engineering.core.graph import CircuitGraph
+from manim_engineering.core.port import Pin
 from manim_engineering.semantic.propagation import PropagationRecord
 from manim_engineering.semantic.signal import Signal
 

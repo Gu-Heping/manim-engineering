@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from manim_engineering.components import SPIMaster, SPISlave
-from manim_engineering.semantic import PinDirection, SignalType
+from manim_engineering.core import PinDirection, SignalType
 
 
 def test_spi_master_pins() -> None:

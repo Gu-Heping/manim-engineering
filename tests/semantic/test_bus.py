@@ -4,17 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from manim_engineering.semantic import (
-    Bus,
+from manim_engineering.core import (
     CircuitGraph,
-    LogicLevel,
-    LogicState,
     Node,
     PinDirection,
-    Signal,
     SignalType,
     TopologyError,
 )
+from manim_engineering.semantic import Bus, LogicLevel, LogicState, Signal
 
 
 def test_bus_propagate_all_deterministic_order() -> None:

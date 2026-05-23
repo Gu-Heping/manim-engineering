@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from manim_engineering.protocol.spi import SPIBusBinding, SPIController, SPIFsmState
-from manim_engineering.semantic import CircuitGraph, LogicLevel, TimingEdge
+from manim_engineering.core import CircuitGraph
+from manim_engineering.semantic import LogicLevel, TimingEdge
 
 
 def _binding() -> SPIBusBinding:

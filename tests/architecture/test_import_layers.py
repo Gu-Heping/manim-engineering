@@ -113,3 +113,33 @@ def test_core_is_topology_only_entry() -> None:
     assert hasattr(core, "CircuitGraph")
     assert hasattr(core, "Port")
     assert not hasattr(core, "Signal")
+
+
+# Modules that were deleted as part of the semantic/core de-duplication. These
+# were thin re-export shims that aliased ``core.graph.CircuitGraph`` etc. under
+# the ``semantic`` namespace. Re-adding any of them would silently re-introduce
+# the double-entry that the architecture audit removed — this guard runs at
+# every CI cycle so the regression cannot land.
+DELETED_SEMANTIC_TOPOLOGY_MODULES: tuple[str, ...] = (
+    f"{PACKAGE_ROOT}.semantic.graph",
+    f"{PACKAGE_ROOT}.semantic.node",
+    f"{PACKAGE_ROOT}.semantic.pin",
+    f"{PACKAGE_ROOT}.semantic.connection",
+)
+
+
+@pytest.mark.parametrize("module", DELETED_SEMANTIC_TOPOLOGY_MODULES)
+def test_deleted_semantic_topology_modules_stay_dead(module: str) -> None:
+    """No file in src/ may import ``semantic.<topology shim>`` again."""
+    violations: list[str] = []
+    for py_file in _iter_python_files(SRC_ROOT):
+        rel = py_file.relative_to(SRC_ROOT)
+        source = py_file.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(py_file))
+        for imported in _collect_imported_modules(tree):
+            if imported == module or imported.startswith(f"{module}."):
+                violations.append(f"{rel}: imports {imported}")
+    assert not violations, (
+        f"{module} is a deleted shim; topology lives in core. Violations:\n"
+        + "\n".join(violations)
+    )

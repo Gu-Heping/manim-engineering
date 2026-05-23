@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from manim_engineering.components.element import AnchorPoint, CircuitElement
 from manim_engineering.components.types import Bounds
-from manim_engineering.semantic.enums import PinDirection, SignalType
+from manim_engineering.core.enums import PinDirection, SignalType
 
-_SPI_BOUNDS = Bounds(width=1.2, height=0.8)
+_SPI_BOUNDS = Bounds(width=1.4, height=1.0)
 _SPI_ANCHORS: dict[str, AnchorPoint] = {
-    "clk": (0.0, 0.75),
+    "clk": (0.0, 0.85),
     "mosi": (0.0, 0.5),
     "miso": (1.0, 0.5),
-    "cs": (0.0, 0.25),
+    "cs": (0.0, 0.15),
     "center": (0.5, 0.5),
 }
 

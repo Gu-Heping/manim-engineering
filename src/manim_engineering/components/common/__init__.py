@@ -1,6 +1,7 @@
 """Common reference and power symbols."""
 
 from manim_engineering.components.common.ground import Ground
+from manim_engineering.components.common.input_driver import InputDriver
 from manim_engineering.components.common.vcc import VCC
 
-__all__ = ["Ground", "VCC"]
+__all__ = ["Ground", "InputDriver", "VCC"]

@@ -78,28 +78,46 @@ scene = ManimRenderer().render(circuit, layout, elements)
 
 ## Directory map
 
+Subdirectories marked `# planned` are described in the roadmap backlog and
+do not yet exist in source.
+
 ```text
 src/manim_engineering/
-    core/              # graph model only
-    semantic/
+    core/                # topology types only (CircuitGraph, Node, Pin, Port, Connection, enums)
+    semantic/            # signals, buses, logic states, propagation, timing events
     components/
-        passive/
-        analog/
-        digital/
-        common/
-        measurement/
+        passive/         # implemented (Resistor, Capacitor)
+        common/          # implemented (Ground, VCC, InputDriver)
+        digital/         # implemented (SPIMaster, SPISlave, UARTPort)
+        analog/          # implemented (NMOS, PMOS, Diode, OpAmp)
+        measurement/     # planned
     layout/
-    protocol/
+    protocol/            # spi/, uart/ implemented; i2c/, can/ planned
     waveform/
     renderers/
-        minimal/
-    animation/
+        minimal/         # implemented
+        ieee/            # planned
+        iec/             # planned
+        educational/     # planned
+    animation/           # primitives, pacing, scene helpers, theme tokens
 
 examples/
+    basics/   analog/   digital/   protocol/
+    waveform/            # planned (see basics/clock_data_waveform.py)
 tests/
-    core/
-    architecture/
+    core/   semantic/   components/   layout/   waveform/   renderers/   protocol/   animation/
+    architecture/        # layer guards (no src equivalent)
+    visual/              # golden regression (no src equivalent)
 ```
+
+Topology types (``CircuitGraph``, ``Node``, ``Pin``, ``Port``, ``Connection``,
+``PinDirection``, ``PortDirection``, ``ConnectionState``, ``SignalType``,
+``TopologyError``) are owned by ``core/`` and not re-exported by ``semantic/``.
+
+Scene-level visual tokens (``DEFAULT_BACKGROUND``, ``BACKGROUND_COLORS``,
+``HIGHLIGHT_COLOR``, ``MUTED_COLOR``) are owned by ``animation/theme.py``.
+Renderers own renderer-specific semantic colours and stroke widths under
+``renderers/<variant>/theme.py``.
 
 ## Forbidden patterns
 

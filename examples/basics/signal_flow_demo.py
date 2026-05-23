@@ -8,11 +8,12 @@ Preview: ``manim -pql examples/basics/signal_flow_demo.py SignalFlowDemo``
 
 from __future__ import annotations
 
-from manim_engineering.animation import SignalFlow
+from manim_engineering.animation import BEAT_DURATION, INTRO_PAUSE, play_propagation_beat
 from manim_engineering.components import Resistor
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.renderers.minimal import MinimalRenderer
-from manim_engineering.semantic import CircuitGraph, LogicLevel, LogicState, Signal, SignalType
+from manim_engineering.renderers.minimal import ManimRenderer
+from manim_engineering.core import CircuitGraph, SignalType
+from manim_engineering.semantic import LogicLevel, LogicState, Signal
 
 
 def build_fixture():
@@ -38,12 +39,7 @@ def build_fixture():
 
 def main() -> None:
     graph, elements, layout, signal = build_fixture()
-    flow = SignalFlow(signal, layout=layout, graph=graph)
-    plan = flow.build()
-    print(
-        f"SignalFlow plan: {len(plan.overlays)} overlay(s), "
-        f"{len(plan.animations)} animation(s), run_time={plan.run_time}s"
-    )
+    print(f"beat_duration={BEAT_DURATION}s")
     print(f"topology connections: {len(graph.connections)}")
 
 
@@ -59,9 +55,16 @@ try:
 
         def construct(self) -> None:
             graph, elements, layout, signal = build_fixture()
-            scene_mob = MinimalRenderer().render_layout(layout, graph, elements)
-            self.add(scene_mob)
-            SignalFlow(signal, layout=layout, graph=graph).play(self)
+            topology = ManimRenderer().render_topology(graph, layout, elements)
+            self.add(topology.circuit_group)
+            self.wait(INTRO_PAUSE)
+            play_propagation_beat(
+                self,
+                signal,
+                layout=layout,
+                graph=graph,
+                duration=BEAT_DURATION,
+            )
 
 except ImportError:
     pass

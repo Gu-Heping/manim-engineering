@@ -6,7 +6,10 @@ from collections.abc import Sequence
 
 from manim import Animation, AnimationGroup, Dot, MoveAlongPath, ShowPassingFlash, VGroup, VMobject
 
+from manim_engineering.animation import theme as anim_theme
 from manim_engineering.animation.base import AnimationPlan, AnimationPrimitive
+from manim_engineering.animation.layers import PROPAGATION_Z_INDEX, PULSE_Z_INDEX
+from manim_engineering.animation.pacing import BEAT_DURATION
 from manim_engineering.animation.purpose import AnimationPurpose
 from manim_engineering.animation.registry import register_primitive
 from manim_engineering.animation.wires import (
@@ -14,19 +17,18 @@ from manim_engineering.animation.wires import (
     oriented_wire_points,
     path_mobject_from_points,
     wire_path_for_connection,
+    wire_path_length,
 )
 from manim_engineering.layout.types import LayoutResult, Point2D
 from manim_engineering.renderers.minimal import theme
 from manim_engineering.renderers.minimal.immutable import copy_for_animation
-from manim_engineering.semantic.graph import CircuitGraph
+from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.semantic.propagation import PropagationRecord
 from manim_engineering.semantic.signal import Signal
 
-# Normal transition band per docs/animation-timing.md
-DEFAULT_PROPAGATION_DURATION = 1.0
-
-# Above routed wires; below scene chrome if any.
-PROPAGATION_Z_INDEX = 2
+# Single source of truth for beat run_time is ``pacing.BEAT_DURATION``.
+# A historical alias is kept for downstream code that still imports it.
+DEFAULT_PROPAGATION_DURATION = BEAT_DURATION
 
 
 def _pin_coord_key(point: Point2D) -> tuple[float, float]:
@@ -55,7 +57,7 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
         layout: LayoutResult | None = None,
         graph: CircuitGraph | None = None,
         wire_mobjects: Sequence[VMobject] | None = None,
-        duration: float = DEFAULT_PROPAGATION_DURATION,
+        duration: float = BEAT_DURATION,
     ) -> None:
         super().__init__(duration=duration)
         self._signal = signal
@@ -94,11 +96,26 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
         path = path_mobject_from_points(points)
         path.set_stroke(width=0, opacity=0)
 
-        pulse = Dot(radius=0.04, color=theme.CLOCK_COLOR)
+        pulse_color = theme.color_for_signal_type(self._signal.signal_type)
+        radius = theme.pulse_radius_for_wire_length(wire_path_length(points))
+        pulse = Dot(radius=radius, color=pulse_color)
+        # Warm gold ring around the semantic-coloured core — 3B1B style:
+        # pulse keeps its semantic identity, the halo just makes it pop on
+        # the dark background without the harshness of pure white. The halo
+        # is a *scene-level* visual contract owned by ``animation/theme.py``,
+        # not by the renderer (so it stays constant across renderer variants).
+        pulse.set_stroke(anim_theme.HIGHLIGHT_COLOR, width=max(3.0, radius * 12), opacity=1.0)
+        pulse.set_z_index(PULSE_Z_INDEX)
         pulse.move_to(path.point_from_proportion(0.0))
 
         pulse_motion = MoveAlongPath(pulse, path, run_time=self.duration)
-        flash_anims, flash_overlays = self._wire_flash_animations()
+        route_flash_anims, route_flash_overlays = self._route_flash_along_points(
+            points,
+            pulse_color,
+        )
+        wire_flash_anims, wire_flash_overlays = self._wire_flash_animations()
+        flash_anims = (*route_flash_anims, *wire_flash_anims)
+        flash_overlays = [*route_flash_overlays, *wire_flash_overlays]
         propagation_overlays: list[VMobject] = [path, *flash_overlays]
 
         if flash_anims:
@@ -157,6 +174,33 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
 
         msg = "unable to resolve connection for propagation record (pass graph=)"
         raise ValueError(msg)
+
+    def _route_flash_along_points(
+        self,
+        points: Sequence[Point2D],
+        pulse_color: object,
+    ) -> tuple[tuple[Animation, ...], tuple[VMobject, ...]]:
+        """Bright traveling flash on a detached wire copy (default visibility)."""
+        if len(points) < 2:
+            return (), ()
+        flash_path = path_mobject_from_points(points)
+        flash_path.set_stroke(
+            color=pulse_color,
+            width=theme.WIRE_STROKE_WIDTH * 2.5,
+            opacity=1.0,
+        )
+        flash_target = copy_for_animation(flash_path)
+        flash_target.set_z_index(PROPAGATION_Z_INDEX)
+        return (
+            (
+                ShowPassingFlash(
+                    flash_target,
+                    time_width=0.55,
+                    run_time=self.duration,
+                ),
+            ),
+            (flash_target,),
+        )
 
     def _wire_flash_animations(self) -> tuple[tuple[Animation, ...], tuple[VMobject, ...]]:
         if not self._wire_mobjects:

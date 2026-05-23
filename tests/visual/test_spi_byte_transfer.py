@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import importlib.util
-import os
 from pathlib import Path
 
-import pytest
+from conftest import assert_or_update_golden_text
 from hashing import layout_waveform_geometry_digest
 
 _GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
@@ -25,7 +24,7 @@ def _load_module():
 
 def _geometry_hash_from_fixture() -> str:
     mod = _load_module()
-    _graph, _elements, layout, _binding, _result, bundle = mod.build_fixture()
+    _graph, _elements, layout, _binding, _result, bundle = mod.build_spi_fixture()
     return layout_waveform_geometry_digest(layout, bundle)
 
 
@@ -33,13 +32,4 @@ def test_spi_byte_transfer_geometry_hash_recorded() -> None:
     """Point geometry hash is stable (layout + waveform panel, no raster)."""
     digest = _geometry_hash_from_fixture()
     geom_path = _GOLDEN_DIR / "spi_byte_transfer.geometry.txt"
-
-    if os.environ.get("UPDATE_VISUAL_GOLDEN"):
-        geom_path.write_text(digest + "\n", encoding="utf-8")
-        pytest.skip("geometry golden updated via UPDATE_VISUAL_GOLDEN=1")
-
-    if not geom_path.exists():
-        pytest.skip("geometry golden not committed yet; set UPDATE_VISUAL_GOLDEN=1 once")
-
-    expected = geom_path.read_text(encoding="utf-8").strip()
-    assert digest == expected
+    assert_or_update_golden_text(geom_path, digest, label="spi_byte_transfer geometry")

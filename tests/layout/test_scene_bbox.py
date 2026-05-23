@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from manim_engineering.components import Resistor
 from manim_engineering.layout import LayoutEngine, scene_bbox
-from manim_engineering.semantic import CircuitGraph, LogicLevel, LogicState, Signal, SignalType
+from manim_engineering.core import CircuitGraph, SignalType
+from manim_engineering.semantic import LogicLevel, LogicState, Signal
 from manim_engineering.waveform import (
     MIN_WAVEFORM_GAP,
     derive_bundle_from_signals,

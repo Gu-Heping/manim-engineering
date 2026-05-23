@@ -25,7 +25,7 @@ def _load_module():
 
 def _geometry_hash_from_fixture() -> str:
     mod = _load_module()
-    _graph, _elements, layout, _binding, _result, bundle = mod.build_fixture()
+    _graph, _elements, layout, _binding, _result, bundle = mod.build_uart_fixture()
     return layout_waveform_geometry_digest(layout, bundle)
 
 

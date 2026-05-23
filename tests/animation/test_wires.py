@@ -11,7 +11,7 @@ from manim_engineering.animation.wires import (
 )
 from manim_engineering.components import Resistor
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.semantic import CircuitGraph
+from manim_engineering.core import CircuitGraph
 
 
 def test_connection_id_for_pins() -> None:

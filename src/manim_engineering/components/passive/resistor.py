@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from manim_engineering.components.element import AnchorPoint, CircuitElement
 from manim_engineering.components.types import Bounds
-from manim_engineering.semantic.enums import PinDirection, SignalType
+from manim_engineering.core.enums import PinDirection, SignalType
 
 _RESISTOR_BOUNDS = Bounds(width=1.0, height=0.25)
 _RESISTOR_ANCHORS: dict[str, AnchorPoint] = {

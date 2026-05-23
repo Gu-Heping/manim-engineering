@@ -41,14 +41,19 @@ def test_governance_wire_endpoints_at_pins() -> None:
 def test_governance_inter_component_wire_in_gap() -> None:
     """Net between R1 and C1 must not run through either component footprint."""
     _circuit, elements, layout, _edge, _bundle = _load_fixture()
-    assert len(layout.wires) == 1
-    wire = layout.wires[0]
+    assert len(layout.wires) == 3
     r1 = next(p for p in layout.placements if p.element_id == "r1")
     c1 = next(p for p in layout.placements if p.element_id == "c1")
     gap_x0 = r1.origin.x + r1.bounds.width
     gap_x1 = c1.origin.x
 
-    for segment in wire.segments:
+    r1_c1_wire = next(
+        w
+        for w in layout.wires
+        if any(abs(p.x - gap_x0) < 0.01 or abs(p.x - gap_x1) < 0.01 for p in w.points)
+        and len(w.points) >= 2
+    )
+    for segment in r1_c1_wire.segments:
         if segment.start.y == segment.end.y:
             y = segment.start.y
             x_min = min(segment.start.x, segment.end.x)

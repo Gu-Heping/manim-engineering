@@ -4,16 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from manim_engineering.semantic import (
+from manim_engineering.core import (
     CircuitGraph,
-    LogicLevel,
-    LogicState,
+    Node,
     Pin,
     PinDirection,
-    Signal,
     SignalType,
 )
-from manim_engineering.semantic.node import Node
+from manim_engineering.semantic import LogicLevel, LogicState, Signal
 
 
 @dataclass

@@ -1,5 +1,6 @@
 """Layout layer: placement, routing, spacing (no Manim, no animation)."""
 
+from manim_engineering.layout.footprint import assert_wires_avoid_footprints, wires_avoid_footprints
 from manim_engineering.layout.engine import (
     LayoutConfig,
     LayoutEngine,
@@ -39,6 +40,7 @@ __all__ = [
     "LayoutBBox",
     "LayoutConfig",
     "LayoutEngine",
+    "assert_wires_avoid_footprints",
     "LayoutError",
     "LayoutResult",
     "PlacementError",
@@ -57,4 +59,5 @@ __all__ = [
     "placement_order_for_graph",
     "points_to_segments",
     "route_orthogonal",
+    "wires_avoid_footprints",
 ]

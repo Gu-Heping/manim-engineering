@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from manim_engineering.semantic.enums import LogicLevel, SignalType, TimingEdge
+from manim_engineering.core.enums import SignalType
+from manim_engineering.semantic.enums import LogicLevel, TimingEdge
 from manim_engineering.semantic.propagation import PropagationRecord
 from manim_engineering.semantic.signal import Signal
 from manim_engineering.semantic.state import LogicState, TimingEvent

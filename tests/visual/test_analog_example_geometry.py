@@ -24,12 +24,12 @@ def _load_module():
 
 
 def test_rc_step_response_import_and_solve() -> None:
-    """Smoke: example module loads and LayoutEngine.solve returns wires."""
+    """Smoke: R + NMOS + C + InputDriver; three routed nets including gate."""
     mod = _load_module()
     circuit, elements, layout = mod.build_fixture()
-    assert len(circuit.nodes) == 2
-    assert len(layout.wires) == 1
-    assert "r1" in elements and "c1" in elements
+    assert len(circuit.nodes) == 4
+    assert len(layout.wires) == 3
+    assert "r1" in elements and "m1" in elements and "c1" in elements
 
 
 def test_rc_step_response_geometry_hash_recorded() -> None:

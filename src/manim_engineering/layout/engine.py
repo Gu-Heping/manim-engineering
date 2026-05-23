@@ -78,19 +78,53 @@ class LayoutEngine:
         self,
         graph: CircuitGraph,
         elements: Mapping[str, CircuitElement],
+        *,
+        placement_overrides: Mapping[str, Point2D] | None = None,
     ) -> LayoutResult:
         """
         Place all graph nodes and route explicit connections.
 
         ``elements`` maps node id → ``CircuitElement`` instance attached to the graph.
+
+        ``placement_overrides`` lets callers pin specific elements at exact world
+        origins (bottom-left of each element's bounds). Unmapped elements still
+        flow through ``place_on_grid``; pass an override map covering every
+        element to bypass automatic placement entirely (canonical vertical-stack
+        diagrams, manually-tuned analog topologies, etc.).
         """
         self._elements_for_graph(graph, elements)
+        overrides: Mapping[str, Point2D] = placement_overrides or {}
+        if overrides:
+            unknown = sorted(set(overrides) - set(elements))
+            if unknown:
+                raise UnknownElementError(
+                    f"placement_overrides reference unknown element id(s): {unknown}"
+                )
+
         ordered_elements = placement_order_for_graph(graph, elements)
-        placements = place_on_grid(
-            ordered_elements,
+        grid_elements = tuple(
+            element for element in ordered_elements if element.element_id not in overrides
+        )
+        grid_placements = place_on_grid(
+            grid_elements,
             cell_gap=self._config.cell_gap,
         )
-        placement_by_id = {placement.element_id: placement for placement in placements}
+
+        manual_placements = tuple(
+            ComponentPlacement(
+                element_id=element.element_id,
+                origin=overrides[element.element_id],
+                bounds=element.get_bounds(),
+            )
+            for element in ordered_elements
+            if element.element_id in overrides
+        )
+
+        placement_by_id = {
+            placement.element_id: placement
+            for placement in (*grid_placements, *manual_placements)
+        }
+        placements = tuple(placement_by_id[element.element_id] for element in ordered_elements)
 
         pin_positions: dict[str, Point2D] = {}
         for element in ordered_elements:

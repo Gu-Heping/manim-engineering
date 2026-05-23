@@ -13,7 +13,8 @@ from manim_engineering.animation import SignalFlow
 from manim_engineering.components import Resistor
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.renderers.minimal import ManimRenderer
-from manim_engineering.semantic import CircuitGraph, LogicLevel, LogicState, Signal, SignalType
+from manim_engineering.core import CircuitGraph, SignalType
+from manim_engineering.semantic import LogicLevel, LogicState, Signal
 
 
 def _line_points_snapshot(lines: tuple[Line, ...]) -> list[np.ndarray]:
@@ -47,7 +48,8 @@ def test_signal_flow_build_does_not_mutate_wire_lines() -> None:
     assert component_counts_before == component_counts_after
     path = plan.propagation_overlays[0]
     assert id(path) not in {id(line) for line in wire_lines}
-    for target, source in zip(plan.propagation_overlays[1:], wire_lines, strict=True):
+    wire_flash_targets = plan.propagation_overlays[-len(wire_lines) :]
+    for target, source in zip(wire_flash_targets, wire_lines, strict=True):
         assert id(target) != id(source)
 
     assert len(before) == len(after)

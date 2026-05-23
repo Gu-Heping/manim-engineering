@@ -1,19 +1,17 @@
-"""Semantic enumerations for pins, signals, and timing."""
+"""Semantic enumerations for signals and timing.
+
+Topology enums (``ConnectionState``, ``PinDirection``, ``PortDirection``,
+``SignalType``) live in ``manim_engineering.core.enums``.
+"""
 
 from __future__ import annotations
 
 from enum import Enum
 
-from manim_engineering.core.enums import ConnectionState, PinDirection, PortDirection, SignalType
-
 __all__ = [
-    "ConnectionState",
     "LogicLevel",
-    "PinDirection",
-    "PortDirection",
     "PropagationState",
     "SignalDirection",
-    "SignalType",
     "TimingEdge",
 ]
 

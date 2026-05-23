@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from manim_engineering.protocol.spi import SPIBusBinding, SPIController
-from manim_engineering.semantic import CircuitGraph
+from manim_engineering.core import CircuitGraph
+from manim_engineering.semantic.enums import LogicLevel
 from manim_engineering.waveform import derive_bundle_from_signals, level_from_value
 
 
@@ -25,3 +26,13 @@ def test_clk_trace_has_multiple_edges() -> None:
     trace = bundle.trace_named("clk")
     assert trace is not None
     assert len(trace.samples) >= 3
+
+
+def test_spi_cs_beat_zero_asserts_low() -> None:
+    """Teaching beat 0: CS active-low — first propagation drives CS LOW."""
+    binding = SPIBusBinding.create_bus(CircuitGraph())
+    SPIController(binding).transfer_byte(0xA5, rx_byte=0x3C)
+    history = binding.cs.propagation_history
+    assert history
+    first = history[0]
+    assert first.new_value.level == LogicLevel.LOW

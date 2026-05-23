@@ -12,8 +12,8 @@ from manim_engineering.layout import (
     LayoutEngine,
     UnknownElementError,
 )
-from manim_engineering.layout.types import DEFAULT_NOMINAL_FRAME
-from manim_engineering.semantic import CircuitGraph
+from manim_engineering.layout.types import DEFAULT_NOMINAL_FRAME, Point2D
+from manim_engineering.core import CircuitGraph
 
 
 def _two_resistor_graph() -> tuple[CircuitGraph, Resistor, Resistor]:
@@ -101,3 +101,61 @@ def test_unknown_element_raises() -> None:
 
     with pytest.raises(UnknownElementError):
         LayoutEngine().layout(graph, {"r1": r1})
+
+
+def test_layout_full_override_skips_grid() -> None:
+    """Every element gets its origin from the override map; grid is never used."""
+
+    graph, r1, r2 = _two_resistor_graph()
+
+    overrides = {
+        "r1": Point2D(0.0, 0.0),
+        "r2": Point2D(2.5, 1.75),
+    }
+
+    result = LayoutEngine().layout(
+        graph,
+        {"r1": r1, "r2": r2},
+        placement_overrides=overrides,
+    )
+
+    by_id = {p.element_id: p for p in result.placements}
+    assert by_id["r1"].origin == Point2D(0.0, 0.0)
+    assert by_id["r2"].origin == Point2D(2.5, 1.75)
+    assert by_id["r1"].bounds == r1.get_bounds()
+    assert by_id["r2"].bounds == r2.get_bounds()
+    assert len(result.wires) == 1
+
+
+def test_layout_partial_override_mixes_grid() -> None:
+    """Unmapped elements still flow through place_on_grid; mapped ones do not."""
+
+    graph, r1, r2 = _two_resistor_graph()
+
+    overrides = {"r2": Point2D(3.5, 2.0)}
+
+    result = LayoutEngine().layout(
+        graph,
+        {"r1": r1, "r2": r2},
+        placement_overrides=overrides,
+    )
+
+    by_id = {p.element_id: p for p in result.placements}
+    assert by_id["r2"].origin == Point2D(3.5, 2.0)
+    assert by_id["r1"].origin.x == 0.0
+    assert len(result.wires) == 1
+    wire = result.wires[0]
+    assert wire.points[0] == result.pin_positions["r1.b"]
+    assert wire.points[-1] == result.pin_positions["r2.a"]
+
+
+def test_layout_override_unknown_element_id_raises() -> None:
+
+    graph, r1, r2 = _two_resistor_graph()
+
+    with pytest.raises(UnknownElementError):
+        LayoutEngine().layout(
+            graph,
+            {"r1": r1, "r2": r2},
+            placement_overrides={"ghost": Point2D(0.0, 0.0)},
+        )

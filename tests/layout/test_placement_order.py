@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from manim_engineering.components import Capacitor, Resistor
 from manim_engineering.layout import LayoutEngine, placement_order_for_graph
-from manim_engineering.semantic import CircuitGraph
+from manim_engineering.core import CircuitGraph
 
 
 def test_placement_order_r1_before_c1() -> None:

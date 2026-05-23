@@ -36,6 +36,28 @@ normal wire     → medium
 helper geometry → thin
 ```
 
+## Typography
+
+Minimal renderer text uses **Manim CE point sizes** (same convention as scene HUD in `animation/pacing.py`), defined in `renderers/minimal/theme.py`:
+
+| Token | Size (pt) | Use |
+|-------|-----------|-----|
+| Component labels | 20 | R1, P1, VCC, … |
+| Waveform trace names | 22 | Timing panel |
+| Interface pin names | 18 | SPI/UART pin labels (drawn **outside** the box edge) |
+| Interface role glyph | 28 | M / S / U centered inside device box |
+| Interface box stroke | 1.25 | Hollow MCU/SLV outline (thinner than passive 3.75) |
+| Interface box stroke color | `#9A9AAB` (`GROUND_COLOR`) | Softer than pure white — less halo on colored pin labels |
+| Interface panel fill | `#1e1e2e` | Opaque interior behind outline (matches scene background) |
+
+Scene HUD sits above this layer: title 36, caption 26, intro 24.
+
+Interface labels (SPI): `clk`/`mosi`/`cs` on the bus-facing edge; `miso` on the return edge (master right, slave left). MCU/SLV names sit above the highest pin label with bbox clearance.
+
+Waveform trace names often look cleaner than schematic pin names because they sit on uniform dark background with no adjacent box outline — not a separate Text API.
+
+Waveform and interface pin names use `labels.label_text`. Manim `Text` glyphs default to **white stroke** on each path (`stroke_color=#FFFFFF`); `label_text` sets `stroke_color`/`fill_color` to the label color and `stroke_opacity=0` on the whole tree. Pin labels sit `0.26` world units outside the box edge. SPI **miso** is labeled on the master only (slave omits it to avoid overlap in the bus gap); waveform panel still shows `miso`.
+
 ## Layout
 
 - Orthogonal routing, 90° turns

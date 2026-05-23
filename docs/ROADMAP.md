@@ -218,7 +218,34 @@ Deliverables:
 - [x] Layout guards: `scene_bbox`, `MIN_WAVEFORM_GAP`, waveform `step_polyline` separation
 - [x] `SignalFlow` wire ownership regression (`tests/animation/test_signal_flow_ownership.py`)
 - [x] Visual geometry goldens: `acceptance_three_layer`, `spi_byte_transfer`, `uart_byte_transfer`
+- [x] **Architectural de-duplication (A+B+D)**: topology types collapsed into
+      `core/`, scene-level visual tokens lifted to `animation/theme.py`,
+      directory maps in rules/docs synced with actual source layout. Guarded
+      by `tests/architecture/test_semantic_topology_purity.py` and the
+      deleted-shim parametrize in `test_import_layers.py`.
+- [x] **arch debt C+E**: pure-topology tests moved out of `tests/semantic/`
+      into `tests/core/` (`test_graph_topology.py`, `test_node_pin.py`,
+      `test_graph_determinism.py`); examples `WaveformDemoScene` + helpers in
+      `examples/_shared.py` removed ~150 lines of construct boilerplate across
+      SPI/UART/clock_data/power_rail. Visual goldens unchanged.
+- [x] **Analog symbol set (Scope A)**: `NMOS`, `PMOS`, `Diode`, `OpAmp` as
+      `CircuitElement` with `MinimalRenderer` symbols (channel + gate /
+      inversion bubble / triangle+bar / op-amp triangle with +/− glyphs);
+      `rc_step_response` upgraded to R + NMOS (switch) + C topology; new
+      `cmos_inverter` example with two switching beats. Continuous physics
+      (RC time constant, MOS threshold, op-amp gain) remains backlog.
+- [x] **Teaching example semantics aligned**: progressive waveform reveal
+      (`WaveformRevealTracker`, `step_polyline` `max_beat` / `idle_only`);
+      `WaveformSync` per-signal isolation; explicit rising/falling edges via
+      `record_rising_edge` / `record_falling_edge`; propagation path clip at
+      pin anchors; `clock_data` dual nets + four beats; `power_rail_demo` →
+      `signal_chain_demo`; RC acceptance (`InputDriver`→R→C→GND); CMOS gate +
+      OUT pull paths; UART horizontal TX→RX layout. Visual goldens refreshed.
 
 ### Suggested next action
 
-Backlog: IEC renderer variant; I2C/CAN geometry goldens; digital gate `CircuitElement` + render symbols; optional rule 6-file merge.
+Backlog: IEC renderer variant; I2C/CAN geometry goldens; digital gate `CircuitElement` + render symbols; optional rule 6-file merge; analog Scope B/C (continuous physics, smooth_polyline, AnalogRamp primitive); planned `measurement/` component category.
+
+Short-term experiment track: circuitjs1-inspired stamp/doStep exploration is
+documented in `docs/circuitjs1-borrowing.md` with an isolated prototype at
+`experiments/circuitjs1_stamp_prototype.py` (no runtime coupling).

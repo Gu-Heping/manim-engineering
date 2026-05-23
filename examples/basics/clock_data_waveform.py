@@ -1,8 +1,8 @@
 """
 Digital clock + data: layout, circuit render, waveform panel, SignalFlow + WaveformSync.
 
-Two-component bus (DRV/RCV) with clock and data traces in a panel below routed wires.
-Demonstrates circuit/waveform separation and z-order after layout/render fixes.
+Two independent nets between DRV and RCV (clk on b→a, data on a→b).
+Four teaching beats: clk↑, data↑, clk↓, data↓ with progressive waveform reveal.
 
 Requires manim: ``pip install -e ".[manim]"``
 
@@ -12,49 +12,50 @@ Acceptance render: ``manim -qm examples/basics/clock_data_waveform.py ClockDataW
 
 from __future__ import annotations
 
-from manim_engineering.animation import SignalFlow, WaveformSync
+from manim_engineering.animation import BEAT_DURATION, BeatSpec
 from manim_engineering.components import Resistor
-from manim_engineering.core import CircuitGraph
+from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.renderers.minimal import ManimRenderer, WaveformPanelRenderer
-from manim_engineering.semantic import LogicLevel, LogicState, Signal, SignalType
-from manim_engineering.waveform import derive_bundle_from_signals, scene_frame_bounds
+from manim_engineering.renderers.minimal import WaveformPanelRenderer
+from manim_engineering.semantic import LogicLevel, LogicState, Signal
+from manim_engineering.semantic.teaching_edges import record_falling_edge, record_rising_edge
+from manim_engineering.waveform import derive_bundle_from_signals
 
 
-def build_fixture():
+def build_clock_data_fixture():
     """Return graph, elements, layout, clock/data signals, and derived waveform bundle."""
     graph = CircuitGraph()
     drv = Resistor("drv", label="DRV")
     rcv = Resistor("rcv", label="RCV")
     graph.add(drv)
     graph.add(rcv)
-    graph.connect(drv.port_b, rcv.port_a)
-    graph.connect(drv.port_a, rcv.port_b)
+    clk_net = (drv.port_b, rcv.port_a)
+    data_net = (drv.port_a, rcv.port_b)
+    graph.connect(*clk_net)
+    graph.connect(*data_net)
 
     elements = {"drv": drv, "rcv": rcv}
     layout = LayoutEngine().solve(graph, elements)
 
     clock = Signal(name="clk", signal_type=SignalType.CLOCK, value=LogicState(level=LogicLevel.LOW))
     data = Signal(name="data", signal_type=SignalType.DATA, value=LogicState(level=LogicLevel.LOW))
-    clock.propagate(drv.port_b, rcv.port_a, graph=graph)
-    data.propagate(drv.port_a, rcv.port_b, graph=graph)
+
+    record_rising_edge(clock, *clk_net, graph=graph)
+    record_rising_edge(data, *data_net, graph=graph)
+    record_falling_edge(clock, *clk_net, graph=graph)
+    record_falling_edge(data, *data_net, graph=graph)
 
     bundle = derive_bundle_from_signals((clock, data))
     return graph, elements, layout, clock, data, bundle
 
 
 def main() -> None:
-    graph, elements, layout, clock, data, bundle = build_fixture()
+    graph, elements, layout, clock, data, bundle = build_clock_data_fixture()
     print(f"traces: {[t.signal_name for t in bundle.traces]}")
-    print(f"clock end level: {bundle.trace_named('clk').samples[-1].level}")
-    print(f"topology connections: {len(graph.connections)}")
-    flow = SignalFlow(clock, layout=layout, graph=graph)
-    sync = WaveformSync(
-        bundle,
-        (clock, data),
-        panel_spec=WaveformPanelRenderer().panel_spec_for_layout(layout, bundle),
-    )
-    print(f"SignalFlow run_time={flow.build().run_time}s, sync beat={sync.resolved_beat()}")
+    print(f"connections: {len(graph.connections)}")
+    print(f"clock transitions: {len(clock.propagation_history)}")
+    panel_spec = WaveformPanelRenderer().panel_spec_for_layout(layout, bundle)
+    print(f"beat_duration={BEAT_DURATION}s, traces={[t.signal_name for t in bundle.traces]}")
 
 
 if __name__ == "__main__":
@@ -62,65 +63,48 @@ if __name__ == "__main__":
 
 
 try:
+    import sys
     from pathlib import Path
 
-    from manim import Scene, VGroup, config
-    from PIL import Image
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from _shared import (
+        WaveformDemoScene,
+        WaveformFixture,
+        capture_camera_frame,
+    )
 
     _ACCEPTANCE_MEDIA = Path("media/videos/clock_data_waveform")
 
-    def _save_camera_frame(scene: Scene, path: Path) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        frame = scene.camera.get_image()
-        if hasattr(frame, "save"):
-            frame.save(path)
-        else:
-            import numpy as np
+    class ClockDataWaveformDemo(WaveformDemoScene):
+        """DRV–RCV: separate clk/data nets, four beats, progressive waveforms."""
 
-            Image.fromarray(np.asarray(frame)).save(path)
-
-    class ClockDataWaveformDemo(Scene):
-        """DRV–RCV circuit, waveform panel under wires, propagation + timing sync."""
-
-        def construct(self) -> None:
-            graph, elements, layout, clock, data, bundle = build_fixture()
-            topology = ManimRenderer().render_topology(graph, layout, elements)
-            panel_renderer = WaveformPanelRenderer()
-            waveform_panel, panel_spec = panel_renderer.render_with_layout(bundle, layout)
-            content = VGroup(topology.components, topology.wires, waveform_panel)
-            self.add(content)
-
-            frame_w, frame_h = scene_frame_bounds(
-                layout,
-                panel_spec,
-                trace_count=len(bundle.traces),
-                target_fill=0.70,
-            )
-            config.frame_width = max(4.0, frame_w)
-            config.frame_height = max(2.5, frame_h)
-            self.camera.frame_width = config.frame_width
-            self.camera.frame_height = config.frame_height
-            self.camera.frame_center = content.get_center()[:2]
-
-            self.wait(0.1)
-            _save_camera_frame(self, _ACCEPTANCE_MEDIA / "acceptance_t0_frame.png")
-            self.wait(2.0)
-
-            anim_duration = 2.5
-            SignalFlow(
-                clock,
-                layout=layout,
+        def build_fixture(self) -> WaveformFixture:
+            graph, elements, layout, clock, data, bundle = build_clock_data_fixture()
+            self._clock = clock
+            self._data = data
+            return WaveformFixture(
                 graph=graph,
-                duration=anim_duration,
-            ).play(self)
-            WaveformSync(
-                bundle,
-                (clock, data),
-                panel_spec=panel_spec,
-                duration=anim_duration,
-            ).play(self)
-            self.wait(5.0)
-            _save_camera_frame(self, _ACCEPTANCE_MEDIA / "acceptance_last_frame.png")
+                elements=elements,
+                layout=layout,
+                bundle=bundle,
+                signals=(clock, data),
+            )
+
+        def teaching_beats(self, _fixture: WaveformFixture) -> tuple[BeatSpec, ...]:
+            ch = self._clock.propagation_history
+            dh = self._data.propagation_history
+            return (
+                BeatSpec(signal=self._clock, record=ch[0], wave_beat=0),
+                BeatSpec(signal=self._data, record=dh[0], wave_beat=0),
+                BeatSpec(signal=self._clock, record=ch[1], wave_beat=1),
+                BeatSpec(signal=self._data, record=dh[1], wave_beat=1),
+            )
+
+        def after_intro_hook(self, _fixture, _camera) -> None:
+            capture_camera_frame(self, _ACCEPTANCE_MEDIA / "acceptance_t0_frame.png")
+
+        def after_beats_hook(self, _fixture, _camera) -> None:
+            capture_camera_frame(self, _ACCEPTANCE_MEDIA / "acceptance_last_frame.png")
 
 except ImportError:
     pass

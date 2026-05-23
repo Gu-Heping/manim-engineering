@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from manim_engineering.protocol.uart import UARTBinding, UARTController, UARTFsmState
-from manim_engineering.semantic import CircuitGraph, LogicLevel
+from manim_engineering.core import CircuitGraph
+from manim_engineering.semantic import LogicLevel
 
 
 def _binding() -> UARTBinding:

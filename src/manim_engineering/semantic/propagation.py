@@ -5,14 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from manim_engineering.semantic.enums import (
-    LogicLevel,
-    PropagationState,
-    SignalType,
-)
+from manim_engineering.core.enums import SignalType
+from manim_engineering.core.graph import CircuitGraph
+from manim_engineering.core.port import Pin
+from manim_engineering.semantic.enums import LogicLevel, PropagationState
 from manim_engineering.semantic.exceptions import PropagationError
-from manim_engineering.semantic.graph import CircuitGraph
-from manim_engineering.semantic.pin import Pin
 from manim_engineering.semantic.state import LogicState
 
 if TYPE_CHECKING:

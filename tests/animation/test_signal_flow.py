@@ -15,7 +15,8 @@ from manim_engineering.animation import (
 )
 from manim_engineering.components import Resistor
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.semantic import CircuitGraph, LogicLevel, LogicState, Signal, SignalType
+from manim_engineering.core import CircuitGraph, SignalType
+from manim_engineering.semantic import LogicLevel, LogicState, Signal
 
 
 def _propagated_fixture() -> tuple[CircuitGraph, dict[str, Resistor], object, Signal]:

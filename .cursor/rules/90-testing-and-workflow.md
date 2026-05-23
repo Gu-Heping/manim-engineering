@@ -112,9 +112,10 @@ Commit updated files under `tests/visual/golden/` (`<scene>.dhash.txt`, optional
   - `tests/layout/test_scene_bbox.py` — `scene_bbox`, `MIN_WAVEFORM_GAP` point separation
   - `tests/layout/test_geometry_overlap.py` — wire vs waveform AABB band/segment guards
   - `tests/animation/test_signal_flow_ownership.py` — `SignalFlow` must not mutate wire geometry
-  - `tests/semantic/test_determinism.py` — deterministic `connection_id` / replay
+  - `tests/core/test_graph_determinism.py` — deterministic `connection_id` / replay (graph iteration + Connection.id ordering)
+  - `tests/semantic/test_signal_propagation.py::test_repeated_propagation_same_result` — `Signal.propagate` determinism
   - `tests/visual/` — dHash and geometry goldens (`@requires_manim` for raster tests)
-- Canonical scenes: `acceptance_three_layer`, `clock_data_waveform`, `power_rail_demo`, `spi_byte_transfer` (one acceptance scene per golden PNG).
+- Canonical scenes: `acceptance_three_layer`, `clock_data_waveform`, `signal_chain_demo`, `spi_byte_transfer` (one acceptance scene per golden PNG).
 
 **Z-order / panel gap**: see `31-visual-geometry.md`.
 

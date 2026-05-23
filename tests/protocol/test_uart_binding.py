@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from manim_engineering.components import UARTPort
 from manim_engineering.protocol.uart import UARTBinding
-from manim_engineering.semantic import CircuitGraph
+from manim_engineering.core import CircuitGraph
 
 
 def test_from_graph_nodes_connects_tx_to_rx() -> None:

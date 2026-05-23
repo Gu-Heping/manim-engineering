@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from manim_engineering.components.element import AnchorPoint, CircuitElement
 from manim_engineering.components.types import Bounds
-from manim_engineering.semantic.enums import PinDirection, SignalType
+from manim_engineering.core.enums import PinDirection, SignalType
 
-_UART_BOUNDS = Bounds(width=1.0, height=0.7)
+_UART_BOUNDS = Bounds(width=1.2, height=0.85)
 _UART_ANCHORS: dict[str, AnchorPoint] = {
-    "tx": (0.0, 0.65),
-    "rx": (0.0, 0.35),
+    "tx": (0.0, 0.72),
+    "rx": (0.0, 0.28),
     "gnd": (0.5, 0.0),
     "center": (0.5, 0.5),
 }

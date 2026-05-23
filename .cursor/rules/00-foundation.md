@@ -50,20 +50,48 @@ Extended subsystems (owned by semantic or adjacent layers, never bypass semantic
 
 ## Repository Layout
 
+Subdirectories marked `# planned` are described in the roadmap but do not
+yet exist in source — do not import from them.
+
 ```text
 src/manim_engineering/
-    semantic/
-    components/          # passive/, analog/, digital/, common/, measurement/
+    core/                # topology types (CircuitGraph, Node, Pin, Port, Connection, enums)
+    semantic/            # signals, buses, logic states, propagation, timing events
+    components/
+        passive/         # implemented (Resistor, Capacitor)
+        common/          # implemented (Ground, VCC, InputDriver)
+        digital/         # implemented (SPIMaster, SPISlave, UARTPort)
+        analog/          # implemented (NMOS, PMOS, Diode, OpAmp)
+        measurement/     # planned (probes, meters)
     layout/
-    protocol/
+    protocol/            # spi/, uart/ implemented; i2c/, can/ planned
     waveform/
-    renderers/           # ieee/, iec/, minimal/, educational/
-    animation/           # signal/, focus/, timing/, protocol/
+    renderers/
+        minimal/         # implemented
+        ieee/            # planned
+        iec/             # planned
+        educational/     # planned
+    animation/           # primitives, pacing, scene helpers, theme tokens
 
-examples/                # basics/, analog/, digital/, protocol/, waveform/
-tests/                   # mirrors src structure
+examples/
+    basics/   analog/   digital/   protocol/
+    waveform/            # planned (currently lives in basics/clock_data_waveform.py)
+tests/
+    core/   semantic/   components/   layout/   waveform/   renderers/   protocol/   animation/
+    architecture/        # layer guards (no src equivalent)
+    visual/              # golden regression (no src equivalent)
 experimental/            # must not leak into stable APIs
 ```
+
+Topology types (``CircuitGraph``, ``Node``, ``Pin``, ``Port``, ``Connection``,
+``PinDirection``, ``PortDirection``, ``ConnectionState``, ``SignalType``,
+``TopologyError``) live in ``core/`` and only there. ``semantic/`` consumes
+them but must not re-export them.
+
+Scene-level visual tokens (``DEFAULT_BACKGROUND``, ``BACKGROUND_COLORS``,
+``HIGHLIGHT_COLOR``, ``MUTED_COLOR``) live in ``animation/theme.py`` and are
+shared across renderer variants. Renderers own *semantic* colours
+(POWER/GROUND/CLOCK/DATA/…) under ``renderers/<variant>/theme.py``.
 
 **Forbidden**: `utils.py`, `helpers.py`, `misc.py`, flat giant component dirs, renderer-specific components in `components/`, scene logic in core.
 

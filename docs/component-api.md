@@ -44,12 +44,16 @@ gate, source, drain, vcc, gnd, clk, rst, tx, rx, in, out
 
 ## Categories
 
-| Directory | Examples |
-|-----------|----------|
-| `passive/` | resistor, capacitor, inductor, diode |
-| `analog/` | NMOS, PMOS, op amp |
-| `digital/` | AND, DFF, mux |
-| `common/` | ground, VCC, probe, port |
+| Directory      | Status      | Examples |
+|----------------|-------------|----------|
+| `passive/`     | implemented | Resistor, Capacitor |
+| `common/`      | implemented | Ground, VCC, InputDriver (single-pin OUT stimulus marker, `semantic_type="io"`) |
+| `digital/`     | implemented | SPIMaster, SPISlave, UARTPort |
+| `analog/`      | implemented | NMOS, PMOS, Diode, OpAmp |
+| `measurement/` | planned     | probes, meters |
+
+`planned` directories are described in the roadmap backlog and do not yet
+exist in source — do not import from them.
 
 ## Forbidden on components
 

@@ -9,12 +9,14 @@ pytest.importorskip("manim")
 from manim import BLUE_C, GREEN_C, GREY_C, ORANGE, RED_C, TEAL_C, YELLOW_C
 
 from manim_engineering.renderers.minimal import theme
-from manim_engineering.semantic.enums import SignalType
+from manim_engineering.core.enums import SignalType
 
 
 def test_semantic_color_constants_match_visual_theme_doc() -> None:
     assert theme.POWER_COLOR == RED_C
-    assert theme.GROUND_COLOR == GREY_C
+    # GROUND lives off the default GREY_C to stay legible on dark backgrounds.
+    assert isinstance(theme.GROUND_COLOR, str)
+    assert theme.GROUND_COLOR.startswith("#")
     assert theme.CLOCK_COLOR == YELLOW_C
     assert theme.DATA_COLOR == GREEN_C
     assert theme.SIGNAL_COLOR == BLUE_C
@@ -22,10 +24,24 @@ def test_semantic_color_constants_match_visual_theme_doc() -> None:
     assert theme.WARNING_COLOR == ORANGE
 
 
-def test_background_palette_non_empty() -> None:
-    assert len(theme.BACKGROUND_COLORS) >= 1
-    assert theme.DEFAULT_BACKGROUND in theme.BACKGROUND_COLORS
-    assert all(color.startswith("#") for color in theme.BACKGROUND_COLORS)
+def test_digital_color_distinct_from_data() -> None:
+    """Multi-line digital buses (e.g. SPI) must not share color with DATA."""
+    # DATA is a ManimColor; DIGITAL is BLUE_C (also ManimColor) — compare repr
+    # to avoid the ManimColor != ManimColor type collision quirk.
+    assert repr(theme.DIGITAL_COLOR) != repr(theme.DATA_COLOR)
+    assert theme.color_for_signal_type(SignalType.DIGITAL) == theme.DIGITAL_COLOR
+
+
+def test_background_tokens_not_in_renderer_theme() -> None:
+    """Background/highlight/muted live in ``animation.theme`` now; renderer
+
+    only owns semantic stroke colours. Asserting absence here so accidental
+    re-introductions get caught."""
+    for name in ("DEFAULT_BACKGROUND", "BACKGROUND_COLORS", "HIGHLIGHT_COLOR", "MUTED_COLOR"):
+        assert not hasattr(theme, name), (
+            f"renderers/minimal/theme.py must not own {name!r} — "
+            "scene-level tokens belong to animation/theme.py."
+        )
 
 
 def test_stroke_width_hierarchy() -> None:

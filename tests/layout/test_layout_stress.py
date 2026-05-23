@@ -16,7 +16,7 @@ from manim_engineering.layout import (
 )
 from manim_engineering.layout.aabb import aabb_overlap, segment_bbox
 from manim_engineering.layout.types import DEFAULT_NOMINAL_FRAME
-from manim_engineering.semantic import CircuitGraph
+from manim_engineering.core import CircuitGraph
 
 # Five-passive chain: widened nominal frame targets 60–75% (see place_on_grid span).
 _STRESS_NOMINAL = Bounds(width=8.0, height=0.55)

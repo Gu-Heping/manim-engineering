@@ -12,7 +12,8 @@ from manim_engineering.layout.aabb import (
 )
 from manim_engineering.layout.routing import points_to_segments
 from manim_engineering.layout.types import Segment
-from manim_engineering.semantic import CircuitGraph, LogicLevel, LogicState, Signal, SignalType
+from manim_engineering.core import CircuitGraph, SignalType
+from manim_engineering.semantic import LogicLevel, LogicState, Signal
 from manim_engineering.waveform import (
     MIN_WAVEFORM_GAP,
     derive_bundle_from_signals,
