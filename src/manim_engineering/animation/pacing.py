@@ -64,8 +64,28 @@ def scene_final_fade_enabled() -> bool:
 
 
 def _pick_font(stack: tuple[str, ...]) -> str:
-    """First entry of the font stack (Manim resolves its own system fallback)."""
-    return stack[0] if stack else "sans-serif"
+    """Return the first usable font from ``stack`` (or ``ME_HUD_FONT`` override).
+
+    Manim warns when a requested family is missing but still rasterises via
+    fallback; that makes cross-platform visual goldens flaky. Visual tests set
+    ``ME_HUD_FONT`` to a family bundled with Manim on Linux CI and Windows dev
+    boxes (``DejaVu Sans``).
+    """
+    override = os.environ.get("ME_HUD_FONT")
+    if override:
+        return override
+
+    try:
+        from manim import Text
+
+        available = set(Text.font_list())
+    except Exception:
+        return stack[0] if stack else "sans-serif"
+
+    for name in stack:
+        if name in available:
+            return name
+    return stack[-1] if stack else "sans-serif"
 
 
 def subtitle_text(

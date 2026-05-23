@@ -9,15 +9,15 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def _suppress_scene_final_fade(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Set ``ME_SUPPRESS_FADE=1`` for the duration of every visual test.
+def _visual_golden_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pin scene env for deterministic last-frame raster compares.
 
-    Scenes end with ``FadeOut(*self.mobjects)`` for cinematic CLI output, but
-    visual golden tests capture ``save_last_frame``: without this gate the
-    "last frame" would be a uniform background, making dHash regression
-    detection useless.
+    - ``ME_SUPPRESS_FADE=1``: keep pre-fade content (not an empty background).
+    - ``ME_HUD_FONT=DejaVu Sans``: Manim ships this on Ubuntu CI and Windows;
+      avoids Windows ``Microsoft YaHei`` vs Linux fallback dHash drift.
     """
     monkeypatch.setenv("ME_SUPPRESS_FADE", "1")
+    monkeypatch.setenv("ME_HUD_FONT", "DejaVu Sans")
 
 
 try:
