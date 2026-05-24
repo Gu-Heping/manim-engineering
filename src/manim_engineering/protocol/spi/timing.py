@@ -7,6 +7,7 @@ from manim_engineering.semantic.state import TimingEvent
 
 
 def _bit_metadata(*, bit_index: int | None) -> dict[str, float]:
+    """Build optional SPI bit-index metadata for a timing edge."""
     if bit_index is None:
         return {}
     return {"bit_index": float(bit_index)}
@@ -19,6 +20,7 @@ def _edge_event(
     edge: TimingEdge,
     bit_index: int | None,
 ) -> TimingEvent:
+    """Construct a mode-0 clock edge ``TimingEvent`` with optional bit metadata."""
     return TimingEvent(
         time=time,
         edge=edge,

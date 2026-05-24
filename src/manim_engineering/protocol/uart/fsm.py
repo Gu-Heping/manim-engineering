@@ -13,9 +13,10 @@ _ACTIVE_LINE_OWNERS: Final[dict[str, UARTLineOwner]] = {
 }
 
 
-def _require_state(current: UARTFsmState, expected: UARTFsmState) -> None:
+def _require_state(current: UARTFsmState, expected: UARTFsmState, *, action: str) -> None:
+    """Raise ``ValueError`` when ``current`` is not the expected FSM state."""
     if current is not expected:
-        raise ValueError(f"expected {expected.value}, got {current.value}")
+        raise ValueError(f"cannot {action} from {current.value}")
 
 
 def owner_for_line(line: str, state: UARTFsmState) -> UARTLineOwner:
@@ -27,19 +28,19 @@ def owner_for_line(line: str, state: UARTFsmState) -> UARTLineOwner:
 
 def transition_on_begin_transmit(current: UARTFsmState) -> UARTFsmState:
     """Idle → start: transmitter pulls line LOW."""
-    _require_state(current, UARTFsmState.IDLE)
+    _require_state(current, UARTFsmState.IDLE, action="begin transmit")
     return UARTFsmState.START
 
 
 def transition_after_start_bit(current: UARTFsmState) -> UARTFsmState:
     """Start bit complete → first data bit."""
-    _require_state(current, UARTFsmState.START)
+    _require_state(current, UARTFsmState.START, action="leave start")
     return UARTFsmState.DATA
 
 
 def transition_after_data_bit(current: UARTFsmState, *, bit_index: int) -> UARTFsmState:
     """Advance data bits; after LSB..MSB (0..7) → stop."""
-    _require_state(current, UARTFsmState.DATA)
+    _require_state(current, UARTFsmState.DATA, action="advance data")
     if bit_index < 7:
         return UARTFsmState.DATA
     return UARTFsmState.STOP
@@ -47,5 +48,5 @@ def transition_after_data_bit(current: UARTFsmState, *, bit_index: int) -> UARTF
 
 def transition_after_stop_bit(current: UARTFsmState) -> UARTFsmState:
     """Stop bit complete → idle (line HIGH)."""
-    _require_state(current, UARTFsmState.STOP)
+    _require_state(current, UARTFsmState.STOP, action="finish stop")
     return UARTFsmState.IDLE

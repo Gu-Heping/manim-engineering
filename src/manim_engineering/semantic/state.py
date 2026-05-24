@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from manim_engineering.semantic.enums import LogicLevel, TimingEdge
 
 
 def _level_label(level: LogicLevel) -> str:
-    """Stable string label for transition text (matches enum value)."""
+    """Return the enum value string used in transition labels."""
     return level.value
 
 
@@ -37,15 +36,4 @@ class TimingEvent:
     time: float
     edge: TimingEdge
     pin_id: str
-    metadata: Mapping[str, float] = field(default_factory=dict)
-
-    def __repr__(self) -> str:
-        meta = dict(self.metadata)
-        if meta:
-            return (
-                f"TimingEvent(time={self.time!r}, edge={self.edge!r}, "
-                f"pin_id={self.pin_id!r}, metadata={meta!r})"
-            )
-        return (
-            f"TimingEvent(time={self.time!r}, edge={self.edge!r}, pin_id={self.pin_id!r})"
-        )
+    metadata: dict[str, float] = field(default_factory=dict)
