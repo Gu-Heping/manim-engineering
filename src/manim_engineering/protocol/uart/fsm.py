@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Final
 
 from manim_engineering.protocol.uart.enums import UARTFsmState, UARTLineOwner
 
 # Semantic line ownership while the frame is active (idle defers to NONE below).
-_ACTIVE_LINE_OWNERS: Final[dict[str, UARTLineOwner]] = {
-    "tx": UARTLineOwner.TRANSMITTER,
-    "rx": UARTLineOwner.RECEIVER,
-}
+_ACTIVE_LINE_OWNERS: Final[MappingProxyType[str, UARTLineOwner]] = MappingProxyType(
+    {
+        "tx": UARTLineOwner.TRANSMITTER,
+        "rx": UARTLineOwner.RECEIVER,
+    }
+)
 
 
 def _require_state(current: UARTFsmState, expected: UARTFsmState, *, action: str) -> None:

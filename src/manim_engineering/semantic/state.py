@@ -20,7 +20,7 @@ class LogicState:
     voltage: float | None = None
 
     def transition_label(self, other: LogicState) -> str:
-        """Human-readable transition label, e.g. ``LOW→HIGH``."""
+        """Human-readable transition label, e.g. ``low→high``."""
         return f"{_level_label(self.level)}→{_level_label(other.level)}"
 
     def __repr__(self) -> str:

@@ -27,8 +27,8 @@ class Connection:
 
     def involves(self, port: Port) -> bool:
         """Return True if ``port`` is an endpoint of this connection."""
-        # Match ``other_port`` live ID semantics (``Port.id`` is derived, not cached).
-        return port.id == self.port_a.id or port.id == self.port_b.id
+        port_id = port.id
+        return port_id == self.port_a.id or port_id == self.port_b.id
 
     def other_port(self, port: Port) -> Port:
         """Return the peer port for ``port``."""

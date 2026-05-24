@@ -46,16 +46,10 @@ def route_orthogonal(
     *,
     hints: tuple[str, ...] = (),
 ) -> tuple[Point2D, ...]:
-    """
-
-    Build an orthogonal polyline between ``start`` and ``end``.
-
-
+    """Build an orthogonal polyline between ``start`` and ``end``.
 
     Default bend order follows layout rules: horizontal segment first (left→right
-
     signal flow), unless hints request vertical-first routing.
-
     """
 
     if start == end:

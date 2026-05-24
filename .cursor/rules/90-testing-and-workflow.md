@@ -105,6 +105,8 @@ UPDATE_VISUAL_GOLDEN=1 pytest tests/visual/ -v
 
 Commit updated files under `tests/visual/golden/` (`<scene>.dhash.txt`, optional `<scene>.geometry.txt`).
 
+**Geometry golden discipline**: changes to `waveform/layout.py` (`step_polyline`, `panel_below_layout`), layout routing/engine wire or trace point lists, or pin anchors that shift routed geometry **must** refresh the full visual suite and review all `*.geometry.txt` diffs — see [docs/visual-validation.md](../../docs/visual-validation.md#geometry-golden-change-discipline).
+
 **Gates**:
 
 - Perceptual compare: dHash Hamming distance **≤ 4** (`PHASH_HAMMING_TOLERANCE` in `tests/visual/conftest.py`).

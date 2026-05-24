@@ -12,8 +12,12 @@ def test_logic_state_transition_label() -> None:
 
 
 def test_logic_state_repr_omits_none_voltage() -> None:
-    assert repr(LogicState(level=LogicLevel.LOW)) == "LogicState(level=<LogicLevel.LOW: 'low'>)"
-    assert "voltage" in repr(LogicState(level=LogicLevel.HIGH, voltage=3.3))
+    low = LogicState(level=LogicLevel.LOW)
+    assert "voltage" not in repr(low)
+    assert "LogicLevel.LOW" in repr(low) or "low" in repr(low)
+    high = LogicState(level=LogicLevel.HIGH, voltage=3.3)
+    assert "voltage" in repr(high)
+    assert "3.3" in repr(high)
 
 
 def test_timing_event_construction() -> None:

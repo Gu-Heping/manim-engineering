@@ -9,7 +9,14 @@ from manim_engineering.core.enums import ConnectionState, PortDirection, SignalT
 
 @dataclass
 class Port:
-    """Semantic interface on a node — not a visual anchor."""
+    """Semantic interface on a node — not a visual anchor.
+
+    **Identity contract:** ``owner_id`` and ``name`` must remain stable after the
+    port is registered on a ``Node`` and especially after ``CircuitGraph.connect``.
+    ``id`` is derived as ``{owner_id}.{name}``; ``Connection`` and graph queries
+    compare live ``port.id`` values. Mutating ``owner_id`` or ``name`` after wiring
+    breaks ``Connection.involves`` / ``other_port`` and is unsupported.
+    """
 
     name: str
     owner_id: str

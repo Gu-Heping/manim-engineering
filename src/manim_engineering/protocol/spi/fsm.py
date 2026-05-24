@@ -2,25 +2,46 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
+from typing import Final
+
 from manim_engineering.protocol.spi.enums import SPIBusOwner, SPIFsmState
+
+# Master-driven lines whenever the bus leaves idle (miso is special-cased below).
+_MASTER_LINES: Final[frozenset[str]] = frozenset({"clk", "mosi", "cs"})
+
+# Line ownership during bit transfer (miso driven by slave).
+_TRANSMITTING_LINE_OWNERS: Final[MappingProxyType[str, SPIBusOwner]] = MappingProxyType(
+    {
+        "clk": SPIBusOwner.MASTER,
+        "mosi": SPIBusOwner.MASTER,
+        "cs": SPIBusOwner.MASTER,
+        "miso": SPIBusOwner.SLAVE,
+    }
+)
+
+
+def _require_state(current: SPIFsmState, expected: SPIFsmState, *, action: str) -> None:
+    """Raise ``ValueError`` when ``current`` is not the expected FSM state."""
+    if current is not expected:
+        raise ValueError(f"cannot {action} from {current.value}")
 
 
 def owner_for_line(line: str, state: SPIFsmState) -> SPIBusOwner:
     """Return semantic owner for a bus line in ``state``."""
     if state is SPIFsmState.IDLE:
         return SPIBusOwner.NONE
-    if line == "miso":
-        return SPIBusOwner.SLAVE if state is SPIFsmState.TRANSMITTING else SPIBusOwner.NONE
-    if line in ("clk", "mosi", "cs"):
+    if state is SPIFsmState.TRANSMITTING:
+        return _TRANSMITTING_LINE_OWNERS.get(line, SPIBusOwner.NONE)
+    if state is SPIFsmState.ACTIVE and line in _MASTER_LINES:
         return SPIBusOwner.MASTER
     return SPIBusOwner.NONE
 
 
 def transition_on_cs_assert(current: SPIFsmState) -> SPIFsmState:
     """Chip select active (LOW): idle → active."""
-    if current is SPIFsmState.IDLE:
-        return SPIFsmState.ACTIVE
-    raise ValueError(f"cannot assert CS from {current.value}")
+    _require_state(current, SPIFsmState.IDLE, action="assert CS")
+    return SPIFsmState.ACTIVE
 
 
 def transition_on_first_clock_edge(current: SPIFsmState) -> SPIFsmState:
