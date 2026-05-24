@@ -13,9 +13,10 @@ OCCUPANCY_TARGET_MIN = 0.60
 OCCUPANCY_TARGET_MAX = 0.75
 
 
-# Default nominal frame sized for the two-resistor basics fixture (~71% occupancy).
+# Default nominal frame for layout smoke and analog-first fixtures. Height 0.60
+# accommodates taller analog symbols versus the retired basics catalog.
 
-DEFAULT_NOMINAL_FRAME = Bounds(width=2.5, height=0.35)
+DEFAULT_NOMINAL_FRAME = Bounds(width=2.5, height=0.60)
 
 
 @dataclass(frozen=True)

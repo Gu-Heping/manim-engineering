@@ -88,3 +88,44 @@ def test_waveform_sync_aligns_with_signal_flow_duration() -> None:
         duration=BEAT_DURATION,
     )
     assert sync.aligns_with_signal_flow(flow.duration)
+
+
+def test_reveal_only_beat_uses_full_duration_when_no_flow_anims() -> None:
+    from unittest.mock import patch
+
+    from manim_engineering.animation.base import AnimationPlan
+    from manim_engineering.animation.signal_flow import SignalFlow
+
+    graph, layout, clock, _data, _bundle, _panel_spec = _clock_data_fixture()
+
+    class _Line:
+        class _Anim:
+            def set_stroke(self, **_kwargs: object) -> str:
+                return "anim"
+
+        animate = _Anim()
+
+    class _RevealTracker:
+        def append_through_time(self, _reveal_time: float) -> list[_Line]:
+            return [_Line()]
+
+    empty_flow = AnimationPlan(
+        overlays=(),
+        propagation_overlays=(),
+        animations=(),
+        run_time=BEAT_DURATION,
+    )
+    scene = _RecordingScene()
+    with patch.object(SignalFlow, "build", return_value=empty_flow):
+        used = play_propagation_beat(
+            scene,
+            clock,
+            layout=layout,
+            graph=graph,
+            duration=BEAT_DURATION,
+            reveal_tracker=_RevealTracker(),
+            reveal_time=0.0,
+        )
+    assert used == pytest.approx(BEAT_DURATION)
+    assert len(scene.played) == 1
+    assert scene.run_times[0] == pytest.approx(BEAT_DURATION)

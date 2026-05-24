@@ -46,10 +46,10 @@ gate, source, drain, vcc, gnd, clk, rst, tx, rx, in, out
 
 | Directory      | Status      | Examples |
 |----------------|-------------|----------|
-| `passive/`     | implemented | Resistor, Capacitor |
+| `passive/`     | implemented | Resistor, Capacitor, Inductor |
 | `common/`      | implemented | Ground, VCC, InputDriver (single-pin OUT stimulus marker, `semantic_type="io"`) |
 | `digital/`     | implemented | SPIMaster, SPISlave, UARTPort |
-| `analog/`      | implemented | NMOS, PMOS, Diode, OpAmp |
+| `analog/`      | implemented | NMOS, PMOS, Diode, OpAmp, NPN, PNP, ZenerDiode |
 | `measurement/` | planned     | probes, meters |
 
 `planned` directories are described in the roadmap backlog and do not yet

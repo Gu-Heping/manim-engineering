@@ -28,4 +28,7 @@ Add to the scene in order: **components → wires → waveform panel**.
 When changing layout, waveform panel placement, or minimal renderer wire/panel geometry:
 
 - Keep `tests/layout/test_scene_bbox.py` passing.
-- Update visual goldens per `90-testing-and-workflow.md` § Visual validation.
+- Keep geometry gates passing per `90-testing-and-workflow.md` § Visual validation:
+  - `tests/layout/test_geometry_overlap.py`
+  - `tests/layout/test_layout_stress.py`
+  - `tests/waveform/test_step_polyline_reveal.py`

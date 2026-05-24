@@ -40,7 +40,7 @@ Per the project animation style brief (see also `docs/animation-timing.md`):
 1. **Background**: `configure_waveform_scene_camera` already sets `#1e1e2e`. Never let a scene render on pure black.
 2. **Entry**: no bare `self.add(topology, hud)` in the first frame. Use `LaggedStart(FadeIn(components), FadeIn(wires), FadeIn(waveform_panel))` for the stage, `Write(title)` for the title, `FadeIn(intro, shift=…)` for the subtitle.
 3. **Body**: every captioned beat is a crossfade (`FadeOut(prev) + FadeIn(next)`) followed by `BEAT_CAPTION_HOLD` (built into `PropagationSequence`), then the propagation pulse.
-4. **Exit**: gate the closing animation with `scene_final_fade_enabled()` so visual golden tests (which set `ME_SUPPRESS_FADE=1`) can still capture a content-bearing last frame, but CLI renders end with `self.play(FadeOut(*self.mobjects, run_time=SCENE_FADE_OUT))`.
+4. **Exit**: gate the closing animation with `scene_final_fade_enabled()` so deterministic preview/export runs (which may set `ME_SUPPRESS_FADE=1`) can still capture a content-bearing last frame, but CLI renders end with `self.play(FadeOut(*self.mobjects, run_time=SCENE_FADE_OUT))`.
 5. **Pulse styling**: pulses keep their semantic core colour but wear a warm-gold halo (`theme.HIGHLIGHT_COLOR = "#FFCB6B"`). Never use pure `WHITE` for transient emphasis — too clinical.
 6. **`dim_inactive`**: only meaningful with `topology=…` passed in. Passing `dim_inactive=True` without `topology` raises `ValueError` by design; do not catch it.
 

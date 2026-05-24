@@ -115,7 +115,7 @@ def scene_frame_bounds(
     *,
     trace_count: int,
     padding: float = 0.5,
-    label_inset: float = 0.4,
+    label_inset: float = 0.55,
     target_fill: float | None = None,
 ) -> tuple[float, float]:
     """Nominal Manim frame (width, height) covering circuit, wires, and waveform panel.

@@ -30,7 +30,7 @@ class Ground(CircuitElement):
     def _register_pins(self) -> None:
         self._register_pin(
             "gnd",
-            direction=PinDirection.IN,
+            direction=PinDirection.INOUT,
             signal_type=SignalType.GROUND,
             routing_hints=("vertical", "down"),
         )

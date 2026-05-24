@@ -102,12 +102,12 @@ src/manim_engineering/
     animation/           # primitives, pacing, scene helpers, theme tokens
 
 examples/
-    basics/   analog/   digital/   protocol/
-    waveform/            # planned (see basics/clock_data_waveform.py)
+    analog/              # primary catalog
+    basics/              # minimal smoke retained
+    protocol/            # minimal smoke retained
 tests/
     core/   semantic/   components/   layout/   waveform/   renderers/   protocol/   animation/
     architecture/        # layer guards (no src equivalent)
-    visual/              # golden regression (no src equivalent)
 ```
 
 Topology types (``CircuitGraph``, ``Node``, ``Pin``, ``Port``, ``Connection``,

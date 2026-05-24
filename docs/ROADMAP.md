@@ -2,7 +2,7 @@
 
 Phased plan for long-running implementation. Each phase completes with **tests + one minimal example** before the next.
 
-**Status**: Phase 8 complete — example library layout, per-directory READMEs, master index. **3-layer refactor complete** (`core/` graph model, `LayoutEngine.solve`, `MinimalRenderer.render_circuit`, `Port` API with `Pin` aliases). **Phase 7 protocol slice** includes SPI and UART (`protocol/spi/`, `protocol/uart/`). **Analog Scope A** examples: `rc_step_response`, `cmos_inverter`. Next: see **Stabilization** vs **Feature backlog** below.
+**Status**: Phase 8 complete — example library and docs are under **analog-first stabilization**. **3-layer refactor complete** (`core/` graph model, `LayoutEngine.solve`, `MinimalRenderer.render_circuit`, `Port` API with `Pin` aliases). **Phase 7 protocol slice** includes SPI and UART (`protocol/spi/`, `protocol/uart/`) with minimal smoke examples retained.
 
 ---
 
@@ -131,7 +131,7 @@ Deliverables:
 
 ## Phase 7 — Protocol vertical slice (complete)
 
-**Owner**: `protocol/` — **SPI** (UART deferred)
+**Owner**: `protocol/` — **SPI + UART**
 
 Deliverables:
 
@@ -154,11 +154,11 @@ Deliverables:
 
 Deliverables:
 
-- [x] `examples/` layout: `basics/`, `analog/`, `digital/`, `protocol/`, `waveform/` per `00-foundation.md`
+- [x] `examples/` layout established and now converging to analog-first catalog with minimal protocol/basic smoke retained
 - [x] Per-directory README (purpose, one-concept table, run commands)
 - [x] Master index [examples/README.md](../examples/README.md); root README "Running examples"
-- [x] `examples/digital/logic_chain.py` — minimal digital propagation smoke
-- [x] `examples/waveform/README.md` — points to `basics/clock_data_waveform.py`
+- [x] Analog 01–08 scene catalog (`examples/analog/01_rc_charge.py` … `08_rlc_transient.py`)
+- [x] Minimal protocol/basic smoke retained (`examples/protocol/spi_byte_transfer.py`, `examples/basics/graph_only.py`)
 - [ ] Renderer variants (IEC) — deferred until minimal renderer stable
 
 **Exit criteria**: all existing examples cataloged; smoke-runnable via `python examples/...`; no layer violations in examples.
@@ -198,20 +198,20 @@ Deliverables:
 
 ### Governance execution (Steps 1–6)
 
-**Steps 1–5 (complete):** deterministic `connection_id`, `scene_bbox` / `MIN_WAVEFORM_GAP`, `SignalFlow` wire ownership, visual golden pipeline (dHash + geometry), CI `visual-golden` job.
+**Steps 1–5 (complete):** deterministic `connection_id`, `scene_bbox` / `MIN_WAVEFORM_GAP`, `SignalFlow` wire ownership, geometry-first regression pipeline.
 
 **Step 6 (complete):**
 
 - [x] AABB wire/waveform overlap guards (`tests/layout/test_geometry_overlap.py`, `layout/aabb.py`)
-- [x] SPI dHash golden (`tests/visual/test_spi_byte_transfer_golden.py`)
-- [x] Protocol geometry goldens: `spi_byte_transfer`, `uart_byte_transfer` (digest only)
+- [x] Geometry regression guards for layout/waveform spacing and overlap (`tests/layout/test_scene_bbox.py`, `tests/layout/test_geometry_overlap.py`)
+- [x] Protocol/layout deterministic geometry contracts (wire replay hash + waveform spacing)
 - [x] Rule/doc cross-ref (`90-testing-and-workflow.md` § Visual validation)
 
 **Step 7 (complete):**
 
-- [x] UART dHash golden (`tests/visual/test_uart_byte_transfer_golden.py`, `golden/uart_byte_transfer.dhash.txt`)
-- [x] UART geometry golden retained (`tests/visual/test_uart_byte_transfer.py`)
-- [x] Minimal analog example (`examples/analog/rc_step_response.py`) + geometry smoke (`tests/visual/test_analog_example_geometry.py`)
+- [x] Geometry-only gate retained without raster dHash dependency
+- [x] Analog catalog expanded to 01–08 scenes with deterministic layout contracts
+- [x] Minimal protocol/basic smoke retained for anti-regression coverage
 - [x] Layout stress fixture (`tests/layout/test_layout_stress.py`) — 5-passive chain, occupancy band, wire AABB, replay hash
 
 ### Post-governance backlog
@@ -219,7 +219,7 @@ Deliverables:
 - [x] Deterministic `connection_id` on `CircuitGraph.connect()` (sorted port ids)
 - [x] Layout guards: `scene_bbox`, `MIN_WAVEFORM_GAP`, waveform `step_polyline` separation
 - [x] `SignalFlow` wire ownership regression (`tests/animation/test_signal_flow_ownership.py`)
-- [x] Visual geometry goldens: `acceptance_three_layer`, `spi_byte_transfer`, `uart_byte_transfer`
+- [x] Geometry-only merge gates: `test_scene_bbox`, `test_geometry_overlap`, `test_layout_stress`, `test_step_polyline_reveal`
 - [x] **Architectural de-duplication (A+B+D)**: topology types collapsed into
       `core/`, scene-level visual tokens lifted to `animation/theme.py`,
       directory maps in rules/docs synced with actual source layout. Guarded
@@ -227,9 +227,8 @@ Deliverables:
       deleted-shim parametrize in `test_import_layers.py`.
 - [x] **arch debt C+E**: pure-topology tests moved out of `tests/semantic/`
       into `tests/core/` (`test_graph_topology.py`, `test_node_pin.py`,
-      `test_graph_determinism.py`); examples `WaveformDemoScene` + helpers in
-      `examples/_shared.py` removed ~150 lines of construct boilerplate across
-      SPI/UART/clock_data/power_rail. Visual goldens unchanged.
+      `test_graph_determinism.py`); examples now converge toward analog-first
+      scenes with protocol/basic smoke retained.
 - [x] **Analog symbol set (Scope A)**: `NMOS`, `PMOS`, `Diode`, `OpAmp` as
       `CircuitElement` with `MinimalRenderer` symbols (channel + gate /
       inversion bubble / triangle+bar / op-amp triangle with +/− glyphs);
@@ -242,7 +241,7 @@ Deliverables:
       `record_rising_edge` / `record_falling_edge`; propagation path clip at
       pin anchors; `clock_data` dual nets + four beats; `power_rail_demo` →
       `signal_chain_demo`; RC acceptance (`InputDriver`→R→C→GND); CMOS gate +
-      OUT pull paths; UART horizontal TX→RX layout. Visual goldens refreshed.
+      OUT pull paths; UART horizontal TX→RX layout. Geometry gates refreshed.
 
 ### Stabilization (current track)
 

@@ -4,16 +4,8 @@ Build a semantic circuit graph only — no Manim render.
 Phase 1 exit example: topology + propagation without geometry.
 """
 
-from manim_engineering.semantic import (
-    Bus,
-    CircuitGraph,
-    LogicLevel,
-    LogicState,
-    Node,
-    PinDirection,
-    Signal,
-    SignalType,
-)
+from manim_engineering.core import CircuitGraph, Node, PinDirection, SignalType
+from manim_engineering.semantic import Bus, LogicLevel, LogicState, Signal
 
 
 def main() -> None:

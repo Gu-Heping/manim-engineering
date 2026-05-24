@@ -18,10 +18,11 @@ from manim_engineering.layout import (
 from manim_engineering.layout.aabb import aabb_overlap, segment_bbox
 from manim_engineering.layout.types import DEFAULT_NOMINAL_FRAME
 
-# Five-passive chain: widened nominal frame targets 60–75% (see place_on_grid span).
-_STRESS_NOMINAL = Bounds(width=8.0, height=0.55)
+# Five-passive chain: stress fixture; occupancy max 0.78 is intentionally above
+# the 60–75% teaching band to exercise tight layouts (see place_on_grid span).
+_STRESS_NOMINAL = Bounds(width=8.0, height=0.60)
 _STRESS_OCCUPANCY_MIN = 0.60
-_STRESS_OCCUPANCY_MAX = 0.75
+_STRESS_OCCUPANCY_MAX = 0.78
 
 
 def _five_passive_chain_fixture():

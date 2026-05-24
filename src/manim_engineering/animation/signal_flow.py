@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from manim import Animation, AnimationGroup, Dot, MoveAlongPath, ShowPassingFlash, VGroup, VMobject
+from manim.utils.rate_functions import smooth as _DEFAULT_RATE_FUNC
 
 from manim_engineering.animation import theme as anim_theme
 from manim_engineering.animation.base import AnimationPlan, AnimationPrimitive
@@ -58,6 +59,9 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
         graph: CircuitGraph | None = None,
         wire_mobjects: Sequence[VMobject] | None = None,
         duration: float = BEAT_DURATION,
+        rate_func: Callable[[float], float] = _DEFAULT_RATE_FUNC,
+        flash_time_width: float = 0.55,
+        wire_flash_time_width: float = 0.35,
     ) -> None:
         super().__init__(duration=duration)
         self._signal = signal
@@ -65,6 +69,9 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
         self._layout = layout
         self._graph = graph
         self._wire_mobjects = tuple(wire_mobjects) if wire_mobjects is not None else ()
+        self._rate_func = rate_func
+        self._flash_time_width = flash_time_width
+        self._wire_flash_time_width = wire_flash_time_width
 
     @property
     def signal(self) -> Signal:
@@ -108,7 +115,7 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
         pulse.set_z_index(PULSE_Z_INDEX)
         pulse.move_to(path.point_from_proportion(0.0))
 
-        pulse_motion = MoveAlongPath(pulse, path, run_time=self.duration)
+        pulse_motion = MoveAlongPath(pulse, path, run_time=self.duration, rate_func=self._rate_func)
         route_flash_anims, route_flash_overlays = self._route_flash_along_points(
             points,
             pulse_color,
@@ -180,13 +187,15 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
         points: Sequence[Point2D],
         pulse_color: object,
     ) -> tuple[tuple[Animation, ...], tuple[VMobject, ...]]:
-        """Bright traveling flash on a detached wire copy (default visibility)."""
+        """Bright traveling flash on a detached wire copy."""
         if len(points) < 2:
             return (), ()
         flash_path = path_mobject_from_points(points)
+        wire_len = wire_path_length(points)
+        flash_width = theme.WIRE_STROKE_WIDTH * max(1.8, min(3.0, wire_len / 4))
         flash_path.set_stroke(
             color=pulse_color,
-            width=theme.WIRE_STROKE_WIDTH * 2.5,
+            width=flash_width,
             opacity=1.0,
         )
         flash_target = copy_for_animation(flash_path)
@@ -195,8 +204,9 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
             (
                 ShowPassingFlash(
                     flash_target,
-                    time_width=0.55,
+                    time_width=self._flash_time_width,
                     run_time=self.duration,
+                    rate_func=self._rate_func,
                 ),
             ),
             (flash_target,),
@@ -212,6 +222,11 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
             flash_target.set_z_index(PROPAGATION_Z_INDEX)
             overlays.append(flash_target)
             animations.append(
-                ShowPassingFlash(flash_target, time_width=0.35, run_time=self.duration)
+                ShowPassingFlash(
+                    flash_target,
+                    time_width=self._wire_flash_time_width,
+                    run_time=self.duration,
+                    rate_func=self._rate_func,
+                )
             )
         return tuple(animations), tuple(overlays)

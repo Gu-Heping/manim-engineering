@@ -30,7 +30,7 @@ coupling to the current Manim pipeline.
 Promote ideas only when all of the following hold:
 
 1. Improves teaching explainability (clearer cause/effect in captions and beats).
-2. Keeps scene determinism (`pytest` + visual golden stability).
+2. Keeps scene determinism (`pytest` + geometry/smoke gate stability).
 3. Does not force large architectural rewrites in `core/semantic/layout/renderers`.
 
 If a prototype fails any gate, keep current semantic propagation model.

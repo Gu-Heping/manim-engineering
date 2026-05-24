@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from manim import Animation, AnimationGroup, ShowPassingFlash
+from manim.utils.rate_functions import smooth as _DEFAULT_RATE_FUNC
 
 from manim_engineering.animation.base import AnimationPlan, AnimationPrimitive
 from manim_engineering.animation.layers import TIMING_Z_INDEX
@@ -41,6 +42,8 @@ class WaveformSync(AnimationPrimitive["WaveformSync"]):
         beat: int | None = None,
         duration: float = DEFAULT_TIMING_DURATION,
         active_signal: Signal | None = None,
+        rate_func: Callable[[float], float] = _DEFAULT_RATE_FUNC,
+        flash_time_width: float = 0.65,
     ) -> None:
         super().__init__(duration=duration)
         self._bundle = bundle
@@ -48,6 +51,8 @@ class WaveformSync(AnimationPrimitive["WaveformSync"]):
         self._panel_spec = panel_spec
         self._beat = beat
         self._active_signal = active_signal
+        self._rate_func = rate_func
+        self._flash_time_width = flash_time_width
 
     @property
     def bundle(self) -> WaveformBundle:
@@ -90,8 +95,9 @@ class WaveformSync(AnimationPrimitive["WaveformSync"]):
             animations.append(
                 ShowPassingFlash(
                     flash_target,
-                    time_width=0.65,
+                    time_width=self._flash_time_width,
                     run_time=self.duration,
+                    rate_func=self._rate_func,
                 )
             )
 

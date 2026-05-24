@@ -101,18 +101,21 @@ Align with [CI](../../.github/workflows/ci.yml) before push:
 
 ```bash
 ruff check src tests
-pytest tests/ -q --ignore=tests/visual
+pytest tests/ -q
 ```
 
 When touching **layout**, **waveform** (`step_polyline`, `panel_below_layout`), **renderer geometry**, or pin anchors:
 
 ```bash
-pytest tests/visual/ -v
-# intentional visual change:
-# UPDATE_VISUAL_GOLDEN=1 pytest tests/visual/ -v
+pytest tests/layout/test_scene_bbox.py -q
+pytest tests/layout/test_geometry_overlap.py -q
+pytest tests/layout/test_layout_stress.py -q
+pytest tests/layout/test_analog_geometry_smoke.py -q
+pytest tests/waveform/test_step_polyline_reveal.py -q
+pytest tests/examples/test_smoke_entrypoints.py -q
 ```
 
-Review **all** `tests/visual/golden/*.geometry.txt` diffs — see [geometry golden discipline](#visual-validation-executable-gates) and [docs/visual-validation.md](../../docs/visual-validation.md#geometry-golden-change-discipline).
+Review any geometry digest/assertion updates in the touched tests. Do not rely on raster snapshots as merge gates.
 
 ### Open a PR
 
@@ -126,8 +129,13 @@ Use `gh pr create`. On Windows, pass the body with multiple `-m` flags (avoid sh
 
 ## Test plan
 - [ ] ruff check src tests
-- [ ] pytest tests/ -q --ignore=tests/visual
-- [ ] pytest tests/visual/ (if layout/waveform/renderer geometry touched)
+- [ ] pytest tests/ -q
+- [ ] pytest tests/layout/test_scene_bbox.py -q
+- [ ] pytest tests/layout/test_geometry_overlap.py -q
+- [ ] pytest tests/layout/test_layout_stress.py -q
+- [ ] pytest tests/layout/test_analog_geometry_smoke.py -q
+- [ ] pytest tests/waveform/test_step_polyline_reveal.py -q
+- [ ] pytest tests/examples/test_smoke_entrypoints.py -q
 ```
 
 Write **why** in Summary; list commands actually run in Test plan.
@@ -140,7 +148,7 @@ Blocking jobs (must pass before merge):
 |-----|----------------|
 | `test (3.11)` | ruff + full pytest |
 | `test (3.12)` | ruff + full pytest |
-| `visual-golden` | `pytest tests/visual/` (Python 3.12, `manim==0.19.1`) |
+| `geometry-smoke` | layout/waveform geometry + retained smoke entrypoint subset |
 
 **CodeRabbit** is informational. Triage as follows:
 
@@ -154,7 +162,7 @@ Blocking jobs (must pass before merge):
 **Project-specific regressions**:
 
 - Tests touching [`animation/registry.py`](../../src/manim_engineering/animation/registry.py) must not leak into global `_REGISTRY` — use `monkeypatch` with a registry snapshot or explicit teardown.
-- Changes to [`waveform/layout.py`](../../src/manim_engineering/waveform/layout.py) require full visual golden review (not SPI-only).
+- Changes to [`waveform/layout.py`](../../src/manim_engineering/waveform/layout.py) require full geometry regression review (not SPI-only).
 
 ### Fix loop
 
@@ -167,7 +175,7 @@ Blocking jobs (must pass before merge):
 
 **Merge when**:
 
-- `test (3.11)`, `test (3.12)`, and `visual-golden` are green
+- `test (3.11)`, `test (3.12)`, and `geometry-smoke` are green
 - No unresolved **actionable** review (or risk accepted in the PR thread)
 - User has asked to merge (agents do not merge on their own initiative)
 
@@ -181,48 +189,48 @@ Blocking jobs (must pass before merge):
 
 ## Visual validation (executable gates)
 
-Golden tests guard **semantic → layout → render → frame** without changing semantics or animation APIs. Human overview: [docs/visual-validation.md](../../docs/visual-validation.md).
+Geometry tests guard **semantic → layout → waveform geometry** without requiring raster dHash snapshots. Human overview: [docs/visual-validation.md](../../docs/visual-validation.md).
 
-**Run locally** (requires Manim, same pin as CI):
+**Run locally** (same as CI):
 
 ```bash
 pip install -e ".[dev]"
-pytest tests/visual/ -v
+pytest tests/layout/test_scene_bbox.py -q
+pytest tests/layout/test_geometry_overlap.py -q
+pytest tests/layout/test_layout_stress.py -q
+pytest tests/layout/test_analog_geometry_smoke.py -q
+pytest tests/waveform/test_step_polyline_reveal.py -q
+pytest tests/examples/test_smoke_entrypoints.py -q
 ```
 
-Without Manim, visual tests are **skipped** (`requires_manim`), not failed.
+These are deterministic geometry gates and should pass without visual snapshot regeneration.
 
-**Update goldens** after intentional visual change:
+**Manual visual inspection** (optional, non-blocking):
 
 ```bash
-# Windows PowerShell
-$env:UPDATE_VISUAL_GOLDEN = "1"
-pytest tests/visual/ -v
-# Linux/macOS
-UPDATE_VISUAL_GOLDEN=1 pytest tests/visual/ -v
+python scripts/export_example_videos.py
 ```
 
-Commit updated files under `tests/visual/golden/` (`<scene>.dhash.txt`, optional `<scene>.geometry.txt`).
-
-**Geometry golden discipline**: changes to `waveform/layout.py` (`step_polyline`, `panel_below_layout`), layout routing/engine wire or trace point lists, or pin anchors that shift routed geometry **must** refresh the full visual suite and review all `*.geometry.txt` diffs — see [docs/visual-validation.md](../../docs/visual-validation.md#geometry-golden-change-discipline).
+**Geometry discipline**: changes to `waveform/layout.py` (`step_polyline`, `panel_below_layout`), layout routing/engine wire point lists, or pin anchors must keep the geometry guard tests passing.
 
 **Gates**:
 
-- Perceptual compare: dHash Hamming distance **≤ 4** (`PHASH_HAMMING_TOLERANCE` in `tests/visual/conftest.py`).
 - When touching **layout**, **waveform**, or **animation** paths, keep these passing before merge:
   - `tests/layout/test_scene_bbox.py` — `scene_bbox`, `MIN_WAVEFORM_GAP` point separation
   - `tests/layout/test_geometry_overlap.py` — wire vs waveform AABB band/segment guards
+  - `tests/layout/test_layout_stress.py` — deterministic wire replay hash / occupancy band
+- `tests/layout/test_analog_geometry_smoke.py` — analog fixture bbox/wire geometry smoke
+  - `tests/waveform/test_step_polyline_reveal.py` — reveal-time polyline geometry contract
+- `tests/examples/test_smoke_entrypoints.py` — analog fixture builders + retained smoke entrypoints
   - `tests/animation/test_signal_flow_ownership.py` — `SignalFlow` must not mutate wire geometry
   - `tests/core/test_graph_determinism.py` — deterministic `connection_id` / replay (graph iteration + Connection.id ordering)
   - `tests/semantic/test_signal_propagation.py::test_repeated_propagation_same_result` — `Signal.propagate` determinism
-  - `tests/visual/` — dHash and geometry goldens (`@requires_manim` for raster tests)
-- Canonical scenes: `acceptance_three_layer`, `clock_data_waveform`, `signal_chain_demo`, `spi_byte_transfer` (one acceptance scene per golden PNG).
 
 **Z-order / panel gap**: see `31-visual-geometry.md`.
 
 ## CI
 
-Tests run in CI: imports, rendering stability, API compatibility, basic examples. Job `visual-golden` (Ubuntu, Python 3.12, `manim==0.19.1`) runs `pytest tests/visual/` and is **blocking**. Main matrix `pytest` skips visual tests when Manim is absent. Broken CI is blocking.
+Tests run in CI: imports, rendering stability, API compatibility, and geometry regression. Job `geometry-smoke` (Ubuntu, Python 3.12) runs geometry-only layout/waveform tests and is **blocking**.
 
 ## Performance
 
