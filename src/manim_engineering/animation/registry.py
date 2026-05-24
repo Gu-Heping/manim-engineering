@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from types import MappingProxyType
 from typing import TypeVar, overload
 
 from manim_engineering.animation.base import AnimationPrimitive
@@ -13,8 +14,13 @@ _REGISTRY: dict[str, type[AnimationPrimitive]] = {}
 
 
 def _store(name: str, cls: type[T]) -> type[T]:
-    if name in _REGISTRY and _REGISTRY[name] is not cls:
-        msg = f"primitive already registered: {name}"
+    """Insert ``cls`` into the registry or raise on duplicate name."""
+    existing = _REGISTRY.get(name)
+    if existing is not None and existing is not cls:
+        msg = (
+            f"primitive already registered: {name!r} "
+            f"(existing={existing.__name__}, new={cls.__name__})"
+        )
         raise ValueError(msg)
     _REGISTRY[name] = cls
     return cls
@@ -47,10 +53,15 @@ def get_primitive(name: str) -> type[AnimationPrimitive]:
     try:
         return _REGISTRY[name]
     except KeyError as exc:
-        msg = f"unknown animation primitive: {name}"
+        msg = f"unknown animation primitive: {name!r}"
         raise KeyError(msg) from exc
 
 
 def registered_primitives() -> tuple[str, ...]:
-    """Return registered primitive names in sorted order."""
+    """Return registered primitive names in lexicographic order (stable for tests)."""
     return tuple(sorted(_REGISTRY))
+
+
+def primitive_registry_view() -> Mapping[str, type[AnimationPrimitive]]:
+    """Read-only live view of the registry (mutations raise ``TypeError``)."""
+    return MappingProxyType(_REGISTRY)

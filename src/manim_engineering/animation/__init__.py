@@ -33,6 +33,7 @@ from manim_engineering.animation.propagation_sequence import (
 from manim_engineering.animation.purpose import AnimationPurpose
 from manim_engineering.animation.registry import (
     get_primitive,
+    primitive_registry_view,
     register_primitive,
     registered_primitives,
 )
@@ -97,6 +98,7 @@ __all__ = [
     "normalize_topology_labels",
     "get_primitive",
     "play_propagation_beat",
+    "primitive_registry_view",
     "register_primitive",
     "registered_primitives",
     "resolve_scene_camera",
