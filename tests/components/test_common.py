@@ -12,7 +12,7 @@ def test_ground_pin_naming() -> None:
     assert set(gnd.pins) == {"gnd"}
     pin = gnd.get_pin("gnd")
     assert pin.signal_type == SignalType.GROUND
-    assert pin.direction == PinDirection.IN
+    assert pin.direction == PinDirection.INOUT
 
 
 def test_vcc_pin_naming() -> None:

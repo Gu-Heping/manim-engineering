@@ -25,15 +25,16 @@ Extended paths: `layout/`, `protocol/`, `waveform/` (see [docs/architecture.md](
 
 ## Repository status
 
-Phases 0–8 complete per [docs/ROADMAP.md](docs/ROADMAP.md): semantic core through example library, SPI/UART protocol demos, and analog Scope A examples (`rc_step_response`, `cmos_inverter`). Feature backlog (IEC renderer, I2C/CAN, continuous analog physics) is tracked separately under **Feature backlog** in the ROADMAP.
+Phases 0–8 are complete and the example layer is now in **analog-first stabilization**: analog `01`–`08` scenes are primary, with minimal smoke retained for `basics/graph_only.py` and `protocol/spi_byte_transfer.py`. Feature backlog (IEC renderer, I2C/CAN, continuous analog physics) stays under **Feature backlog** in the ROADMAP.
 
 ## Running examples
 
-Install the package, then run scripts from the repo root. Most examples expose `main()` for smoke checks without rendering video.
+Install the package, then run smoke scripts from the repo root.
 
 ```bash
 pip install -e .
 python examples/basics/graph_only.py
+python examples/protocol/spi_byte_transfer.py
 ```
 
 Manim previews need the optional extra:
@@ -41,6 +42,7 @@ Manim previews need the optional extra:
 ```bash
 pip install -e ".[manim]"
 manim -pql examples/basics/signal_flow_demo.py SignalFlowDemo
+manim --disable_caching -pql examples/analog/01_rc_charge.py RCChargeScene
 ```
 
 Full catalog, per-directory tables, and all run commands: [examples/README.md](examples/README.md).

@@ -1,11 +1,11 @@
-"""Analog component stub contract (NMOS / PMOS / Diode / OpAmp).
+"""Analog component stub contract (NMOS / PMOS / Diode / OpAmp / BJT / Zener).
 
 Scope A: pin metadata + bounds + graph-registration smoke only. No physics.
 """
 
 from __future__ import annotations
 
-from manim_engineering.components import NMOS, PMOS, Diode, OpAmp
+from manim_engineering.components import NMOS, NPN, PMOS, PNP, Diode, OpAmp, ZenerDiode
 from manim_engineering.core import CircuitGraph, PinDirection, SignalType
 
 
@@ -89,3 +89,25 @@ def test_op_amp_attaches_to_graph() -> None:
     op = OpAmp("u1")
     op.attach_to(graph)
     assert any(node.id == "u1" for node in graph.nodes)
+
+
+def test_bjt_pins_and_metadata() -> None:
+    npn = NPN("q1", label="Q1")
+    pnp = PNP("q2", label="Q2")
+    for bjt in (npn, pnp):
+        assert bjt.semantic_type == "analog"
+        assert set(bjt.pins) == {"base", "collector", "emitter"}
+        assert bjt.get_pin("base").direction is PinDirection.IN
+        assert bjt.get_pin("collector").direction is PinDirection.INOUT
+        assert bjt.get_pin("emitter").signal_type is SignalType.ANALOG
+        assert bjt.get_bounds().width > 0
+
+
+def test_zener_diode_pins_and_metadata() -> None:
+    z = ZenerDiode("dz1", label="DZ1")
+    assert z.semantic_type == "analog"
+    assert set(z.pins) == {"anode", "cathode"}
+    assert z.get_pin("anode").direction is PinDirection.IN
+    assert z.get_pin("cathode").direction is PinDirection.OUT
+    assert z.get_pin("anode").signal_type is SignalType.ANALOG
+    assert z.get_bounds().height > 0

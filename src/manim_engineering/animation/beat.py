@@ -105,17 +105,10 @@ def play_propagation_beat(
                 mob.set_z_index(PULSE_Z_INDEX)
         add(*overlays)
 
-    animations: list[object] = []
-    for anim in flow_plan.animations:
-        animations.append(anim)
-    if sync_plan is not None:
-        for anim in sync_plan.animations:
-            animations.append(anim)
-
+    reveal_anims: list[object] = []
     if reveal_tracker is not None:
         append = getattr(reveal_tracker, "append_through_beat", None)
         append_time = getattr(reveal_tracker, "append_through_time", None)
-        reveal_anims: list[object] = []
         if reveal_time is not None and append_time is not None:
             for line in append_time(reveal_time):
                 reveal_anims.append(line.animate.set_stroke(width=theme.WAVEFORM_STROKE_WIDTH))
@@ -123,19 +116,29 @@ def play_propagation_beat(
             for reveal_signal, target_beat in reveal_targets:
                 for line in append(reveal_signal, target_beat):
                     reveal_anims.append(line.animate.set_stroke(width=theme.WAVEFORM_STROKE_WIDTH))
-        if reveal_anims:
-            animations.append(
-                AnimationGroup(*reveal_anims, lag_ratio=0.0)
-                if len(reveal_anims) > 1
-                else reveal_anims[0]
-            )
 
-    if animations:
-        if len(animations) == 1:
-            combined = animations[0]
+    flow_anims: list[object] = []
+    for anim in flow_plan.animations:
+        flow_anims.append(anim)
+    if sync_plan is not None:
+        for anim in sync_plan.animations:
+            flow_anims.append(anim)
+
+    if reveal_tracker is not None and reveal_anims:
+        reveal_dur = beat_duration * 0.25
+        if len(reveal_anims) == 1:
+            play(reveal_anims[0], run_time=reveal_dur)
         else:
-            combined = AnimationGroup(*animations)
-        play(combined, run_time=beat_duration)
+            play(AnimationGroup(*reveal_anims), run_time=reveal_dur)
+        flow_dur = beat_duration - reveal_dur
+    else:
+        flow_dur = beat_duration
+
+    if flow_anims:
+        if len(flow_anims) == 1:
+            play(flow_anims[0], run_time=flow_dur)
+        else:
+            play(AnimationGroup(*flow_anims), run_time=flow_dur)
 
     to_remove: list[object] = []
     if propagation_group is not None:

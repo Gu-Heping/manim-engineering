@@ -15,7 +15,7 @@ OCCUPANCY_TARGET_MAX = 0.75
 
 # Default nominal frame sized for the two-resistor basics fixture (~71% occupancy).
 
-DEFAULT_NOMINAL_FRAME = Bounds(width=2.5, height=0.35)
+DEFAULT_NOMINAL_FRAME = Bounds(width=2.5, height=0.60)
 
 
 @dataclass(frozen=True)

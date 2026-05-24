@@ -40,6 +40,9 @@ class BeatSpec:
             ``(signal, wave_beat or beat_index)``.
         reveal_time: When set, every trace in the panel advances to this
             shared semantic time (requires ``reveal_tracker`` on the sequence).
+        duration: Per-beat run_time override; ``None`` defers to the
+            sequence-level ``beat_duration``. Use for emphasis (slower) or
+            quick setup transitions (faster).
     """
 
     signal: Signal
@@ -48,6 +51,7 @@ class BeatSpec:
     caption: str | None = None
     reveal_targets: tuple[tuple[Signal, int], ...] | None = None
     reveal_time: float | None = None
+    duration: float | None = None
 
 
 class PropagationSequence:
@@ -146,13 +150,14 @@ class PropagationSequence:
                     reveal_targets = ((spec.signal, wave_beat),)
             if self._waveform_reveal_callback is not None and self._reveal_tracker is None:
                 self._waveform_reveal_callback(spec, index)
+            beat_duration = spec.duration if spec.duration is not None else self._beat_duration
             play_propagation_beat(
                 scene,
                 spec.signal,
                 layout=self._layout,
                 graph=self._graph,
                 record=spec.record,
-                duration=self._beat_duration,
+                duration=beat_duration,
                 bundle=self._bundle,
                 signals=self._sync_signals,
                 panel_spec=self._panel_spec,

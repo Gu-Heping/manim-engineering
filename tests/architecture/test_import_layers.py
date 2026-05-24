@@ -14,6 +14,7 @@ PACKAGE_ROOT = "manim_engineering"
 LAYER_FORBIDDEN_PREFIXES: dict[str, tuple[str, ...]] = {
     "core": (
         "manim",
+        f"{PACKAGE_ROOT}.debug",
         f"{PACKAGE_ROOT}.components",
         f"{PACKAGE_ROOT}.layout",
         f"{PACKAGE_ROOT}.protocol",
@@ -24,6 +25,7 @@ LAYER_FORBIDDEN_PREFIXES: dict[str, tuple[str, ...]] = {
     ),
     "semantic": (
         "manim",
+        f"{PACKAGE_ROOT}.debug",
         f"{PACKAGE_ROOT}.components",
         f"{PACKAGE_ROOT}.layout",
         f"{PACKAGE_ROOT}.protocol",
@@ -33,6 +35,7 @@ LAYER_FORBIDDEN_PREFIXES: dict[str, tuple[str, ...]] = {
     ),
     "protocol": (
         "manim",
+        f"{PACKAGE_ROOT}.debug",
         f"{PACKAGE_ROOT}.components",
         f"{PACKAGE_ROOT}.layout",
         f"{PACKAGE_ROOT}.waveform",
@@ -41,20 +44,23 @@ LAYER_FORBIDDEN_PREFIXES: dict[str, tuple[str, ...]] = {
     ),
     "components": (
         "manim",
+        f"{PACKAGE_ROOT}.debug",
         f"{PACKAGE_ROOT}.layout",
         f"{PACKAGE_ROOT}.renderers",
         f"{PACKAGE_ROOT}.animation",
     ),
     "layout": (
         "manim",
+        f"{PACKAGE_ROOT}.debug",
         f"{PACKAGE_ROOT}.renderers",
         f"{PACKAGE_ROOT}.animation",
     ),
     "waveform": (
         "manim",
+        f"{PACKAGE_ROOT}.debug",
         f"{PACKAGE_ROOT}.animation",
     ),
-    "renderers": (f"{PACKAGE_ROOT}.animation",),
+    "renderers": (f"{PACKAGE_ROOT}.animation", f"{PACKAGE_ROOT}.debug"),
     "animation": (),
 }
 

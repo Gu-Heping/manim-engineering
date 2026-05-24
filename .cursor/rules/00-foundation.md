@@ -35,6 +35,7 @@ Extended subsystems (owned by semantic or adjacent layers, never bypass semantic
 | `waveform/` | semantic-adjacent | derive traces from signal/timing state (no Manim) |
 | `renderers/` | rendering | draw symbols, wires, waveform panels from layout + derived traces |
 | `animation/` | animation | motion, highlights, propagation visuals |
+| `debug/` | dev-only | scene inspection helpers; must not be imported by core/semantic/components/layout/protocol/waveform |
 
 **Forbidden dependencies**: semantic→rendering/animation; component→animation; rendering→semantic mutation; animation→topology ownership.
 
@@ -58,10 +59,10 @@ src/manim_engineering/
     core/                # topology types (CircuitGraph, Node, Pin, Port, Connection, enums)
     semantic/            # signals, buses, logic states, propagation, timing events
     components/
-        passive/         # implemented (Resistor, Capacitor)
+        passive/         # implemented (Resistor, Capacitor, Inductor)
         common/          # implemented (Ground, VCC, InputDriver)
         digital/         # implemented (SPIMaster, SPISlave, UARTPort)
-        analog/          # implemented (NMOS, PMOS, Diode, OpAmp)
+        analog/          # implemented (NMOS, PMOS, Diode, OpAmp, NPN, PNP, ZenerDiode)
         measurement/     # planned (probes, meters)
     layout/
     protocol/            # spi/, uart/ implemented; i2c/, can/ planned
@@ -74,12 +75,12 @@ src/manim_engineering/
     animation/           # primitives, pacing, scene helpers, theme tokens
 
 examples/
-    basics/   analog/   digital/   protocol/
-    waveform/            # planned (currently lives in basics/clock_data_waveform.py)
+    analog/              # primary teaching catalog (01-08)
+    basics/              # minimal smoke retained (graph_only)
+    protocol/            # minimal smoke retained (spi_byte_transfer)
 tests/
     core/   semantic/   components/   layout/   waveform/   renderers/   protocol/   animation/
     architecture/        # layer guards (no src equivalent)
-    visual/              # golden regression (no src equivalent)
 experimental/            # must not leak into stable APIs
 ```
 

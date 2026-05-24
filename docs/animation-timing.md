@@ -194,7 +194,7 @@ self.wait(INTRO_PAUSE - 0.6)
 
 # ... beats ...
 
-# Exit — gated so visual golden tests still see content:
+# Exit — gated so deterministic geometry/smoke tests keep stable content:
 if scene_final_fade_enabled():
     self.wait(max(OUTRO_PAUSE - SCENE_FADE_OUT, 0.2))
     self.play(FadeOut(*self.mobjects, run_time=SCENE_FADE_OUT))
@@ -203,8 +203,8 @@ else:
 ```
 
 `scene_final_fade_enabled()` returns `False` when the env var
-`ME_SUPPRESS_FADE=1` is set (visual tests use this automatically via
-`tests/visual/conftest.py`).
+`ME_SUPPRESS_FADE=1` is set (export/preview tooling can set this for
+deterministic captures).
 
 ## Renderer vs animation (troubleshooting abrupt appear/disappear)
 
@@ -218,7 +218,7 @@ else:
 
 Static appearance is owned by `MinimalRenderer`; time-axis emphasis is owned by
 `PropagationSequence`, `play_propagation_beat`, and `WaveformDemoScene` in
-`examples/_shared.py`.
+example scene helpers.
 
 ## Manim cache (local previews)
 
@@ -241,4 +241,6 @@ Ensure the package is installed editable so Python loads your working tree:
 pip install -e ".[manim]"
 ```
 
-CI visual goldens and `scripts/export_example_videos.py` pass `--disable_caching` (or equivalent `disable_caching` in `tempconfig`) so golden PNGs and exported MP4s reflect current code.
+CI smoke and `scripts/export_example_videos.py` pass `--disable_caching`
+(or equivalent `disable_caching` in `tempconfig`) so exported MP4s reflect
+current code.

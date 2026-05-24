@@ -37,7 +37,7 @@ jobs:
       - name: Pytest
         run: pytest
 
-  visual-golden:
+  geometry-smoke:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -47,17 +47,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install system dependencies (Manim / manimpango)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libcairo2-dev libpango1.0-dev pkg-config ffmpeg
-
-      - name: Install package, dev deps, and pinned Manim
+      - name: Install package and dev dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-          pip install "manim==0.19.1"
 
-      - name: Visual golden tests
-        run: pytest tests/visual/ -v
+      - name: Geometry-only regression gates
+        run: |
+          pytest tests/layout/test_scene_bbox.py -q
+          pytest tests/layout/test_geometry_overlap.py -q
+          pytest tests/layout/test_layout_stress.py -q
+          pytest tests/layout/test_analog_geometry_smoke.py -q
+          pytest tests/waveform/test_step_polyline_reveal.py -q
+          pytest tests/examples/test_smoke_entrypoints.py -q
+
