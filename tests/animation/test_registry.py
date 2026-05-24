@@ -24,10 +24,14 @@ def test_primitive_registry_view_is_read_only_live_view() -> None:
         view["new"] = SignalFlow  # type: ignore[index]
 
 
-def test_primitive_registry_view_reflects_registration() -> None:
+def test_primitive_registry_view_reflects_registration(monkeypatch: pytest.MonkeyPatch) -> None:
+    from manim_engineering.animation import registry as registry_module
     from manim_engineering.animation.base import AnimationPlan, AnimationPrimitive
     from manim_engineering.animation.purpose import AnimationPurpose
     from manim_engineering.animation.registry import register_primitive
+
+    snapshot = dict(registry_module._REGISTRY)
+    monkeypatch.setattr(registry_module, "_REGISTRY", snapshot)
 
     class _ProbePrimitive(AnimationPrimitive["_ProbePrimitive"]):
         purpose = AnimationPurpose.FOCUS

@@ -41,7 +41,7 @@ python examples/basics/acceptance_three_layer.py
 
 **Manim preview** — low-quality preview (`-pql`); requires `manim` and a `Scene` class in the file.
 
-After changing library code under `src/manim_engineering/`, pass **`--disable_caching`** (or delete `media/videos/<scene>/partial_movie_files/`) so Manim does not replay stale partial movies. CI and golden export scripts already disable caching. Use **`pip install -e ".[manim]"`** so edits to the package are picked up. See [docs/animation-timing.md](../docs/animation-timing.md#manim-cache-local-previews).
+**Cache management:** After changing library code, pass `--disable_caching` or delete `media/videos/<scene>/partial_movie_files/` to avoid stale renders. Use `pip install -e ".[manim]"` for live updates. See [docs/animation-timing.md](../docs/animation-timing.md#manim-cache-local-previews).
 
 ```bash
 manim -pql examples/basics/render_two_resistors.py RenderTwoResistors
