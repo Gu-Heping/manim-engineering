@@ -1,4 +1,9 @@
-"""Animation layer: motion, highlights, propagation visuals."""
+"""Animation layer: motion, highlights, propagation visuals.
+
+Deferred stubs ``VoltagePulse`` and ``LogicTransition`` (from ``stubs``) are
+exported for registry compatibility only — they raise ``NotImplementedError``
+and must not be used in production teaching scenes. See ``docs/ROADMAP.md``.
+"""
 
 from manim_engineering.animation.base import AnimationPlan, AnimationPrimitive
 from manim_engineering.animation.beat import play_propagation_beat

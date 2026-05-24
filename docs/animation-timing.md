@@ -219,3 +219,26 @@ else:
 Static appearance is owned by `MinimalRenderer`; time-axis emphasis is owned by
 `PropagationSequence`, `play_propagation_beat`, and `WaveformDemoScene` in
 `examples/_shared.py`.
+
+## Manim cache (local previews)
+
+Manim caches partial movie segments under `media/videos/<module>/<SceneClass>/partial_movie_files/`.
+If you change library code in `src/manim_engineering/` but preview with plain `manim -pql`, you may see **stale frames** from cache even though the package is editable.
+
+**Always do one of the following after editing framework code:**
+
+```bash
+# Preferred — bypass cache for this run
+manim --disable_caching -pql examples/protocol/spi_byte_transfer.py SPIByteTransferDemo
+
+# Or delete cached segments for that scene, then re-run
+# (path varies by module and Scene class name)
+```
+
+Ensure the package is installed editable so Python loads your working tree:
+
+```bash
+pip install -e ".[manim]"
+```
+
+CI visual goldens and `scripts/export_example_videos.py` pass `--disable_caching` (or equivalent `disable_caching` in `tempconfig`) so golden PNGs and exported MP4s reflect current code.

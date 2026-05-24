@@ -55,6 +55,7 @@ Commit updated files under `tests/visual/golden/`:
 
 - `acceptance_three_layer.dhash.txt` — 64-bit dHash hex from last frame
 - `acceptance_three_layer.geometry.txt` — SHA-256 of routed `Line` points only (`stable_geometry_hash_lines_only`, excludes label tessellation)
+- `signal_chain_demo.dhash.txt` / `signal_chain_demo.geometry.txt` — resistor-chain demo
 - `spi_byte_transfer.dhash.txt` — SPI demo last frame (Hamming ≤ 4)
 - `spi_byte_transfer.geometry.txt` — layout + waveform panel digest (`layout_waveform_geometry_digest`, no raster)
 - `uart_byte_transfer.dhash.txt` — UART demo last frame (Hamming ≤ 4)
@@ -62,6 +63,26 @@ Commit updated files under `tests/visual/golden/`:
 - `rc_step_response.geometry.txt` — analog R1–C1 layout digest (`layout_geometry_digest`, no raster)
 
 **Tolerance:** perceptual compare uses **Hamming distance ≤ 4** on the dHash (`tests/visual/conftest.py`).
+
+## Geometry golden change discipline
+
+When a change touches **waveform polyline construction** or **layout coordinates** that feed goldens, update **all** affected geometry files — not only the scene you were editing.
+
+**Must run full visual suite** after edits to:
+
+- `waveform/layout.py` — especially `step_polyline`, `panel_below_layout`, point deduplication
+- `layout/engine.py` or `layout/routing.py` when wire/trace point lists change
+- renderer symbol geometry that shifts pin anchors used by routing
+
+```bash
+# Windows PowerShell
+$env:UPDATE_VISUAL_GOLDEN = "1"
+pytest tests/visual/ -q
+# Linux/macOS
+UPDATE_VISUAL_GOLDEN=1 pytest tests/visual/ -q
+```
+
+Review **every** `tests/visual/golden/*.geometry.txt` diff in the PR, not just SPI or UART in isolation. A `step_polyline` dedupe fix can shift UART and `signal_chain_demo` digests even when the motivating bug was SPI-only.
 
 ## What goldens do *not* guarantee
 

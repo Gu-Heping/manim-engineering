@@ -2,7 +2,7 @@
 
 Phased plan for long-running implementation. Each phase completes with **tests + one minimal example** before the next.
 
-**Status**: Phase 8 complete — example library layout, per-directory READMEs, master index. **3-layer refactor complete** (`core/` graph model, `LayoutEngine.solve`, `MinimalRenderer.render_circuit`, `Port` API with `Pin` aliases). Next: backlog (IEC renderer, analog examples, UART, gate components).
+**Status**: Phase 8 complete — example library layout, per-directory READMEs, master index. **3-layer refactor complete** (`core/` graph model, `LayoutEngine.solve`, `MinimalRenderer.render_circuit`, `Port` API with `Pin` aliases). **Phase 7 protocol slice** includes SPI and UART (`protocol/spi/`, `protocol/uart/`). **Analog Scope A** examples: `rc_step_response`, `cmos_inverter`. Next: see **Stabilization** vs **Feature backlog** below.
 
 ---
 
@@ -138,9 +138,11 @@ Deliverables:
 - [x] `protocol/spi/` — FSM (`idle` / `active` / `transmitting`), master ownership, mode-0 timing
 - [x] `SPIController.transfer_byte` — deterministic `TimingEvent`s + `Signal` updates via `apply_level_between_pins`
 - [x] `SPIBusBinding` — graph + clk/mosi/miso/cs; `from_graph_nodes` / `create_bus`; `SPIMaster` / `SPISlave` components
-- [x] Waveform via `derive_bundle_from_signals`; example uses `SignalFlow` + `WaveformSync`
-- [x] `tests/protocol/` — FSM, transfer ordering, waveform alignment
-- [x] Example `examples/protocol/spi_byte_transfer.py`
+- [x] `protocol/uart/` — FSM (idle / start / data / stop), 8N1 TX timing, `UARTController.transfer_byte`
+- [x] `UARTBinding` — graph + tx/rx; example `examples/protocol/uart_byte_transfer.py`
+- [x] Waveform via `derive_bundle_from_signals`; examples use `PropagationSequence` + `WaveformSync`
+- [x] `tests/protocol/` — FSM, transfer ordering, waveform alignment (SPI + UART)
+- [x] Examples `examples/protocol/spi_byte_transfer.py`, `examples/protocol/uart_byte_transfer.py`
 
 **Exit criteria**: ownership and timing visible; protocol tests deterministic.
 
@@ -242,9 +244,18 @@ Deliverables:
       `signal_chain_demo`; RC acceptance (`InputDriver`→R→C→GND); CMOS gate +
       OUT pull paths; UART horizontal TX→RX layout. Visual goldens refreshed.
 
-### Suggested next action
+### Stabilization (current track)
 
-Backlog: IEC renderer variant; I2C/CAN geometry goldens; digital gate `CircuitElement` + render symbols; optional rule 6-file merge; analog Scope B/C (continuous physics, smooth_polyline, AnalogRamp primitive); planned `measurement/` component category.
+Documentation and CI discipline; topology invariants (`Port.id` contract); post-merge review nits; deferred animation stubs clearly marked. Does **not** add new protocol features or continuous physics.
+
+- [x] ROADMAP / README / examples index synced with SPI, UART, analog Scope A
+- [x] Manim cache + geometry golden update discipline documented
+- [x] `Port.id` invariant documented + tested; `Connection.involves` semantics locked
+- [x] Animation stubs (`VoltagePulse`, `LogicTransition`) marked deferred — not for production scenes
+
+### Feature backlog (deferred)
+
+IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `CircuitElement` + render symbols; optional rule 6-file merge; analog **Scope B/C** (continuous physics, RC exponential, `smooth_polyline`, `AnalogRamp` primitive); planned `measurement/` component category.
 
 Short-term experiment track: circuitjs1-inspired stamp/doStep exploration is
 documented in `docs/circuitjs1-borrowing.md` with an isolated prototype at

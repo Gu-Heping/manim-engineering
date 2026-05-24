@@ -25,7 +25,7 @@ Extended paths: `layout/`, `protocol/`, `waveform/` (see [docs/architecture.md](
 
 ## Repository status
 
-Phases 0–8 complete per [docs/ROADMAP.md](docs/ROADMAP.md): semantic core through example library. Implementation continues on backlog items (IEC renderer, analog examples, UART, etc.).
+Phases 0–8 complete per [docs/ROADMAP.md](docs/ROADMAP.md): semantic core through example library, SPI/UART protocol demos, and analog Scope A examples (`rc_step_response`, `cmos_inverter`). Feature backlog (IEC renderer, I2C/CAN, continuous analog physics) is tracked separately under **Feature backlog** in the ROADMAP.
 
 ## Running examples
 
