@@ -13,9 +13,8 @@ pytest.importorskip("manim")
 from manim import VGroup
 
 from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
-from manim_engineering.layout.types import Point2D
 from manim_engineering.renderers.minimal import WaveformPanelRenderer
-from manim_engineering.waveform.layout import WaveformPanelSpec, beat_for_time, step_polyline
+from manim_engineering.waveform.layout import beat_for_time, step_polyline
 
 _EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / "protocol" / "spi_byte_transfer.py"
 
