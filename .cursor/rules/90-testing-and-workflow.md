@@ -80,6 +80,105 @@ New abstractions require: immediate use case, layer justification, demonstrated 
 5. tests + minimal example  
 6. renderer/component independence  
 
+## PR and merge workflow
+
+Delivery loop for AI-assisted changes. Stabilization vs feature tracks: [docs/ROADMAP.md](../../docs/ROADMAP.md) (**Stabilization** / **Feature backlog**).
+
+### Branch naming and scope
+
+| Kind | Prefix | Example |
+|------|--------|---------|
+| Docs / discipline | `docs/` | `docs/sync-roadmap-golden-discipline` |
+| Core contracts | `core/` | `core/port-id-invariant` |
+| Review / chore | `chore/` | `chore/stabilization-debt` |
+| Awakening refactor | `refactor/awaken-*` | `refactor/awaken-spi-fsm` |
+
+One PR, one theme. Prefer splitting **docs-only** from **behavior changes**.
+
+### Pre-push gates (local)
+
+Align with [CI](../../.github/workflows/ci.yml) before push:
+
+```bash
+ruff check src tests
+pytest tests/ -q --ignore=tests/visual
+```
+
+When touching **layout**, **waveform** (`step_polyline`, `panel_below_layout`), **renderer geometry**, or pin anchors:
+
+```bash
+pytest tests/visual/ -v
+# intentional visual change:
+# UPDATE_VISUAL_GOLDEN=1 pytest tests/visual/ -v
+```
+
+Review **all** `tests/visual/golden/*.geometry.txt` diffs — see [geometry golden discipline](#visual-validation-executable-gates) and [docs/visual-validation.md](../../docs/visual-validation.md#geometry-golden-change-discipline).
+
+### Open a PR
+
+Use `gh pr create`. On Windows, pass the body with multiple `-m` flags (avoid shell heredoc).
+
+**Body template** (required sections):
+
+```markdown
+## Summary
+- …
+
+## Test plan
+- [ ] ruff check src tests
+- [ ] pytest tests/ -q --ignore=tests/visual
+- [ ] pytest tests/visual/ (if layout/waveform/renderer geometry touched)
+```
+
+Write **why** in Summary; list commands actually run in Test plan.
+
+### CI and review bots
+
+Blocking jobs (must pass before merge):
+
+| Job | What it runs |
+|-----|----------------|
+| `test (3.11)` | ruff + full pytest |
+| `test (3.12)` | ruff + full pytest |
+| `visual-golden` | `pytest tests/visual/` (Python 3.12, `manim==0.19.1`) |
+
+**CodeRabbit** is informational. Triage as follows:
+
+| Comment kind | Action |
+|--------------|--------|
+| **Actionable** (test leaks, correctness, would fail CI) | Fix and push |
+| **Nitpick** (wording, formatting) | Fix if cheap; else defer with a PR comment |
+| **Warning** (e.g. docstring coverage below threshold) | Not merge-blocking unless policy changes |
+| **Architecture major** (e.g. stale ID cache vs live `Port.id`) | Follow semantic/core rules; document trade-off in PR |
+
+**Project-specific regressions**:
+
+- Tests touching [`animation/registry.py`](../../src/manim_engineering/animation/registry.py) must not leak into global `_REGISTRY` — use `monkeypatch` with a registry snapshot or explicit teardown.
+- Changes to [`waveform/layout.py`](../../src/manim_engineering/waveform/layout.py) require full visual golden review (not SPI-only).
+
+### Fix loop
+
+1. `gh pr checks <number>` — wait for CI.
+2. Read CodeRabbit summary and **actionable** inline comments.
+3. Scoped fix commit → push. Do **not** `git commit --amend` after the branch is on the remote unless the user explicitly requests it and the commit was not pushed.
+4. Repeat until merge criteria are met.
+
+### Merge criteria and method
+
+**Merge when**:
+
+- `test (3.11)`, `test (3.12)`, and `visual-golden` are green
+- No unresolved **actionable** review (or risk accepted in the PR thread)
+- User has asked to merge (agents do not merge on their own initiative)
+
+**Default**: `gh pr merge --squash --delete-branch`
+
+**Forbidden** without explicit user request:
+
+- force-push `main` / `master`
+- merge while CI is red
+- weakening CI workflows or test gates to make a PR pass
+
 ## Visual validation (executable gates)
 
 Golden tests guard **semantic → layout → render → frame** without changing semantics or animation APIs. Human overview: [docs/visual-validation.md](../../docs/visual-validation.md).

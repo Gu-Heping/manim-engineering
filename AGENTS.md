@@ -24,11 +24,24 @@ Do not re-derive architecture from `docs/` alone; rules are authoritative.
 | `60-renderer-philosophy.md` | Renderers, themes |
 | `70-component-authoring.md` | New components |
 | `80-animation-and-education.md` | Motion, scenes, pacing |
-| `90-testing-and-workflow.md` | Tests, examples, diff discipline, visual goldens |
+| `90-testing-and-workflow.md` | Tests, examples, diff discipline, visual goldens, **PR delivery** |
 
 ## Workflow
 
 Task sizing, implementation order, per-task checklist, and forbidden patterns: see [`.cursor/rules/90-testing-and-workflow.md`](.cursor/rules/90-testing-and-workflow.md).
+
+### Delivery workflow
+
+Default path for shipping changes:
+
+**feature branch → PR → CI green → actionable review addressed → squash merge**
+
+Full branch naming, pre-push gates, review triage, fix loop, and merge criteria: [`.cursor/rules/90-testing-and-workflow.md` § PR and merge workflow](.cursor/rules/90-testing-and-workflow.md#pr-and-merge-workflow).
+
+**Agent constraints** (repo policy):
+
+- Do **not** commit, push, open a PR, or merge unless the user explicitly asks.
+- When the user asks to merge: do **not** merge while CI is failing or actionable review items remain unresolved (unless the user accepts the risk in the PR thread).
 
 ## Human reference docs
 
