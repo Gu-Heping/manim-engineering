@@ -48,3 +48,13 @@ def test_basic_graph_only_main_smoke() -> None:
 def test_protocol_spi_main_smoke() -> None:
     mod = _load_module(REPO / "examples/protocol/spi_byte_transfer.py")
     mod.main()
+
+
+@pytest.mark.requires_manim
+def test_protocol_spi_scene_class_available() -> None:
+    pytest.importorskip("manim")
+    from manim import Scene
+
+    mod = _load_module(REPO / "examples/protocol/spi_byte_transfer.py")
+    assert hasattr(mod, "SPIByteTransferDemo")
+    assert issubclass(mod.SPIByteTransferDemo, Scene)
