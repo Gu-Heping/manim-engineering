@@ -44,7 +44,7 @@ try:
         sys.path.insert(0, str(_EXAMPLES))
 
     from _shared import CaptionTrack  # noqa: E402
-    from manim import FadeIn, Scene
+    from manim import FadeIn, FadeOut, Scene
 
     from manim_engineering.animation import (
         BEAT_DURATION,
@@ -52,6 +52,7 @@ try:
         BeatSpec,
         PropagationSequence,
         configure_topology_scene_camera,
+        scene_final_fade_enabled,
         subtitle_text,
     )
     from manim_engineering.renderers.minimal import ManimRenderer
@@ -105,6 +106,9 @@ try:
                 caption_callback=caption_track.swap,
             ).play(self)
             caption_track.close()
+            # Visual goldens capture save_last_frame; HUD CJK glyphs differ by OS font.
+            if not scene_final_fade_enabled():
+                self.play(FadeOut(title), run_time=0.2)
             self.wait(1.5)
 
 except ImportError:
