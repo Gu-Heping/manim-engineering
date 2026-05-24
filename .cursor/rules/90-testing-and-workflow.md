@@ -198,7 +198,9 @@ pip install -e ".[dev]"
 pytest tests/layout/test_scene_bbox.py -q
 pytest tests/layout/test_geometry_overlap.py -q
 pytest tests/layout/test_layout_stress.py -q
+pytest tests/layout/test_analog_geometry_smoke.py -q
 pytest tests/waveform/test_step_polyline_reveal.py -q
+pytest tests/examples/test_smoke_entrypoints.py -q
 ```
 
 These are deterministic geometry gates and should pass without visual snapshot regeneration.

@@ -125,7 +125,7 @@ def play_propagation_beat(
             flow_anims.append(anim)
 
     if reveal_tracker is not None and reveal_anims:
-        reveal_dur = beat_duration * 0.25
+        reveal_dur = beat_duration * 0.25 if flow_anims else beat_duration
         if len(reveal_anims) == 1:
             play(reveal_anims[0], run_time=reveal_dur)
         else:

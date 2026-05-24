@@ -16,8 +16,6 @@ REPO = Path(__file__).resolve().parents[1]
 EXAMPLES = REPO / "examples"
 OUT_DIR = REPO / "media" / "debug" / "previews"
 
-os.environ.setdefault("ME_SUPPRESS_FADE", "1")
-
 # (output stem, example path relative to examples, scene class name)
 PREVIEW_SCENES: tuple[tuple[str, str, str], ...] = (
     ("analog_01_rc_charge", "analog/01_rc_charge.py", "RCChargeScene"),
@@ -42,25 +40,26 @@ def _load_module(name: str, path: Path):
 def _render_scene_last_frame(scene_cls: type, glob_pattern: str) -> Path:
     from manim import tempconfig
 
-    tmpdir = tempfile.mkdtemp(prefix="me_preview_")
-    with tempconfig(
-        {
-            "quality": "low_quality",
-            "disable_caching": True,
-            "media_dir": tmpdir,
-            "write_to_movie": False,
-            "save_last_frame": True,
-        }
-    ):
-        scene_cls().render()
+    with tempfile.TemporaryDirectory(prefix="me_preview_") as tmpdir:
+        with tempconfig(
+            {
+                "quality": "low_quality",
+                "disable_caching": True,
+                "media_dir": tmpdir,
+                "write_to_movie": False,
+                "save_last_frame": True,
+            }
+        ):
+            scene_cls().render()
 
-    matches = sorted(Path(tmpdir).rglob(f"{glob_pattern}*.png"))
-    if not matches:
-        raise FileNotFoundError(f"no PNG matching {glob_pattern!r} under {tmpdir}")
-    return matches[-1]
+        matches = sorted(Path(tmpdir).rglob(f"{glob_pattern}*.png"))
+        if not matches:
+            raise FileNotFoundError(f"no PNG matching {glob_pattern!r} under {tmpdir}")
+        return matches[-1]
 
 
 def main() -> None:
+    os.environ.setdefault("ME_SUPPRESS_FADE", "1")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     from manim import __version__ as manim_version
 

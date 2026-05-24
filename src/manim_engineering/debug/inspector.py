@@ -49,9 +49,15 @@ class SceneInspector:
         bbox = None
         pos = None
         try:
-            b = mob.get_bounding_box()
-            if b is not None:
-                bbox = [float(b[0]), float(b[1]), float(b[2]), float(b[3])]
+            bbox_pts = mob.get_bounding_box()
+            if bbox_pts is not None:
+                min_corner, max_corner = bbox_pts[0], bbox_pts[2]
+                bbox = [
+                    float(min_corner[0]),
+                    float(min_corner[1]),
+                    float(max_corner[0]),
+                    float(max_corner[1]),
+                ]
         except Exception:
             pass
         try:

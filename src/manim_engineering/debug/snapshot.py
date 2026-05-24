@@ -42,8 +42,14 @@ def snapshot_frame(scene: Scene, label: str) -> Path | None:
 def _mobject_bounds(mob: Mobject) -> list[float] | None:
     """Get axis-aligned bounding box [x0, y0, x1, y1] or None."""
     try:
-        pts = mob.get_bounding_box()
-        return [float(pts[0]), float(pts[1]), float(pts[2]), float(pts[3])]
+        bbox_pts = mob.get_bounding_box()
+        min_corner, max_corner = bbox_pts[0], bbox_pts[2]
+        return [
+            float(min_corner[0]),
+            float(min_corner[1]),
+            float(max_corner[0]),
+            float(max_corner[1]),
+        ]
     except Exception:
         return None
 

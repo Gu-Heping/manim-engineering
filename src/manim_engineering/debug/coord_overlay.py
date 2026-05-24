@@ -38,26 +38,29 @@ class SceneCoordinateOverlay:
     def _debug_subtree(self, root: VMobject, prefix: str) -> list[VMobject]:
         result: list[VMobject] = []
         try:
-            rect = root.get_bounding_box()
+            bbox_pts = root.get_bounding_box()
         except Exception:
             return result
-        if rect is None:
+        if bbox_pts is None:
             return result
+        min_corner, max_corner = bbox_pts[0], bbox_pts[2]
         rect_mob = Rectangle(
-            width=rect[2] - rect[0],
-            height=rect[3] - rect[1],
+            width=max_corner[0] - min_corner[0],
+            height=max_corner[1] - min_corner[1],
             stroke_color=YELLOW,
             stroke_width=0.5,
             fill_opacity=0,
         )
-        rect_mob.move_to([(rect[0] + rect[2]) / 2, (rect[1] + rect[3]) / 2, 0.0])
+        rect_mob.move_to(
+            [(min_corner[0] + max_corner[0]) / 2, (min_corner[1] + max_corner[1]) / 2, 0.0]
+        )
 
         label = Text(
             f"{prefix} z={getattr(root, 'z_index', 0)}",
             font_size=12,
             color=WHITE,
         )
-        label.move_to([rect[0], rect[3], 0.0])
+        label.move_to([min_corner[0], max_corner[1], 0.0])
         result.extend([rect_mob, label])
 
         for j, sub in enumerate(getattr(root, "submobjects", [])):
