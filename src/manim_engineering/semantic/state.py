@@ -7,6 +7,11 @@ from dataclasses import dataclass, field
 from manim_engineering.semantic.enums import LogicLevel, TimingEdge
 
 
+def _level_label(level: LogicLevel) -> str:
+    """Return the enum value string used in transition labels."""
+    return level.value
+
+
 @dataclass(frozen=True)
 class LogicState:
     """Explicit logic level with optional analog voltage."""
@@ -16,7 +21,12 @@ class LogicState:
 
     def transition_label(self, other: LogicState) -> str:
         """Human-readable transition label, e.g. ``LOW→HIGH``."""
-        return f"{self.level.value}→{other.level.value}"
+        return f"{_level_label(self.level)}→{_level_label(other.level)}"
+
+    def __repr__(self) -> str:
+        if self.voltage is None:
+            return f"LogicState(level={self.level!r})"
+        return f"LogicState(level={self.level!r}, voltage={self.voltage!r})"
 
 
 @dataclass(frozen=True)
