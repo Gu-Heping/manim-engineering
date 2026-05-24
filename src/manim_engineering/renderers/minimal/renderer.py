@@ -533,10 +533,10 @@ class MinimalRenderer:
         )
         bend_tip = 0.10 * w
         cathode_bar = Line([bar_x, y_top, 0.0], [bar_x, y_bot, 0.0], **stroke)
-        cathode_bend = Line([bar_x, y_bot, 0.0], [bar_x + bend_tip, y_bot, 0.0], **stroke)
+        cathode_bend = Line([bar_x, y_mid, 0.0], [bar_x + bend_tip, y_mid, 0.0], **stroke)
         leads = [
             Line([0.0, y_mid, 0.0], [tri_base_x, y_mid, 0.0], **stroke),
-            Line([bar_x + bend_tip, y_bot, 0.0], [w, y_bot, 0.0], **stroke),
+            Line([bar_x + bend_tip, y_mid, 0.0], [w, y_mid, 0.0], **stroke),
         ]
         return VGroup(triangle, cathode_bar, cathode_bend, *leads)
 
@@ -551,8 +551,8 @@ class MinimalRenderer:
         collector_x = 0.60 * w
         emitter_x = 0.60 * w
         base_y = 0.50 * h
-        collector_y = 0.85 * h
-        emitter_y = 0.15 * h
+        collector_y = h
+        emitter_y = 0.0
 
         vertical = Line([collector_x, emitter_y, 0.0], [collector_x, collector_y, 0.0], **stroke)
         base_stub = Line([0.0, base_y, 0.0], [base_x, base_y, 0.0], **stroke)
@@ -577,8 +577,8 @@ class MinimalRenderer:
         collector_x = 0.60 * w
         emitter_x = 0.60 * w
         base_y = 0.50 * h
-        collector_y = 0.15 * h
-        emitter_y = 0.85 * h
+        collector_y = 0.0
+        emitter_y = h
 
         vertical = Line([collector_x, collector_y, 0.0], [collector_x, emitter_y, 0.0], **stroke)
         base_stub = Line([0.0, base_y, 0.0], [base_x, base_y, 0.0], **stroke)
