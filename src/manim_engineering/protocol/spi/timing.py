@@ -6,6 +6,27 @@ from manim_engineering.semantic.enums import TimingEdge
 from manim_engineering.semantic.state import TimingEvent
 
 
+def _bit_metadata(*, bit_index: int | None) -> dict[str, float]:
+    if bit_index is None:
+        return {}
+    return {"bit_index": float(bit_index)}
+
+
+def _edge_event(
+    *,
+    time: float,
+    pin_id: str,
+    edge: TimingEdge,
+    bit_index: int | None,
+) -> TimingEvent:
+    return TimingEvent(
+        time=time,
+        edge=edge,
+        pin_id=pin_id,
+        metadata=_bit_metadata(bit_index=bit_index),
+    )
+
+
 def clock_rising_event(
     time: float,
     pin_id: str,
@@ -13,10 +34,12 @@ def clock_rising_event(
     bit_index: int | None = None,
 ) -> TimingEvent:
     """Rising edge: sample MOSI/MISO in mode 0."""
-    metadata: dict[str, float] = {}
-    if bit_index is not None:
-        metadata["bit_index"] = float(bit_index)
-    return TimingEvent(time=time, edge=TimingEdge.RISING, pin_id=pin_id, metadata=metadata)
+    return _edge_event(
+        time=time,
+        pin_id=pin_id,
+        edge=TimingEdge.RISING,
+        bit_index=bit_index,
+    )
 
 
 def clock_falling_event(
@@ -26,7 +49,9 @@ def clock_falling_event(
     bit_index: int | None = None,
 ) -> TimingEvent:
     """Falling edge: update MOSI for next bit in mode 0."""
-    metadata: dict[str, float] = {}
-    if bit_index is not None:
-        metadata["bit_index"] = float(bit_index)
-    return TimingEvent(time=time, edge=TimingEdge.FALLING, pin_id=pin_id, metadata=metadata)
+    return _edge_event(
+        time=time,
+        pin_id=pin_id,
+        edge=TimingEdge.FALLING,
+        bit_index=bit_index,
+    )
