@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from types import MappingProxyType
 from typing import TypeVar, overload
 
 from manim_engineering.animation.base import AnimationPrimitive
@@ -13,6 +14,7 @@ _REGISTRY: dict[str, type[AnimationPrimitive]] = {}
 
 
 def _store(name: str, cls: type[T]) -> type[T]:
+    """Insert ``cls`` into the registry or raise on duplicate name."""
     existing = _REGISTRY.get(name)
     if existing is not None and existing is not cls:
         msg = (
@@ -61,5 +63,5 @@ def registered_primitives() -> tuple[str, ...]:
 
 
 def primitive_registry_view() -> Mapping[str, type[AnimationPrimitive]]:
-    """Read-only snapshot of the registry (for diagnostics and tooling)."""
-    return dict(_REGISTRY)
+    """Read-only live view of the registry (mutations raise ``TypeError``)."""
+    return MappingProxyType(_REGISTRY)

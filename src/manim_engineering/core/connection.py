@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from manim_engineering.core.port import Port
 
@@ -14,14 +14,6 @@ class Connection:
     id: str
     port_a: Port
     port_b: Port
-    _endpoint_ids: frozenset[str] = field(init=False, repr=False, compare=False)
-
-    def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "_endpoint_ids",
-            frozenset((self.port_a.id, self.port_b.id)),
-        )
 
     @property
     def pin_a(self) -> Port:
@@ -35,7 +27,8 @@ class Connection:
 
     def involves(self, port: Port) -> bool:
         """Return True if ``port`` is an endpoint of this connection."""
-        return port.id in self._endpoint_ids
+        # Match ``other_port`` live ID semantics (``Port.id`` is derived, not cached).
+        return port.id == self.port_a.id or port.id == self.port_b.id
 
     def other_port(self, port: Port) -> Port:
         """Return the peer port for ``port``."""
