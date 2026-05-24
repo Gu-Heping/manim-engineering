@@ -14,7 +14,7 @@ from manim_engineering.components import SPIMaster, SPISlave
 from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import LayoutConfig, LayoutEngine
 from manim_engineering.protocol.spi import SPIBusBinding, SPIController
-from manim_engineering.waveform import derive_bundle_from_signals
+from manim_engineering.waveform import derive_spi_waveform_bundle
 
 TX_BYTE = 0xA5
 RX_BYTE = 0x3C
@@ -39,7 +39,7 @@ def build_spi_fixture():
 
     elements = {"master": master, "slave": slave}
     layout = LayoutEngine(LayoutConfig(cell_gap=0.85)).layout(graph, elements)
-    bundle = derive_bundle_from_signals(binding.signals())
+    bundle = derive_spi_waveform_bundle(binding, result)
     return graph, elements, layout, binding, result, bundle
 
 
@@ -76,6 +76,7 @@ def _teaching_beats(binding) -> tuple[BeatSpec, ...]:
             record=binding.cs.propagation_history[0],
             wave_beat=0,
             caption="① CS↓ 片选有效",
+            reveal_time=0.0,
         ),
     ]
     for circle, (label, iter_index) in enumerate(_BIT_LABELS, start=2):
@@ -86,6 +87,7 @@ def _teaching_beats(binding) -> tuple[BeatSpec, ...]:
                 record=history[wave_beat],
                 wave_beat=wave_beat,
                 caption=f"{_CIRCLED[circle - 1]} CLK↑ {label}",
+                reveal_time=float(2 * iter_index),
             )
         )
     return tuple(beats)

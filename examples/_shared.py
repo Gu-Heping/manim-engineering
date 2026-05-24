@@ -331,10 +331,6 @@ class WaveformDemoScene(Scene):
                 options.setdefault("dim_inactive", True)
                 options.setdefault("topology", topology)
 
-            def _reveal_waveform(spec: BeatSpec, _index: int) -> None:
-                wave_beat = spec.wave_beat if spec.wave_beat is not None else _index
-                reveal_tracker.reveal_for_beat(spec.signal, wave_beat)
-
             sequence = PropagationSequence(
                 layout=fixture.layout,
                 graph=fixture.graph,
@@ -344,7 +340,7 @@ class WaveformDemoScene(Scene):
                 panel_spec=panel_spec,
                 beat_gap=BEAT_GAP,
                 caption_callback=caption_track.swap if caption_track is not None else None,
-                waveform_reveal_callback=_reveal_waveform,
+                reveal_tracker=reveal_tracker,
                 **options,
             )
             sequence.play(self)

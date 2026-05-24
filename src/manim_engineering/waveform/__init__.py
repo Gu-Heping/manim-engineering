@@ -10,6 +10,7 @@ from manim_engineering.waveform.derive import (
 from manim_engineering.waveform.layout import (
     MIN_WAVEFORM_GAP,
     WaveformPanelSpec,
+    beat_for_time,
     camera_frame_center,
     frame_size_for_pixel_aspect,
     hud_text_y,
@@ -20,6 +21,7 @@ from manim_engineering.waveform.layout import (
     time_scale_for_bundle,
     transition_point_for_beat,
 )
+from manim_engineering.waveform.spi import derive_spi_waveform_bundle
 from manim_engineering.waveform.trace import WaveformBundle, WaveformSample, WaveformTrace
 
 __all__ = [
@@ -28,8 +30,10 @@ __all__ = [
     "WaveformPanelSpec",
     "WaveformSample",
     "WaveformTrace",
+    "beat_for_time",
     "camera_frame_center",
     "derive_bundle_from_signals",
+    "derive_spi_waveform_bundle",
     "derive_trace_from_signal",
     "frame_size_for_pixel_aspect",
     "hud_text_y",

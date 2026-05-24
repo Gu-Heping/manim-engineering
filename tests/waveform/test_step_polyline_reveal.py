@@ -43,6 +43,14 @@ def test_step_polyline_max_beat_grows_with_edges() -> None:
     assert len(full) >= len(beat1)
 
 
+def test_step_polyline_partial_reveal_ends_before_panel_edge() -> None:
+    spec = WaveformPanelSpec(origin=_origin(), width=4.0, trace_height=0.4, trace_gap=0.5)
+    trace = _trace()
+    partial = step_polyline(trace, spec, 0, max_beat=0, extend_to_panel=False)
+    full = step_polyline(trace, spec, 0, max_beat=0, extend_to_panel=True)
+    assert partial[-1].x < full[-1].x
+
+
 def _origin():
     from manim_engineering.layout.types import Point2D
 

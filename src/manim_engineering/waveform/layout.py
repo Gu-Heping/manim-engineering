@@ -199,12 +199,17 @@ def step_polyline(
     *,
     max_beat: int | None = None,
     idle_only: bool = False,
+    extend_to_panel: bool | None = None,
+    hold_through_time: float | None = None,
 ) -> tuple[Point2D, ...]:
     """Orthogonal digital steps: hold level, then vertical edge at next sample.
 
     ``idle_only``: only the first sample (idle level) extended to panel width.
     ``max_beat``: include edges ``0..max_beat`` (needs ``max_beat + 2`` samples).
     ``max_beat is None``: full trace history.
+    ``extend_to_panel``: when ``True``, append a horizontal hold to the panel's
+        right edge; when ``False``, stop at the last revealed sample (progressive
+        reveal). Defaults to ``idle_only or max_beat is None``.
     """
     if not trace.samples:
         return ()
@@ -216,21 +221,44 @@ def step_polyline(
     else:
         sample_slice = trace.samples
 
+    if extend_to_panel is None:
+        extend_to_panel = idle_only or max_beat is None
+
     points: list[Point2D] = []
     for index, sample in enumerate(sample_slice):
         pt = sample_to_point(sample, spec, trace_index)
         if index == 0:
-            points.append(pt)
+            _append_point_if_distinct(points, pt)
             continue
         prev = sample_slice[index - 1]
         corner = Point2D(pt.x, sample_to_point(prev, spec, trace_index).y)
-        points.append(corner)
-        points.append(pt)
+        _append_point_if_distinct(points, corner)
+        _append_point_if_distinct(points, pt)
     last = sample_slice[-1]
-    end_x = spec.origin.x + spec.width
-    end_pt = Point2D(end_x, sample_to_point(last, spec, trace_index).y)
-    points.append(end_pt)
+    last_y = sample_to_point(last, spec, trace_index).y
+    if hold_through_time is not None:
+        hold_x = spec.origin.x + hold_through_time * spec.time_scale
+        _append_point_if_distinct(points, Point2D(hold_x, last_y))
+    elif extend_to_panel:
+        end_x = spec.origin.x + spec.width
+        _append_point_if_distinct(points, Point2D(end_x, last_y))
     return tuple(points)
+
+
+def _append_point_if_distinct(points: list[Point2D], pt: Point2D) -> None:
+    if points and points[-1].x == pt.x and points[-1].y == pt.y:
+        return
+    points.append(pt)
+
+
+def beat_for_time(trace: WaveformTrace, reveal_time: float) -> int:
+    """Edge index that includes every sample at or before ``reveal_time``."""
+    eligible = [
+        index for index, sample in enumerate(trace.samples) if sample.time <= reveal_time + 1e-9
+    ]
+    if not eligible:
+        return -1
+    return max(-1, max(eligible) - 1)
 
 
 def transition_point_for_beat(

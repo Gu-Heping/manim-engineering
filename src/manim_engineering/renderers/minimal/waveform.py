@@ -59,6 +59,7 @@ class WaveformPanelRenderer:
         *,
         max_beat: int | None = None,
         idle_only: bool = False,
+        extend_to_panel: bool | None = None,
     ) -> VGroup:
         group = VGroup()
         points = step_polyline(
@@ -67,6 +68,7 @@ class WaveformPanelRenderer:
             trace_index,
             max_beat=max_beat,
             idle_only=idle_only,
+            extend_to_panel=extend_to_panel,
         )
         color = _trace_color(trace)
         for start, end in zip(points, points[1:], strict=False):

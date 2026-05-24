@@ -94,9 +94,6 @@ try:
                 BeatSpec(signal=edge, record=history[1], wave_beat=1),
             )
 
-            def _reveal(spec: BeatSpec, _index: int) -> None:
-                reveal.reveal_for_beat(spec.signal, spec.wave_beat or _index)
-
             PropagationSequence(
                 layout=layout,
                 graph=circuit,
@@ -106,7 +103,7 @@ try:
                 panel_spec=panel_spec,
                 beat_duration=BEAT_DURATION,
                 beat_gap=BEAT_GAP,
-                waveform_reveal_callback=_reveal,
+                reveal_tracker=reveal,
             ).play(self)
             reveal.reveal_all()
             self.wait(OUTRO_PAUSE)

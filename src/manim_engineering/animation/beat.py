@@ -12,6 +12,7 @@ from manim_engineering.animation.signal_flow import SignalFlow
 from manim_engineering.animation.waveform_sync import WaveformSync
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
+from manim_engineering.renderers.minimal import theme
 from manim_engineering.semantic.propagation import PropagationRecord
 from manim_engineering.semantic.signal import Signal
 from manim_engineering.waveform.layout import WaveformPanelSpec
@@ -45,6 +46,9 @@ def play_propagation_beat(
     signals: Sequence[Signal] = (),
     panel_spec: WaveformPanelSpec | None = None,
     beat: int | None = None,
+    reveal_tracker: object | None = None,
+    reveal_targets: Sequence[tuple[Signal, int]] = (),
+    reveal_time: float | None = None,
 ) -> float:
     """
     Play propagation and optional waveform timing on the same beat (one ``run_time``).
@@ -107,6 +111,24 @@ def play_propagation_beat(
     if sync_plan is not None:
         for anim in sync_plan.animations:
             animations.append(anim)
+
+    if reveal_tracker is not None:
+        append = getattr(reveal_tracker, "append_through_beat", None)
+        append_time = getattr(reveal_tracker, "append_through_time", None)
+        reveal_anims: list[object] = []
+        if reveal_time is not None and append_time is not None:
+            for line in append_time(reveal_time):
+                reveal_anims.append(line.animate.set_stroke(width=theme.WAVEFORM_STROKE_WIDTH))
+        elif append is not None and reveal_targets:
+            for reveal_signal, target_beat in reveal_targets:
+                for line in append(reveal_signal, target_beat):
+                    reveal_anims.append(line.animate.set_stroke(width=theme.WAVEFORM_STROKE_WIDTH))
+        if reveal_anims:
+            animations.append(
+                AnimationGroup(*reveal_anims, lag_ratio=0.0)
+                if len(reveal_anims) > 1
+                else reveal_anims[0]
+            )
 
     if animations:
         if len(animations) == 1:

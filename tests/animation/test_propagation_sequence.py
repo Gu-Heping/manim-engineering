@@ -185,7 +185,7 @@ def test_sequence_with_captions_holds_for_reading_before_each_beat() -> None:
     )
 
 
-def test_sequence_waveform_reveal_runs_before_propagation_beat() -> None:
+def test_sequence_waveform_reveal_runs_during_propagation_beat() -> None:
     graph, layout, signal = _three_beat_signal_fixture()
     events: list[str] = []
 
@@ -193,10 +193,17 @@ def test_sequence_waveform_reveal_runs_before_propagation_beat() -> None:
         def wait(self, duration: float) -> None:
             pass
 
-    def on_reveal(_spec: BeatSpec, _index: int) -> None:
-        events.append("reveal")
+    class Tracker:
+        def append_through_beat(self, sig, target: int) -> tuple[()]:
+            return ()
 
     def fake_beat(scene, sig, **kwargs):
+        tracker = kwargs.get("reveal_tracker")
+        targets = kwargs.get("reveal_targets") or ()
+        if tracker is not None and targets:
+            for reveal_signal, target in targets:
+                tracker.append_through_beat(reveal_signal, target)
+            events.append("reveal")
         events.append("beat")
 
     import manim_engineering.animation.propagation_sequence as ps_mod
@@ -209,7 +216,7 @@ def test_sequence_waveform_reveal_runs_before_propagation_beat() -> None:
             layout=layout,
             graph=graph,
             max_beats=3,
-            waveform_reveal_callback=on_reveal,
+            reveal_tracker=Tracker(),
         ).play(Scene())
     finally:
         ps_mod.play_propagation_beat = original

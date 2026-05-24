@@ -35,12 +35,19 @@ class BeatSpec:
         wave_beat: Index into the trace edge history for ``WaveformSync``;
             ``None`` for "use the latest" semantics.
         caption: Optional teaching string surfaced via ``caption_callback``.
+        reveal_targets: Optional ``(signal, max_beat)`` pairs for progressive
+            waveform panel reveal. When omitted, defaults to
+            ``(signal, wave_beat or beat_index)``.
+        reveal_time: When set, every trace in the panel advances to this
+            shared semantic time (requires ``reveal_tracker`` on the sequence).
     """
 
     signal: Signal
     record: PropagationRecord
     wave_beat: int | None = None
     caption: str | None = None
+    reveal_targets: tuple[tuple[Signal, int], ...] | None = None
+    reveal_time: float | None = None
 
 
 class PropagationSequence:
@@ -69,6 +76,7 @@ class PropagationSequence:
         topology: TopologyProjection | None = None,
         caption_callback: Callable[[BeatSpec, int], None] | None = None,
         waveform_reveal_callback: Callable[[BeatSpec, int], None] | None = None,
+        reveal_tracker: object | None = None,
     ) -> None:
         if dim_inactive and topology is None:
             # Silently no-op'ing here was the root cause of "我以为开了 dim
@@ -90,6 +98,7 @@ class PropagationSequence:
         self._topology = topology
         self._caption_callback = caption_callback
         self._waveform_reveal_callback = waveform_reveal_callback
+        self._reveal_tracker = reveal_tracker
 
         if beats is not None:
             specs = list(beats)
@@ -129,7 +138,13 @@ class PropagationSequence:
                 # pulse fires. Skipped when no caption (e.g. clock_data demo).
                 if spec.caption and self._caption_hold > 0:
                     wait(self._caption_hold)
-            if self._waveform_reveal_callback is not None:
+            reveal_time = spec.reveal_time
+            reveal_targets = spec.reveal_targets
+            if reveal_time is None:
+                if reveal_targets is None:
+                    wave_beat = spec.wave_beat if spec.wave_beat is not None else index
+                    reveal_targets = ((spec.signal, wave_beat),)
+            if self._waveform_reveal_callback is not None and self._reveal_tracker is None:
                 self._waveform_reveal_callback(spec, index)
             play_propagation_beat(
                 scene,
@@ -142,6 +157,9 @@ class PropagationSequence:
                 signals=self._sync_signals,
                 panel_spec=self._panel_spec,
                 beat=spec.wave_beat if spec.wave_beat is not None else index,
+                reveal_tracker=self._reveal_tracker,
+                reveal_targets=reveal_targets,
+                reveal_time=reveal_time,
             )
             if index < len(self._beats) - 1:
                 wait(self._beat_gap)
