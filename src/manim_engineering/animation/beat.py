@@ -139,7 +139,13 @@ def play_propagation_beat(
             )
             sync_plan = sync.build()
 
-    scene = require_scene_methods(scene, require_play=True, require_add=True, require_remove=True)
+    scene = require_scene_methods(
+        scene,
+        require_play=True,
+        require_add=True,
+        require_remove=True,
+        require_wait=True,
+    )
 
     propagation_overlays, overlays, flow_anims = _merge_animation_plans(
         flow_plan, sync_plan, ramp_plan
@@ -171,7 +177,7 @@ def play_propagation_beat(
                 for line in reveal_tracker.append_through_beat(reveal_signal, target_beat):
                     reveal_anims.append(line.animate.set_stroke(width=theme.WAVEFORM_STROKE_WIDTH))
 
-    beat_anims: list[object] = [*reveal_anims, *list(flow_anims)]
+    beat_anims: list[object] = [*reveal_anims, *flow_anims]
     if beat_anims:
         if len(beat_anims) == 1:
             scene.play(beat_anims[0], run_time=beat_duration)

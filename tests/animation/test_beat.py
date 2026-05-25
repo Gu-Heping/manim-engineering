@@ -7,7 +7,7 @@ import pytest
 pytest.importorskip("manim")
 
 from manim import AnimationGroup
-from conftest import RecordingScene
+from recording_scene import RecordingScene
 
 from manim_engineering.animation import BEAT_DURATION, play_propagation_beat
 from manim_engineering.animation.signal_flow import SignalFlow
@@ -191,8 +191,9 @@ def test_reveal_scope_signal_uses_single_trace_append() -> None:
         animate = _Anim()
 
     class _RevealTracker:
-        all_calls: list[float] = []
-        signal_calls: list[tuple[str, float]] = []
+        def __init__(self) -> None:
+            self.all_calls: list[float] = []
+            self.signal_calls: list[tuple[str, float]] = []
 
         def revealed_time_for(self, _signal_name: str) -> float:
             return 0.0

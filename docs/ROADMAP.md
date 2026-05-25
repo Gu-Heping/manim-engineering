@@ -277,7 +277,7 @@ IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `Circuit
 - [x] HUD stage (#10)
 - [x] beat merge (#12)
 - [x] reveal decouple (#13)
-- [ ] tests (#14)
+- [x] tests (#14)
 
 Short-term experiment track: circuitjs1-inspired stamp/doStep exploration is
 documented in `docs/circuitjs1-borrowing.md` with an isolated prototype at

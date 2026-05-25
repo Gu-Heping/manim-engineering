@@ -6,7 +6,7 @@ import pytest
 
 pytest.importorskip("manim")
 
-from conftest import RecordingScene
+from recording_scene import RecordingScene
 
 from manim_engineering.animation import BEAT_DURATION, play_propagation_beat
 from manim_engineering.animation.focus import DEFAULT_DIM_OPACITY, dim_topology, restore_topology
@@ -59,6 +59,7 @@ def test_dim_restore_round_trip_on_rendered_topology() -> None:
 
 def test_dim_then_beat_then_restore_preserves_label_contrast() -> None:
     layout, graph, signal, topology = _topology_projection()
+    assert signal.propagation_history, "expected at least one propagation record"
     dim_topology(topology)
     scene = RecordingScene()
     play_propagation_beat(

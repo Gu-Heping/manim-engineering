@@ -6,8 +6,8 @@ import pytest
 
 pytest.importorskip("manim")
 
-from manim import FadeIn, FadeOut
-from conftest import RecordingScene
+from manim import AnimationGroup, FadeIn, FadeOut
+from recording_scene import RecordingScene
 
 from manim_engineering.animation import (
     CAPTION_CROSSFADE,
@@ -59,10 +59,10 @@ def test_caption_track_first_beat_fades_title() -> None:
     seed = subtitle_text("intro", role="intro")
     track = CaptionTrack(scene, seed, _camera(), title=title)
     track.swap(_beat_spec(caption="beat 0"), index=0)
-    assert len(scene.played) == 3
-    title_fade = scene.played[0][0]
-    assert isinstance(title_fade, FadeOut)
-    assert title_fade.run_time == pytest.approx(CAPTION_CROSSFADE)
+    assert len(scene.played) == 1
+    group = scene.played[0][0]
+    assert isinstance(group, AnimationGroup)
+    assert scene.run_times[0] == pytest.approx(CAPTION_CROSSFADE)
 
 
 def test_play_hud_intro_sets_hud_z_index() -> None:
@@ -79,9 +79,11 @@ def test_caption_crossfade_uses_pacing_constant() -> None:
     seed = subtitle_text("intro", role="intro")
     track = CaptionTrack(scene, seed, _camera())
     track.swap(_beat_spec(caption="next"), index=1)
-    fade_out = scene.played[0][0]
-    fade_in = scene.played[1][0]
-    assert isinstance(fade_out, FadeOut)
-    assert isinstance(fade_in, FadeIn)
-    assert fade_out.run_time == pytest.approx(CAPTION_CROSSFADE)
-    assert fade_in.run_time == pytest.approx(CAPTION_CROSSFADE)
+    assert len(scene.played) == 1
+    group = scene.played[0][0]
+    assert isinstance(group, AnimationGroup)
+    assert scene.run_times[0] == pytest.approx(CAPTION_CROSSFADE)
+    anims = group.animations
+    assert len(anims) == 2
+    assert isinstance(anims[0], FadeOut)
+    assert isinstance(anims[1], FadeIn)
