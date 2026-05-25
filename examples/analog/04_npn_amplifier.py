@@ -12,17 +12,9 @@ from manim_engineering.animation import configure_topology_scene_camera, subtitl
 from manim_engineering.components import NPN, VCC, Ground, InputDriver, Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.layout.types import Point2D
+from manim_engineering.layout.presets import layout_from_preset
+from manim_engineering.layout.presets.npn_ce import common_emitter_preset
 from manim_engineering.renderers.minimal import ManimRenderer
-
-AMP_OVERRIDES: dict[str, Point2D] = {
-    "vcc1": Point2D(0.5, 2.5),
-    "rc1": Point2D(-1.5, 1.8),
-    "q1": Point2D(-1.0, 0.5),
-    "re1": Point2D(-1.5, -0.9),
-    "gnd1": Point2D(0.5, -1.7),
-    "in_drv": Point2D(-3.5, 0.8),
-}
 
 
 def build_npn_amplifier_fixture():
@@ -41,7 +33,8 @@ def build_npn_amplifier_fixture():
     graph.connect(re.get_pin("b"), gnd.get_pin("gnd"))
     graph.connect(in_drv.get_pin("out"), q1.get_pin("base"))
     elements = {"vcc1": vcc, "gnd1": gnd, "rc1": rc, "re1": re, "q1": q1, "in_drv": in_drv}
-    layout = LayoutEngine().layout(graph, elements, placement_overrides=AMP_OVERRIDES)
+    preset = common_emitter_preset(vcc, gnd, rc, re, q1, in_drv)
+    layout = layout_from_preset(LayoutEngine(), graph, elements, preset)
     return graph, elements, layout
 
 

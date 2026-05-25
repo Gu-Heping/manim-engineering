@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 
 from manim_engineering.components.types import Bounds
 
@@ -18,6 +19,9 @@ OCCUPANCY_TARGET_MAX = 0.75
 
 DEFAULT_NOMINAL_FRAME = Bounds(width=2.5, height=0.60)
 
+# Shortest routed segment for coincident pins (topology shared, visual stub required).
+MIN_VISIBLE_STUB = 0.08
+
 
 @dataclass(frozen=True)
 class Point2D:
@@ -26,6 +30,23 @@ class Point2D:
     x: float
 
     y: float
+
+
+_VALID_ROTATIONS = frozenset({0, 90, 180, 270})
+
+
+@dataclass(frozen=True)
+class ComponentOrientation:
+    """Placement-time rotation / mirror (layout-owned; components stay canonical)."""
+
+    rotation: int = 0
+    flip_x: bool = False
+    flip_y: bool = False
+
+    def __post_init__(self) -> None:
+        if self.rotation not in _VALID_ROTATIONS:
+            msg = f"rotation must be one of {sorted(_VALID_ROTATIONS)}, got {self.rotation}"
+            raise ValueError(msg)
 
 
 @dataclass(frozen=True)
@@ -38,14 +59,36 @@ class Segment:
 
 
 @dataclass(frozen=True)
+class TextPlacementOverride:
+    """Optional world position for a renderer text role on one placement."""
+
+    role: str
+
+    world: Point2D
+
+
+class LabelPlacementMode(Enum):
+    """How upright ``component_label`` picks a screen slot when not overridden."""
+
+    AUTO = "auto"
+    SLOT_ONLY = "slot_only"
+
+
+@dataclass(frozen=True)
 class ComponentPlacement:
-    """World-space origin (bottom-left) for a placed component."""
+    """World-space origin (bottom-left of oriented AABB) for a placed component."""
 
     element_id: str
 
     origin: Point2D
 
     bounds: Bounds
+
+    orientation: ComponentOrientation = ComponentOrientation()
+
+    text_overrides: tuple[TextPlacementOverride, ...] = ()
+
+    label_mode: LabelPlacementMode = LabelPlacementMode.AUTO
 
 
 @dataclass(frozen=True)
@@ -104,3 +147,5 @@ class LayoutResult:
     layout_bbox: LayoutBBox
 
     scene_bbox: LayoutBBox
+
+    junction_nodes: frozenset[Point2D] = frozenset()

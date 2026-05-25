@@ -48,6 +48,12 @@ Complex parts may compose subcomponents internally with semantic structure.
 
 Expose semantic state (logic level, enable, selected channel) explicitly. No hidden animation or renderer state.
 
+MOSFET **drawing convention** (textbook vertical vs legacy stub arrow) belongs in
+``MinimalRenderer(mosfet_convention=...)``, not on ``CircuitElement`` — see
+[docs/mosfet-symbols.md](../../docs/mosfet-symbols.md). All four MOSFET classes
+register ``bulk``; connect ``bulk`` to ``source`` in CMOS/discrete examples unless
+substrate bias is the lesson topic.
+
 ## Implementation Order
 
 See `00-foundation.md` § Implementation Order.

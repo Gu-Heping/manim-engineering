@@ -1,5 +1,6 @@
 """Minimal renderer: simple symbols and semantic theme colors."""
 
+from manim_engineering.renderers.minimal.conventions import MosfetSymbolConvention
 from manim_engineering.renderers.minimal.immutable import (
     TopologyProjection,
     copy_for_animation,
@@ -44,6 +45,7 @@ __all__ = [
     "INTERFACE_ROLE_FONT_SIZE",
     "ManimRenderer",
     "MinimalRenderer",
+    "MosfetSymbolConvention",
     "POWER_COLOR",
     "SIGNAL_COLOR",
     "TopologyProjection",

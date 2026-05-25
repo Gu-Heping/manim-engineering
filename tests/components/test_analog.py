@@ -5,24 +5,40 @@ Scope A: pin metadata + bounds + graph-registration smoke only. No physics.
 
 from __future__ import annotations
 
-from manim_engineering.components import NMOS, NPN, PMOS, PNP, Diode, OpAmp, ZenerDiode
+import pytest
+
+from manim_engineering.components import (
+    NMOS,
+    NMOSDepletion,
+    NPN,
+    PMOS,
+    PMOSDepletion,
+    PNP,
+    Diode,
+    OpAmp,
+    ZenerDiode,
+)
 from manim_engineering.core import CircuitGraph, PinDirection, SignalType
 
 
 def test_nmos_pins_and_metadata() -> None:
     n = NMOS("m1", label="M1")
     assert n.semantic_type == "analog"
-    assert set(n.pins) == {"gate", "drain", "source"}
+    assert set(n.pins) == {"gate", "drain", "source", "bulk"}
     assert n.get_pin("gate").direction is PinDirection.IN
+    assert n.get_pin("bulk").direction is PinDirection.IN
     assert n.get_pin("drain").direction is PinDirection.INOUT
     assert n.get_pin("source").direction is PinDirection.INOUT
-    for name in ("gate", "drain", "source"):
+    for name in ("gate", "drain", "source", "bulk"):
         assert n.get_pin(name).signal_type is SignalType.ANALOG
     bounds = n.get_bounds()
     assert bounds.width > 0 and bounds.height > 0
-    # NMOS source sits at the bottom-right corner, drain at top-right.
     anchors = n.anchor_points
     assert anchors["drain"][1] > anchors["source"][1]
+    assert anchors["drain"][0] != anchors["source"][0]
+    assert anchors["bulk"][0] == anchors["source"][0]
+    assert anchors["bulk"][1] > anchors["source"][1]
+    assert anchors["bulk"][1] < anchors["drain"][1]
 
 
 def test_nmos_attaches_to_graph() -> None:
@@ -35,13 +51,17 @@ def test_nmos_attaches_to_graph() -> None:
 def test_pmos_pins_and_swap_drain_source_roles() -> None:
     p = PMOS("p1", label="P1")
     assert p.semantic_type == "analog"
-    assert set(p.pins) == {"gate", "drain", "source"}
+    assert set(p.pins) == {"gate", "drain", "source", "bulk"}
     assert p.get_pin("gate").direction is PinDirection.IN
-    for name in ("gate", "drain", "source"):
+    for name in ("gate", "drain", "source", "bulk"):
         assert p.get_pin(name).signal_type is SignalType.ANALOG
     # In CMOS-inverter convention the PMOS source sits at top, drain at bottom.
     anchors = p.anchor_points
     assert anchors["source"][1] > anchors["drain"][1]
+    assert anchors["drain"][0] != anchors["source"][0]
+    assert anchors["bulk"][0] == anchors["source"][0]
+    assert anchors["bulk"][1] < anchors["source"][1]
+    assert anchors["bulk"][1] > anchors["drain"][1]
     assert p.get_bounds().width > 0 and p.get_bounds().height > 0
 
 
@@ -50,6 +70,41 @@ def test_pmos_attaches_to_graph() -> None:
     p = PMOS("p1")
     p.attach_to(graph)
     assert any(node.id == "p1" for node in graph.nodes)
+
+
+def test_nmos_depletion_pins_match_enhancement_layout() -> None:
+    n = NMOSDepletion("nd1", label="ND1")
+    assert n.conduction_mode == "depletion"
+    assert n.channel_polarity == "n"
+    assert set(n.pins) == {"gate", "drain", "source", "bulk"}
+    anchors = n.anchor_points
+    assert anchors["drain"][1] > anchors["source"][1]
+
+
+def test_pmos_depletion_pins_match_enhancement_layout() -> None:
+    p = PMOSDepletion("pd1", label="PD1")
+    assert p.conduction_mode == "depletion"
+    assert p.channel_polarity == "p"
+    assert set(p.pins) == {"gate", "drain", "source", "bulk"}
+    anchors = p.anchor_points
+    assert anchors["source"][1] > anchors["drain"][1]
+
+
+def test_mosfet_bulk_pin_registered() -> None:
+    for factory in (NMOS, PMOS, NMOSDepletion, PMOSDepletion):
+        comp = factory("m")
+        bulk = comp.get_pin("bulk")
+        assert bulk.name == "bulk"
+        assert bulk.direction is PinDirection.IN
+
+
+def test_mosfet_drain_and_source_stub_columns_differ() -> None:
+    for factory in (NMOS, PMOS):
+        anchors = factory("m").anchor_points
+        assert anchors["drain"][0] == pytest.approx(1.0)
+        assert anchors["source"][0] == pytest.approx(0.86)
+        assert anchors["bulk"][0] == pytest.approx(anchors["source"][0])
+        assert anchors["drain"][0] != anchors["source"][0]
 
 
 def test_diode_pins_and_directions() -> None:

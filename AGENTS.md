@@ -51,6 +51,8 @@ Full branch naming, pre-push gates, review triage, fix loop, and merge criteria:
 | [docs/component-api.md](docs/component-api.md) | `CircuitElement` contract |
 | [docs/visual-theme.md](docs/visual-theme.md) | Color/background constants |
 | [docs/animation-timing.md](docs/animation-timing.md) | Duration guidelines |
+| [docs/mosfet-symbols.md](docs/mosfet-symbols.md) | Four MOSFET types + switchable conventions |
+| [docs/layout-strategy.md](docs/layout-strategy.md) | Grid vs preset vs override; deferred auto-placer |
 | [docs/visual-validation.md](docs/visual-validation.md) | Golden pipeline overview (gates in rule 90) |
 
 ## Conflict resolution

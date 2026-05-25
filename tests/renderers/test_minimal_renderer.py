@@ -157,6 +157,22 @@ def _body_endpoint_coords(body) -> set[tuple[float, float]]:
     return coords
 
 
+def test_vcc_and_ground_labels_clear_of_symbol_body() -> None:
+    from manim_engineering.components import Ground, VCC
+
+    vcc = VCC("vcc1", label="VCC")
+    gnd = Ground("gnd1", label="GND")
+    vcc_mob = MinimalRenderer().render(vcc)
+    gnd_mob = MinimalRenderer().render(gnd)
+    vcc_label = vcc_mob.submobjects[-1]
+    gnd_label = gnd_mob.submobjects[-1]
+    _, vh = vcc.get_bounds().width, vcc.get_bounds().height
+    _, gh = gnd.get_bounds().width, gnd.get_bounds().height
+
+    assert float(vcc_label.get_center()[1]) > vh
+    assert float(gnd_label.get_center()[1]) < 0.0
+
+
 def test_vcc_symbol_stroke_meets_bottom_anchor() -> None:
     from manim_engineering.components import VCC
 
@@ -170,13 +186,19 @@ def test_vcc_symbol_stroke_meets_bottom_anchor() -> None:
 
 def test_pmos_symbol_strokes_end_at_source_and_drain_anchors() -> None:
     from manim_engineering.components import PMOS
+    from manim_engineering.components.analog.mosfet import (
+        MOSFET_DRAIN_STUB_X,
+        MOSFET_SOURCE_STUB_X,
+    )
 
     pmos = PMOS("p1")
     body = MinimalRenderer().render(pmos).submobjects[0]
     w, h = pmos.get_bounds().width, pmos.get_bounds().height
     coords = _body_endpoint_coords(body)
-    assert (round(w, 4), round(h, 4)) in coords
-    assert (round(w, 4), 0.0) in coords
+    drain_x = round(MOSFET_DRAIN_STUB_X * w, 4)
+    source_x = round(MOSFET_SOURCE_STUB_X * w, 4)
+    assert (drain_x, 0.0) in coords
+    assert (source_x, round(h, 4)) in coords
 
 
 def _all_text_submobjects(mob) -> list:
@@ -453,10 +475,16 @@ def test_interface_skips_pin_dots() -> None:
 
 def test_nmos_symbol_strokes_end_at_drain_and_source_anchors() -> None:
     from manim_engineering.components import NMOS
+    from manim_engineering.components.analog.mosfet import (
+        MOSFET_DRAIN_STUB_X,
+        MOSFET_SOURCE_STUB_X,
+    )
 
     nmos = NMOS("m1")
     body = MinimalRenderer().render(nmos).submobjects[0]
     w, h = nmos.get_bounds().width, nmos.get_bounds().height
     coords = _body_endpoint_coords(body)
-    assert (round(w, 4), round(h, 4)) in coords
-    assert (round(w, 4), 0.0) in coords
+    drain_x = round(MOSFET_DRAIN_STUB_X * w, 4)
+    source_x = round(MOSFET_SOURCE_STUB_X * w, 4)
+    assert (drain_x, round(h, 4)) in coords
+    assert (source_x, 0.0) in coords

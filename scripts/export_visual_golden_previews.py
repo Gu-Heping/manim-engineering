@@ -26,6 +26,7 @@ PREVIEW_SCENES: tuple[tuple[str, str, str], ...] = (
     ("analog_06_opamp_integrator", "analog/06_opamp_integrator.py", "OpAmpIntegratorScene"),
     ("analog_07_zener_regulator", "analog/07_zener_regulator.py", "ZenerRegulatorScene"),
     ("analog_08_rlc_transient", "analog/08_rlc_transient.py", "RLCTransientScene"),
+    ("analog_09_mos_four_types", "analog/09_mos_four_types.py", "MosFourTypesScene"),
 )
 
 
@@ -37,7 +38,7 @@ def _load_module(name: str, path: Path):
     return mod
 
 
-def _render_scene_last_frame(scene_cls: type, glob_pattern: str) -> Path:
+def _render_scene_last_frame(scene_cls: type, glob_pattern: str, dest: Path) -> None:
     from manim import tempconfig
 
     with tempfile.TemporaryDirectory(prefix="me_preview_") as tmpdir:
@@ -55,7 +56,7 @@ def _render_scene_last_frame(scene_cls: type, glob_pattern: str) -> Path:
         matches = sorted(Path(tmpdir).rglob(f"{glob_pattern}*.png"))
         if not matches:
             raise FileNotFoundError(f"no PNG matching {glob_pattern!r} under {tmpdir}")
-        return matches[-1]
+        shutil.copy2(matches[-1], dest)
 
 
 def main() -> None:
@@ -70,9 +71,8 @@ def main() -> None:
         path = EXAMPLES / rel
         mod = _load_module(stem, path)
         scene_cls = getattr(mod, cls_name)
-        png = _render_scene_last_frame(scene_cls, cls_name)
         dest = OUT_DIR / f"{stem}_last_frame.png"
-        shutil.copy2(png, dest)
+        _render_scene_last_frame(scene_cls, cls_name, dest)
         print(f"  {dest.name}")
 
 
