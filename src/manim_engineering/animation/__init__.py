@@ -13,6 +13,7 @@ from manim_engineering.animation.focus import (
     normalize_topology_labels,
     restore_topology,
 )
+from manim_engineering.animation.hud import CaptionTrack, make_caption_track, play_hud_intro
 from manim_engineering.animation.layers import (
     HUD_Z_INDEX,
     PROPAGATION_Z_INDEX,
@@ -49,8 +50,8 @@ from manim_engineering.animation.scene import (
     resolve_scene_camera,
     resolve_topology_scene_camera,
 )
-from manim_engineering.animation.scene_template import play_topology_intro
 from manim_engineering.animation.scene_protocol import TeachingSceneProtocol
+from manim_engineering.animation.scene_template import play_topology_intro
 from manim_engineering.animation.signal_flow import (
     DEFAULT_PROPAGATION_DURATION,
     SignalFlow,
@@ -79,6 +80,7 @@ __all__ = [
     "BEAT_GAP",
     "CAPTION_CROSSFADE",
     "BeatSpec",
+    "CaptionTrack",
     "DEFAULT_BACKGROUND",
     "DEFAULT_PROPAGATION_DURATION",
     "DEFAULT_TIMING_DURATION",
@@ -104,7 +106,9 @@ __all__ = [
     "configure_waveform_scene_camera",
     "dim_topology",
     "normalize_topology_labels",
+    "make_caption_track",
     "get_primitive",
+    "play_hud_intro",
     "play_propagation_beat",
     "play_topology_intro",
     "primitive_registry_view",

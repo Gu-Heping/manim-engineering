@@ -22,9 +22,9 @@ Provided
 
 * Three module-level helpers:
 
-    - :func:`_play_hud_intro` — ``FadeIn(title)`` (CJK-stable) + ``FadeIn(intro)``
-      above the topology.
-    - :func:`_make_caption_track` — returns a :class:`CaptionTrack` whose
+    - :func:`play_hud_intro` — ``FadeIn(title)`` (CJK-stable) + ``FadeIn(intro)``
+      above the topology (from ``manim_engineering.animation``).
+    - :func:`make_caption_track` — returns a :class:`CaptionTrack` whose
       ``swap`` method is plugged into ``PropagationSequence.caption_callback``.
     - :func:`capture_camera_frame` — writes the current camera image to disk
       (PNG). Used by clock_data_waveform for acceptance frames; intentionally
@@ -41,30 +41,29 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from manim import FadeIn, FadeOut, Scene, Text, VGroup
+from manim import FadeOut, Scene, VGroup
 
 from manim_engineering.animation import (
     BEAT_GAP,
-    CAPTION_CROSSFADE,
-    HUD_Z_INDEX,
     INTRO_PAUSE,
     OUTRO_PAUSE,
     SCENE_FADE_OUT,
     BeatSpec,
+    CaptionTrack,
     PropagationSequence,
     SceneCamera,
     WaveformRevealTracker,
     configure_waveform_scene_camera,
+    make_caption_track,
+    play_hud_intro,
     play_topology_intro,
     scene_final_fade_enabled,
-    subtitle_text,
 )
 from manim_engineering.components import CircuitElement
 from manim_engineering.core import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
 from manim_engineering.renderers.minimal import ManimRenderer, WaveformPanelRenderer
 from manim_engineering.semantic import Signal
-from manim_engineering.waveform import hud_text_y
 from manim_engineering.waveform.trace import WaveformBundle
 
 __all__ = [
@@ -86,93 +85,6 @@ class WaveformFixture:
     layout: LayoutResult
     bundle: WaveformBundle
     signals: tuple[Signal, ...] = field(default_factory=tuple)
-
-
-class CaptionTrack:
-    """Maintain a single on-screen caption mobject across multiple beats.
-
-    The :meth:`swap` method is plugged into
-    :class:`PropagationSequence.caption_callback`. After the beat sequence
-    completes, call :meth:`close` to fade out the last caption.
-    """
-
-    def __init__(
-        self,
-        scene: Scene,
-        seed: Text,
-        camera: SceneCamera,
-        *,
-        title: Text | None = None,
-    ) -> None:
-        self._scene = scene
-        self._camera = camera
-        self.current: Text | None = seed
-        self._title: Text | None = title
-
-    def swap(self, spec: BeatSpec, index: int) -> None:
-        if not spec.caption:
-            return
-        next_caption = subtitle_text(spec.caption or "", role="caption")
-        next_caption.move_to(
-            [
-                self._camera.frame_cx,
-                hud_text_y(self._camera.frame_cy, self._camera.frame_height, row=1),
-                0,
-            ]
-        )
-        next_caption.set_z_index(HUD_Z_INDEX)
-        current = self.current
-        crossfade = CAPTION_CROSSFADE
-        if index == 0 and self._title is not None:
-            self._scene.play(FadeOut(self._title, run_time=crossfade))
-            self._scene.remove(self._title)
-            self._title = None
-        if current is not None:
-            self._scene.play(FadeOut(current, run_time=crossfade))
-            self._scene.remove(current)
-        self._scene.play(FadeIn(next_caption, run_time=crossfade))
-        self.current = next_caption
-
-    def close(self) -> None:
-        if self.current is not None:
-            self._scene.play(FadeOut(self.current, run_time=CAPTION_CROSSFADE))
-            self._scene.remove(self.current)
-            self.current = None
-
-
-def _play_hud_intro(
-    scene: Scene,
-    title_text: str,
-    intro_text: str,
-    camera: SceneCamera,
-) -> tuple[Text, Text]:
-    """Play the 3B1B-style HUD intro: ``Write(title)`` then ``FadeIn(intro)``.
-
-    Returns the two ``Text`` mobjects so the caller can keep references for
-    later (e.g. seeding a :class:`CaptionTrack` or fading out at the end).
-    """
-    title = subtitle_text(title_text, role="title")
-    intro = subtitle_text(intro_text, role="intro")
-    title.move_to([camera.frame_cx, hud_text_y(camera.frame_cy, camera.frame_height, row=0), 0])
-    intro.move_to([camera.frame_cx, hud_text_y(camera.frame_cy, camera.frame_height, row=1), 0])
-    title.set_z_index(HUD_Z_INDEX)
-    intro.set_z_index(HUD_Z_INDEX)
-    # FadeIn is more stable than Write for CJK title glyphs in first frames.
-    scene.play(FadeIn(title, shift=0.08), run_time=0.5)
-    scene.play(FadeIn(intro, shift=0.15), run_time=0.55)
-    return title, intro
-
-
-def _make_caption_track(
-    scene: Scene,
-    seed: Text,
-    camera: SceneCamera,
-    *,
-    title: Text | None = None,
-) -> CaptionTrack:
-    """Return a :class:`CaptionTrack` whose ``swap`` matches the
-    :class:`PropagationSequence.caption_callback` protocol."""
-    return CaptionTrack(scene, seed, camera, title=title)
 
 
 def capture_camera_frame(scene: Scene, path: Path) -> None:
@@ -309,11 +221,11 @@ class WaveformDemoScene(Scene):
         )
 
         caption_track: CaptionTrack | None = None
-        title_mob: Text | None = None
+        title_mob: object | None = None
         if hud is not None:
             title_text, intro_text = hud
-            title_mob, intro_mob = _play_hud_intro(self, title_text, intro_text, camera)
-            caption_track = _make_caption_track(self, intro_mob, camera, title=title_mob)
+            title_mob, intro_mob = play_hud_intro(self, title_text, intro_text, camera)
+            caption_track = make_caption_track(self, intro_mob, camera, title=title_mob)
 
         self.after_intro_hook(fixture, camera)
         self.wait(max(INTRO_PAUSE - self.intro_pause_offset, 0.3))
