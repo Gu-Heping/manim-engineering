@@ -13,7 +13,7 @@ from manim_engineering.waveform.layout import (
     MIN_WAVEFORM_GAP,
     WaveformPanelSpec,
     panel_below_layout,
-    step_polyline,
+    polyline_for_trace,
     time_scale_for_bundle,
 )
 from manim_engineering.waveform.trace import WaveformBundle, WaveformTrace
@@ -62,7 +62,7 @@ class WaveformPanelRenderer:
         extend_to_panel: bool | None = None,
     ) -> VGroup:
         group = VGroup()
-        points = step_polyline(
+        points = polyline_for_trace(
             trace,
             spec,
             trace_index,

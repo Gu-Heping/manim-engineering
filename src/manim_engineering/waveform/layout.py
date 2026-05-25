@@ -192,6 +192,123 @@ def sample_to_point(
     return Point2D(x, y)
 
 
+def _sample_slice_for_polyline(
+    trace: WaveformTrace,
+    *,
+    idle_only: bool,
+    max_beat: int | None,
+    hold_through_time: float | None,
+) -> tuple[WaveformSample, ...]:
+    if not trace.samples:
+        return ()
+    if idle_only:
+        return trace.samples[:1]
+    if hold_through_time is not None:
+        return _samples_through_time(trace.samples, hold_through_time)
+    if max_beat is not None:
+        end = min(max_beat + 2, len(trace.samples))
+        return trace.samples[: max(end, 1)]
+    return trace.samples
+
+
+def _samples_through_time(
+    samples: tuple[WaveformSample, ...],
+    hold_through_time: float,
+) -> tuple[WaveformSample, ...]:
+    """Include every sample at or before ``hold_through_time``, interpolating the tail."""
+    if not samples:
+        return ()
+    included: list[WaveformSample] = []
+    for sample in samples:
+        if sample.time <= hold_through_time + 1e-9:
+            included.append(sample)
+        else:
+            break
+    if not included:
+        included.append(samples[0])
+    last = included[-1]
+    if last.time < hold_through_time - 1e-9:
+        included.append(_interpolate_sample_at_time(samples, hold_through_time))
+    return tuple(included)
+
+
+def _interpolate_sample_at_time(
+    samples: tuple[WaveformSample, ...],
+    target_time: float,
+) -> WaveformSample:
+    if target_time <= samples[0].time:
+        return WaveformSample(time=target_time, level=samples[0].level)
+    for index in range(1, len(samples)):
+        current = samples[index]
+        if current.time >= target_time:
+            previous = samples[index - 1]
+            if current.time == previous.time:
+                return WaveformSample(time=target_time, level=current.level)
+            fraction = (target_time - previous.time) / (current.time - previous.time)
+            prev_level = previous.level
+            curr_level = current.level
+            if isinstance(prev_level, float) and isinstance(curr_level, float):
+                level: LogicLevel | float = prev_level + fraction * (curr_level - prev_level)
+            else:
+                level = curr_level
+            return WaveformSample(time=target_time, level=level)
+    last = samples[-1]
+    return WaveformSample(time=target_time, level=last.level)
+
+
+def smooth_polyline(
+    trace: WaveformTrace,
+    spec: WaveformPanelSpec,
+    trace_index: int,
+    *,
+    max_beat: int | None = None,
+    idle_only: bool = False,
+    extend_to_panel: bool | None = None,
+    hold_through_time: float | None = None,
+) -> tuple[Point2D, ...]:
+    """Continuous trace polyline: connect samples directly (linear hold between points)."""
+    sample_slice = _sample_slice_for_polyline(
+        trace,
+        idle_only=idle_only,
+        max_beat=max_beat,
+        hold_through_time=hold_through_time,
+    )
+    if not sample_slice:
+        return ()
+
+    if extend_to_panel is None:
+        extend_to_panel = idle_only or (max_beat is None and hold_through_time is None)
+
+    points: list[Point2D] = []
+    for sample in sample_slice:
+        _append_point_if_distinct(points, sample_to_point(sample, spec, trace_index))
+
+    last_pt = sample_to_point(sample_slice[-1], spec, trace_index)
+    if hold_through_time is not None:
+        hold_x = spec.origin.x + hold_through_time * spec.time_scale
+        _append_point_if_distinct(points, Point2D(hold_x, last_pt.y))
+        if extend_to_panel:
+            end_x = spec.origin.x + spec.width
+            if points and points[-1].x < end_x - 1e-9:
+                _append_point_if_distinct(points, Point2D(end_x, points[-1].y))
+    elif extend_to_panel:
+        end_x = spec.origin.x + spec.width
+        _append_point_if_distinct(points, Point2D(end_x, last_pt.y))
+    return tuple(points)
+
+
+def polyline_for_trace(
+    trace: WaveformTrace,
+    spec: WaveformPanelSpec,
+    trace_index: int,
+    **kwargs: object,
+) -> tuple[Point2D, ...]:
+    """Dispatch to ``step_polyline`` or ``smooth_polyline`` based on ``trace.is_discrete``."""
+    if trace.is_discrete:
+        return step_polyline(trace, spec, trace_index, **kwargs)  # type: ignore[arg-type]
+    return smooth_polyline(trace, spec, trace_index, **kwargs)  # type: ignore[arg-type]
+
+
 def step_polyline(
     trace: WaveformTrace,
     spec: WaveformPanelSpec,
@@ -211,15 +328,14 @@ def step_polyline(
         right edge; when ``False``, stop at the last revealed sample (progressive
         reveal). Defaults to ``idle_only or max_beat is None``.
     """
-    if not trace.samples:
+    sample_slice = _sample_slice_for_polyline(
+        trace,
+        idle_only=idle_only,
+        max_beat=max_beat,
+        hold_through_time=hold_through_time,
+    )
+    if not sample_slice:
         return ()
-    if idle_only:
-        sample_slice = trace.samples[:1]
-    elif max_beat is not None:
-        end = min(max_beat + 2, len(trace.samples))
-        sample_slice = trace.samples[: max(end, 1)]
-    else:
-        sample_slice = trace.samples
 
     if extend_to_panel is None:
         extend_to_panel = idle_only or max_beat is None

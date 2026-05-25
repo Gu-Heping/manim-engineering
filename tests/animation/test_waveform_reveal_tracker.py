@@ -80,3 +80,87 @@ def test_append_through_time_rebuilds_hold_on_beat_advance() -> None:
         max(line.get_start()[0], line.get_end()[0]) for line in lines_after_t2  # type: ignore[attr-defined]
     )
     assert hold_end == 2.0
+
+
+def test_append_through_time_for_only_updates_named_trace() -> None:
+    from manim_engineering.layout.types import Point2D
+    from manim_engineering.waveform.trace import WaveformBundle
+
+    vin = WaveformTrace(
+        signal_name="vin",
+        signal_type=SignalType.DIGITAL,
+        pin_id="drv.out",
+        samples=(
+            WaveformSample(time=0.0, level=LogicLevel.LOW),
+            WaveformSample(time=0.0, level=LogicLevel.HIGH),
+        ),
+    )
+    vc = WaveformTrace(
+        signal_name="vc",
+        signal_type=SignalType.ANALOG,
+        pin_id="c1.a",
+        samples=(
+            WaveformSample(time=0.0, level=0.0),
+            WaveformSample(time=1.0, level=0.4),
+            WaveformSample(time=2.0, level=0.7),
+        ),
+        is_discrete=False,
+    )
+    bundle = WaveformBundle(traces=(vin, vc))
+    spec = WaveformPanelSpec(
+        origin=Point2D(0.0, -2.0),
+        width=4.0,
+        trace_height=0.4,
+        trace_gap=0.5,
+        time_scale=1.0,
+    )
+    renderer = WaveformPanelRenderer()
+    panel = VGroup(
+        renderer.render_trace(vin, spec, 0, idle_only=True),
+        renderer.render_trace(vc, spec, 1, idle_only=True),
+    )
+    tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+
+    vin_before = len(panel.submobjects[0].submobjects) - 1
+    vc_before = len(panel.submobjects[1].submobjects) - 1
+
+    tracker.append_through_time_for("vc", 2.0)
+
+    assert len(panel.submobjects[0].submobjects) - 1 == vin_before
+    assert len(panel.submobjects[1].submobjects) - 1 > vc_before
+    assert tracker.revealed_time_for("vc") == pytest.approx(2.0)
+
+
+def test_reveal_all_extends_analog_trace_to_end_time() -> None:
+    from manim_engineering.layout.types import Point2D
+    from manim_engineering.waveform.trace import WaveformBundle
+
+    vc = WaveformTrace(
+        signal_name="vc",
+        signal_type=SignalType.ANALOG,
+        pin_id="c1.a",
+        samples=(
+            WaveformSample(time=0.0, level=0.0),
+            WaveformSample(time=2.0, level=0.63),
+            WaveformSample(time=5.0, level=0.99),
+        ),
+        is_discrete=False,
+    )
+    bundle = WaveformBundle(traces=(vc,))
+    spec = WaveformPanelSpec(
+        origin=Point2D(0.0, -2.0),
+        width=4.0,
+        trace_height=0.4,
+        trace_gap=0.5,
+        time_scale=1.0,
+    )
+    renderer = WaveformPanelRenderer()
+    panel = VGroup(renderer.render_trace(vc, spec, 0, idle_only=True))
+    tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+
+    tracker.reveal_all()
+
+    lines = list(panel.submobjects[0].submobjects[:-1])
+    assert lines
+    hold_end = max(max(line.get_start()[0], line.get_end()[0]) for line in lines)  # type: ignore[attr-defined]
+    assert hold_end == pytest.approx(spec.origin.x + spec.width)

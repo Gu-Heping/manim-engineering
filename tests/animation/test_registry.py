@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from manim_engineering.animation import (
+    AnalogRamp,
     SignalFlow,
     get_primitive,
     primitive_registry_view,
@@ -15,6 +16,11 @@ from manim_engineering.animation import (
 def test_signal_flow_registered() -> None:
     assert get_primitive("signal_flow") is SignalFlow
     assert "signal_flow" in registered_primitives()
+
+
+def test_analog_ramp_registered() -> None:
+    assert get_primitive("analog_ramp") is AnalogRamp
+    assert "analog_ramp" in registered_primitives()
 
 
 def test_primitive_registry_view_is_read_only_live_view() -> None:

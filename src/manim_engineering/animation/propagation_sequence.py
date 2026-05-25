@@ -38,8 +38,13 @@ class BeatSpec:
         reveal_targets: Optional ``(signal, max_beat)`` pairs for progressive
             waveform panel reveal. When omitted, defaults to
             ``(signal, wave_beat or beat_index)``.
-        reveal_time: When set, every trace in the panel advances to this
-            shared semantic time (requires ``reveal_tracker`` on the sequence).
+        reveal_time: When set, the panel advances to this semantic time
+            (requires ``reveal_tracker`` on the sequence). Scope is controlled
+            by ``reveal_scope``.
+        reveal_scope: ``"all"`` advances every trace (SPI shared axis);
+            ``"signal"`` advances only ``signal.name``.
+        wire_pulse: When ``False``, skip :class:`SignalFlow` and keep waveform
+            timing/reveal only (analog teaching beats).
         duration: Per-beat run_time override; ``None`` defers to the
             sequence-level ``beat_duration``. Use for emphasis (slower) or
             quick setup transitions (faster).
@@ -51,6 +56,8 @@ class BeatSpec:
     caption: str | None = None
     reveal_targets: tuple[tuple[Signal, int], ...] | None = None
     reveal_time: float | None = None
+    reveal_scope: str = "all"
+    wire_pulse: bool = True
     duration: float | None = None
 
 
@@ -165,6 +172,8 @@ class PropagationSequence:
                 reveal_tracker=self._reveal_tracker,
                 reveal_targets=reveal_targets,
                 reveal_time=reveal_time,
+                reveal_scope=spec.reveal_scope,
+                wire_pulse=spec.wire_pulse,
             )
             if index < len(self._beats) - 1:
                 wait(self._beat_gap)

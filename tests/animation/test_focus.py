@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -21,7 +21,7 @@ from manim_engineering.renderers.minimal.immutable import TopologyProjection
 def _filled_vmob() -> VMobject:
     mob = VMobject()
     mob.set_points_as_corners([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0]])
-    mob.set_stroke(opacity=1.0)
+    mob.set_stroke(width=2.0, opacity=1.0)
     return mob
 
 
@@ -31,30 +31,23 @@ def _projection() -> TopologyProjection:
     return TopologyProjection(components=components, wires=wires, n_components=2)
 
 
-def test_dim_topology_lowers_opacity() -> None:
+def test_dim_topology_lowers_stroke_opacity() -> None:
     projection = _projection()
-    with (
-        patch.object(projection.components, "set_opacity") as comp_opacity,
-        patch.object(projection.wires, "set_opacity") as wire_opacity,
-    ):
-        dim_topology(projection)
-    comp_opacity.assert_called_once_with(DEFAULT_DIM_OPACITY)
-    wire_opacity.assert_called_once_with(DEFAULT_DIM_OPACITY)
+    dim_topology(projection)
+    for mob in projection.components.submobjects:
+        assert mob.get_stroke_opacity() == pytest.approx(DEFAULT_DIM_OPACITY)
 
 
-def test_restore_topology_brings_back_full_opacity() -> None:
+def test_restore_topology_brings_back_full_stroke_opacity() -> None:
     projection = _projection()
-    with (
-        patch.object(projection.components, "set_opacity") as comp_opacity,
-        patch.object(projection.wires, "set_opacity") as wire_opacity,
-    ):
-        restore_topology(projection)
-    comp_opacity.assert_called_once_with(1.0)
-    wire_opacity.assert_called_once_with(1.0)
+    dim_topology(projection)
+    restore_topology(projection)
+    for mob in projection.components.submobjects:
+        assert mob.get_stroke_opacity() == pytest.approx(1.0)
 
 
 def test_propagation_sequence_dim_inactive_restores_between_beats() -> None:
-    """Sequence with ``dim_inactive=True`` must dim *after* every beat except the last."""
+    """Sequence with ``dim_inactive=True`` must restore at the start of every beat."""
     from manim_engineering.animation import BEAT_DURATION, BeatSpec, PropagationSequence
     from manim_engineering.components import Resistor
     from manim_engineering.core import CircuitGraph, SignalType
@@ -108,14 +101,11 @@ def test_propagation_sequence_dim_inactive_restores_between_beats() -> None:
         topology=projection,
     )
 
-    with patch.object(
-        projection.components, "set_opacity", wraps=projection.components.set_opacity
-    ) as comp_opacity:
+    with patch(
+        "manim_engineering.animation.propagation_sequence.restore_topology",
+    ) as restore:
         seq.play(_Scene())
-
-    # After the final beat the topology should be at full opacity (the
-    # sequence restores at the start of every beat); no trailing dim event.
-    assert comp_opacity.call_args_list[-1] == call(1.0)
+    assert restore.call_count == len(beats)
 
 
 def test_dim_topology_does_not_mutate_points() -> None:

@@ -41,7 +41,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from manim import FadeIn, FadeOut, LaggedStart, Scene, Text, VGroup
+from manim import FadeIn, FadeOut, Scene, Text, VGroup
 
 from manim_engineering.animation import (
     BEAT_GAP,
@@ -55,6 +55,7 @@ from manim_engineering.animation import (
     SceneCamera,
     WaveformRevealTracker,
     configure_waveform_scene_camera,
+    play_topology_intro,
     scene_final_fade_enabled,
     subtitle_text,
 )
@@ -62,7 +63,6 @@ from manim_engineering.components import CircuitElement
 from manim_engineering.core import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
 from manim_engineering.renderers.minimal import ManimRenderer, WaveformPanelRenderer
-from manim_engineering.renderers.minimal.labels import hide_labels, show_labels
 from manim_engineering.semantic import Signal
 from manim_engineering.waveform import hud_text_y
 from manim_engineering.waveform.trace import WaveformBundle
@@ -96,12 +96,20 @@ class CaptionTrack:
     completes, call :meth:`close` to fade out the last caption.
     """
 
-    def __init__(self, scene: Scene, seed: Text, camera: SceneCamera) -> None:
+    def __init__(
+        self,
+        scene: Scene,
+        seed: Text,
+        camera: SceneCamera,
+        *,
+        title: Text | None = None,
+    ) -> None:
         self._scene = scene
         self._camera = camera
         self.current: Text | None = seed
+        self._title: Text | None = title
 
-    def swap(self, spec: BeatSpec, _index: int) -> None:
+    def swap(self, spec: BeatSpec, index: int) -> None:
         if not spec.caption:
             return
         next_caption = subtitle_text(spec.caption or "", role="caption")
@@ -115,6 +123,10 @@ class CaptionTrack:
         next_caption.set_z_index(HUD_Z_INDEX)
         current = self.current
         crossfade = CAPTION_CROSSFADE
+        if index == 0 and self._title is not None:
+            self._scene.play(FadeOut(self._title, run_time=crossfade))
+            self._scene.remove(self._title)
+            self._title = None
         if current is not None:
             self._scene.play(FadeOut(current, run_time=crossfade))
             self._scene.remove(current)
@@ -151,10 +163,16 @@ def _play_hud_intro(
     return title, intro
 
 
-def _make_caption_track(scene: Scene, seed: Text, camera: SceneCamera) -> CaptionTrack:
+def _make_caption_track(
+    scene: Scene,
+    seed: Text,
+    camera: SceneCamera,
+    *,
+    title: Text | None = None,
+) -> CaptionTrack:
     """Return a :class:`CaptionTrack` whose ``swap`` matches the
     :class:`PropagationSequence.caption_callback` protocol."""
-    return CaptionTrack(scene, seed, camera)
+    return CaptionTrack(scene, seed, camera, title=title)
 
 
 def capture_camera_frame(scene: Scene, path: Path) -> None:
@@ -172,35 +190,6 @@ def capture_camera_frame(scene: Scene, path: Path) -> None:
     from PIL import Image
 
     Image.fromarray(np.asarray(frame)).save(path)
-
-
-def _play_topology_intro(
-    scene: Scene,
-    topology,
-    waveform_panel,
-    content: VGroup,
-    *,
-    components_run_time: float,
-    wires_run_time: float,
-    panel_run_time: float,
-    lag_ratio: float,
-    total_run_time: float,
-) -> None:
-    """Fade in symbol bodies and wires; reveal pin/trace labels without opacity tween."""
-    hide_labels(topology.components)
-    hide_labels(waveform_panel)
-    scene.add(content)
-    scene.play(
-        LaggedStart(
-            FadeIn(topology.components, shift=0.15, run_time=components_run_time),
-            FadeIn(topology.wires, run_time=wires_run_time),
-            FadeIn(waveform_panel, run_time=panel_run_time),
-            lag_ratio=lag_ratio,
-        ),
-        run_time=total_run_time,
-    )
-    show_labels(topology.components)
-    show_labels(waveform_panel)
 
 
 class WaveformDemoScene(Scene):
@@ -226,6 +215,9 @@ class WaveformDemoScene(Scene):
 
     subtitle_band: float | None = None
     """If set, reserves vertical space for HUD rows above the topology."""
+
+    camera_target_fill: float = 0.70
+    """Passed to :func:`configure_waveform_scene_camera` as ``target_fill``."""
 
     dim_inactive: bool = False
     """If ``True`` and :meth:`teaching_beats` returns beats, the topology is
@@ -296,6 +288,7 @@ class WaveformDemoScene(Scene):
             fixture.layout,
             panel_spec,
             fixture.bundle,
+            target_fill=self.camera_target_fill,
             subtitle_band=(
                 self.subtitle_band
                 if self.subtitle_band is not None
@@ -303,7 +296,7 @@ class WaveformDemoScene(Scene):
             ),
         )
 
-        _play_topology_intro(
+        play_topology_intro(
             self,
             topology,
             waveform_panel,
@@ -316,10 +309,11 @@ class WaveformDemoScene(Scene):
         )
 
         caption_track: CaptionTrack | None = None
+        title_mob: Text | None = None
         if hud is not None:
             title_text, intro_text = hud
-            _title_mob, intro_mob = _play_hud_intro(self, title_text, intro_text, camera)
-            caption_track = _make_caption_track(self, intro_mob, camera)
+            title_mob, intro_mob = _play_hud_intro(self, title_text, intro_text, camera)
+            caption_track = _make_caption_track(self, intro_mob, camera, title=title_mob)
 
         self.after_intro_hook(fixture, camera)
         self.wait(max(INTRO_PAUSE - self.intro_pause_offset, 0.3))

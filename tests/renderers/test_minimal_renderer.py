@@ -371,6 +371,61 @@ def test_fade_in_opacity_on_components_then_normalize_fixes_pin_labels() -> None
             assert str(sub.get_fill_color()).lower() != "#ffffff"
 
 
+def test_refresh_label_strokes_preserves_component_line_stroke_width() -> None:
+    """Empty VGroup containers must not cascade stroke width=0 onto symbol Lines."""
+    from manim_engineering.components import Capacitor, Resistor
+    from manim_engineering.core import CircuitGraph
+    from manim_engineering.layout import LayoutEngine
+    from manim_engineering.renderers.minimal import ManimRenderer
+    from manim_engineering.renderers.minimal.labels import refresh_label_strokes
+
+    graph = CircuitGraph()
+    r1 = Resistor("r1", label="R1")
+    c1 = Capacitor("c1", label="C1")
+    r1.attach_to(graph)
+    c1.attach_to(graph)
+    graph.connect(r1.get_pin("b"), c1.get_pin("a"))
+    layout = LayoutEngine().layout(graph, {"r1": r1, "c1": c1})
+    topology = ManimRenderer().render_topology(graph, layout, {"r1": r1, "c1": c1})
+    lines = [
+        mob
+        for mob in topology.components.get_family()
+        if mob.__class__.__name__ == "Line" and len(mob.points) > 0
+    ]
+    assert lines
+    widths_before = [mob.get_stroke_width() for mob in lines]
+    assert all(width > 0 for width in widths_before)
+    refresh_label_strokes(topology.components, mode="full")
+    for mob, width_before in zip(lines, widths_before, strict=True):
+        assert mob.get_stroke_width() == pytest.approx(width_before)
+
+
+def test_set_opacity_restore_does_not_fill_resistor_lines() -> None:
+    from manim_engineering.animation.focus import normalize_topology_labels
+    from manim_engineering.components import Resistor
+    from manim_engineering.core import CircuitGraph
+    from manim_engineering.layout import LayoutEngine
+    from manim_engineering.renderers.minimal import ManimRenderer
+
+    graph = CircuitGraph()
+    r1 = Resistor("r1", label="R1")
+    r1.attach_to(graph)
+    layout = LayoutEngine().layout(graph, {"r1": r1})
+    topology = ManimRenderer().render_topology(graph, layout, {"r1": r1})
+    lines = [
+        mob
+        for mob in topology.components.get_family()
+        if mob.__class__.__name__ == "Line" and len(mob.points) > 0
+    ]
+    assert lines
+    assert all(mob.get_fill_opacity() == 0.0 for mob in lines)
+    topology.components.set_opacity(1.0)
+    assert all(mob.get_fill_opacity() == 1.0 for mob in lines)
+    normalize_topology_labels(topology)
+    assert all(mob.get_fill_opacity() == 0.0 for mob in lines)
+    assert all(mob.get_stroke_width() > 0 for mob in lines)
+
+
 def test_dim_topology_keeps_pin_labels_at_dim_opacity() -> None:
     """stroke_only refresh must not pop label fill back to 1.0 while dimmed."""
     from manim_engineering.animation.focus import DEFAULT_DIM_OPACITY, dim_topology

@@ -50,6 +50,78 @@ def iter_label_roots(root: Mobject) -> tuple[Mobject, ...]:
     return tuple(roots)
 
 
+def _label_subtree_ids(root: Mobject) -> set[int]:
+    ids: set[int] = set()
+    for label_root in iter_label_roots(root):
+        for sub in label_root.get_family():
+            ids.add(id(sub))
+    return ids
+
+
+def normalize_stroke_only_geometry(root: Mobject) -> None:
+    """Clear accidental fill on symbol/wire ``Line`` objects after parent ``set_opacity``.
+
+    Manim ``Line`` defaults to white fill at opacity 0; a parent ``set_opacity(1.0)``
+    (intro restore, dim/restore) promotes that fill and paints zig-zag resistors solid.
+    """
+    label_ids = _label_subtree_ids(root)
+    for mob in root.get_family():
+        if id(mob) in label_ids:
+            continue
+        if mob.__class__.__name__ != "Line" or len(mob.points) == 0:
+            continue
+        mob.set_fill(opacity=0.0, family=False)
+
+
+def iter_symbol_strokes(root: Mobject) -> tuple[Mobject, ...]:
+    """Return drawable symbol/wire bodies for intro ``Create`` (excludes label subtrees)."""
+    label_ids = _label_subtree_ids(root)
+    seen: set[int] = set()
+    strokes: list[Mobject] = []
+    for mob in root.get_family():
+        sid = id(mob)
+        if sid in label_ids or sid in seen or len(mob.points) == 0:
+            continue
+        name = mob.__class__.__name__
+        if name in ("Line", "Polygon", "Dot"):
+            seen.add(sid)
+            strokes.append(mob)
+    return tuple(strokes)
+
+
+def prepare_stroke_reveal(mobjects: tuple[Mobject, ...]) -> None:
+    """Hide symbol strokes/fills before ``Create`` without touching label subtrees."""
+    for mob in mobjects:
+        mob.set_stroke(opacity=0.0, family=False)
+        if mob.__class__.__name__ != "Line":
+            mob.set_fill(opacity=0.0, family=False)
+        else:
+            mob.set_fill(opacity=0.0, family=False)
+
+
+def apply_symbol_opacity(root: Mobject, opacity: float) -> None:
+    """Dim or restore symbol geometry via stroke/fill opacity (never ``VGroup.set_opacity``)."""
+    label_ids = _label_subtree_ids(root)
+    for mob in root.get_family():
+        if id(mob) in label_ids or len(mob.points) == 0:
+            continue
+        name = mob.__class__.__name__
+        if name == "Line":
+            mob.set_stroke(opacity=opacity, family=False)
+            mob.set_fill(opacity=0.0, family=False)
+        elif name in ("Polygon", "Dot"):
+            mob.set_stroke(opacity=opacity, family=False)
+            mob.set_fill(opacity=opacity, family=False)
+        elif mob.get_stroke_width() > 0:
+            mob.set_stroke(opacity=opacity, family=False)
+
+
+def apply_label_opacity(root: Mobject, opacity: float) -> None:
+    """Dim or restore label roots without touching symbol ``Line`` geometry."""
+    for mob in iter_label_roots(root):
+        mob.set_opacity(opacity)
+
+
 def hide_labels(root: Mobject) -> None:
     """Set label roots to invisible (intro: fade bodies without animating glyphs)."""
     for mob in iter_label_roots(root):
@@ -112,7 +184,9 @@ def refresh_label_strokes(root: Mobject, *, mode: LabelRefreshMode = "full") -> 
         if id(mob) in touched:
             continue
         if len(mob.points) == 0:
-            mob.set_stroke(width=0, opacity=0)
+            # ``family=False``: empty container groups must not zero stroke on
+            # symbol Line submobjects (intro show_labels / normalize path).
+            mob.set_stroke(width=0, opacity=0, family=False)
 
 
 def label_text(

@@ -28,3 +28,23 @@ def test_waveform_panel_renders_traces() -> None:
     panel, spec = WaveformPanelRenderer().render_with_layout(bundle, layout)
     assert len(panel.submobjects) >= 2
     assert spec.width > 0
+
+
+def test_waveform_panel_renders_smooth_analog_trace() -> None:
+    graph = CircuitGraph()
+    drv = Resistor("drv")
+    rcv = Resistor("rcv")
+    drv.attach_to(graph)
+    rcv.attach_to(graph)
+    graph.connect(drv.get_pin("b"), rcv.get_pin("a"))
+    layout = LayoutEngine().layout(graph, {"drv": drv, "rcv": rcv})
+    vc = Signal(name="vc", signal_type=SignalType.ANALOG, value=0.0)
+    from manim_engineering.waveform import RCStepParams, derive_rc_waveform_bundle
+
+    vin = Signal(name="vin", signal_type=SignalType.DIGITAL, value=LogicState(level=LogicLevel.LOW))
+    bundle = derive_rc_waveform_bundle(vin, vc, RCStepParams(sample_count=8))
+    panel, spec = WaveformPanelRenderer().render_with_layout(bundle, layout)
+    vc_trace = bundle.trace_named("vc")
+    assert vc_trace is not None
+    rendered = WaveformPanelRenderer().render_trace(vc_trace, spec, 1)
+    assert len(rendered.submobjects) >= 2

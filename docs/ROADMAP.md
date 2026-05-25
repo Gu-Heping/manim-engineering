@@ -261,7 +261,14 @@ Documentation and CI discipline; topology invariants (`Port.id` contract); post-
 Layout preset track is stable on `main`; pick the next feature vertical slice in a dedicated
 planning session (Scope B / IEC / I2C — not bundled with stabilization).
 
-IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `CircuitElement` + render symbols; optional rule 6-file merge; analog **Scope B/C** (continuous physics, RC exponential, `smooth_polyline`, `AnalogRamp` primitive); planned `measurement/` component category; **global netlist auto-placer** (preset-first remains default — see [docs/layout-strategy.md](layout-strategy.md) and `experiments/auto_placer_zener_spike.py`).
+IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `CircuitElement` + render symbols; optional rule 6-file merge; analog **Scope C** (remaining continuous physics beyond RC slice, e.g. RLC damping); planned `measurement/` component category; **global netlist auto-placer** (preset-first remains default — see [docs/layout-strategy.md](layout-strategy.md) and `experiments/auto_placer_zener_spike.py`).
+
+**Scope B (RC slice — complete):**
+
+- [x] `RCStepParams` + `derive_rc_waveform_bundle` (`waveform/rc.py`)
+- [x] `smooth_polyline` + `polyline_for_trace` dispatch
+- [x] `AnalogRamp` animation primitive + beat integration
+- [x] `01_rc_charge` upgraded to `WaveformDemoScene` with teaching beats
 
 Short-term experiment track: circuitjs1-inspired stamp/doStep exploration is
 documented in `docs/circuitjs1-borrowing.md` with an isolated prototype at

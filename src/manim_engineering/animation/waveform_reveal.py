@@ -11,7 +11,7 @@ from manim_engineering.renderers.minimal.waveform import (
     _trace_color,
 )
 from manim_engineering.semantic.signal import Signal
-from manim_engineering.waveform.layout import WaveformPanelSpec, beat_for_time, step_polyline
+from manim_engineering.waveform.layout import WaveformPanelSpec, beat_for_time, polyline_for_trace
 from manim_engineering.waveform.trace import WaveformBundle, WaveformTrace
 
 _SegmentKey = tuple[float, float, float, float]
@@ -62,6 +62,18 @@ class WaveformRevealTracker:
                 self._sync_trace_to_time(trace.signal_name, hold_through_time=reveal_time)
             )
         return tuple(added)
+
+    def append_through_time_for(
+        self,
+        signal_name: str,
+        reveal_time: float,
+    ) -> tuple[object, ...]:
+        """Reveal one named trace up to ``reveal_time`` (mixed digital/analog scenes)."""
+        return self._sync_trace_to_time(signal_name, hold_through_time=reveal_time)
+
+    def revealed_time_for(self, signal_name: str) -> float:
+        """Last semantic time revealed for ``signal_name`` (0.0 when still idle)."""
+        return max(0.0, self._revealed_time.get(signal_name, -1.0))
 
     def _sync_trace_to_time(
         self,
@@ -134,11 +146,32 @@ class WaveformRevealTracker:
 
     def reveal_all(self) -> None:
         """Show full history on every trace (end of sequence)."""
-        for trace in self._bundle.traces:
-            edges = max(0, len(trace.samples) - 2)
-            self._revealed[trace.signal_name] = edges
-            self._refresh_trace(trace.signal_name, extend_to_panel=True)
-            self._segment_snapshots[trace.signal_name] = ()
+        for trace_index, trace in enumerate(self._bundle.traces):
+            name = trace.signal_name
+            if trace.is_discrete:
+                edges = max(0, len(trace.samples) - 2)
+                self._revealed[name] = edges
+                self._refresh_trace(name, extend_to_panel=True)
+            else:
+                panel_end_time = self._spec.width / self._spec.time_scale
+                hold_time = min(trace.end_time, panel_end_time)
+                self._revealed[name] = beat_for_time(trace, hold_time)
+                self._revealed_time[name] = hold_time
+                trace_group = self._panel.submobjects[trace_index]
+                label = trace_group.submobjects[-1]
+                for line in self._line_children(trace_group):
+                    trace_group.remove(line)
+                trace_group.remove(label)
+                for line in self._line_segments(
+                    trace,
+                    trace_index,
+                    self._revealed[name],
+                    extend_to_panel=True,
+                    hold_through_time=hold_time,
+                ):
+                    trace_group.add(line)
+                trace_group.add(label)
+            self._segment_snapshots[name] = ()
 
     def _line_children(self, trace_group: VGroup) -> list[object]:
         return list(trace_group.submobjects[:-1])
@@ -152,7 +185,7 @@ class WaveformRevealTracker:
         extend_to_panel: bool = False,
         hold_through_time: float | None = None,
     ) -> list[Line]:
-        points = step_polyline(
+        points = polyline_for_trace(
             trace,
             self._spec,
             trace_index,
