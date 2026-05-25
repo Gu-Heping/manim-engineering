@@ -66,6 +66,8 @@ class TextPlacementOverride:
 
     world: Point2D
 
+    label: str | None = None
+
 
 class LabelPlacementMode(Enum):
     """How upright ``component_label`` picks a screen slot when not overridden."""

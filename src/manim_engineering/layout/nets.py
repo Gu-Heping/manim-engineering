@@ -156,6 +156,7 @@ def _route_star_net(
     pin_positions: Mapping[str, Point2D],
     elements: Mapping[str, CircuitElement],
     connections_by_id: Mapping[str, Connection],
+    placements_by_id: Mapping[str, ComponentPlacement],
 ) -> list[WirePath]:
     """Hub-and-spoke routes for a multi-pin net; de-duplicates shared trunk segments."""
     seen_segments: set[tuple[float, float, float, float]] = set()
@@ -163,9 +164,6 @@ def _route_star_net(
 
     for pin_id in sorted(net.pin_ids):
         pin_point = pin_positions[pin_id]
-        if _points_close(pin_point, hub):
-            continue
-
         hints = _hints_for_pin_in_net(pin_id, net, connections_by_id)
         connection = next(
             connections_by_id[cid]
@@ -177,6 +175,30 @@ def _route_star_net(
             pin_positions,
             elements,
         )
+
+        if _points_close(pin_point, hub):
+            points = ensure_visible_connection(
+                (hub,),
+                connection=connection,
+                pin_positions=pin_positions,
+                placements_by_id=placements_by_id,
+                hints=hints,
+            )
+            segments = points_to_segments(points)
+            branch_segments = [
+                segment for segment in segments if _segment_key(segment) not in seen_segments
+            ]
+            for segment in branch_segments:
+                seen_segments.add(_segment_key(segment))
+            if branch_segments:
+                wires.append(
+                    WirePath(
+                        connection_id=f"{net.net_id}/{pin_id}",
+                        points=_segments_to_points(branch_segments),
+                        segments=tuple(branch_segments),
+                    )
+                )
+            continue
 
         points = _route_hub_to_pin(
             hub,
@@ -335,6 +357,7 @@ def route_nets(
                     pin_positions,
                     elements,
                     connections_by_id,
+                    placements_by_id,
                 )
             )
             continue

@@ -6,18 +6,15 @@ Preview: ``manim -pql examples/analog/03_cmos_inverter.py CMOSInverterScene``
 
 from __future__ import annotations
 
-from manim import UP, Line, Scene
+from manim import UP, Scene
 
 from manim_engineering.animation import configure_topology_scene_camera, subtitle_text
 from manim_engineering.components import NMOS, PMOS, VCC, Ground, InputDriver
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.layout.presets import layout_from_preset
-from manim_engineering.layout.presets.cmos_inverter import DRAIN_Y, OUT_X, cmos_inverter_preset
-from manim_engineering.renderers.minimal import ManimRenderer, theme
-from manim_engineering.renderers.minimal.labels import label_text
-
-OUT_LABEL_POS = (0.8, DRAIN_Y)
+from manim_engineering.layout.presets.cmos_inverter import cmos_inverter_preset
+from manim_engineering.renderers.minimal import ManimRenderer
 
 
 def build_inverter_fixture():
@@ -54,13 +51,4 @@ class CMOSInverterScene(Scene):
         title = subtitle_text("CMOS Inverter · VCC→P1→OUT→N1→GND", role="title")
         title.to_edge(UP, buff=0.2)
         self.add(title)
-        out_label = label_text("OUT", font_size=20, color="white")
-        out_label.move_to([OUT_LABEL_POS[0], OUT_LABEL_POS[1], 0])
-        out_wire = Line(
-            [OUT_X, DRAIN_Y, 0.0],
-            [OUT_LABEL_POS[0] - 0.12, DRAIN_Y, 0.0],
-            stroke_color=theme.color_for_signal_type(SignalType.ANALOG),
-            stroke_width=theme.WIRE_STROKE_WIDTH,
-        )
-        self.add(out_wire, out_label)
         self.wait(2)

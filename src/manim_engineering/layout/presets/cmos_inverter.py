@@ -24,6 +24,8 @@ VCC_Y = 2.5
 PMOS_DRAIN_Y = VCC_Y - 1.0
 NMOS_DRAIN_Y = GND_Y + 1.0
 DRAIN_Y = PMOS_DRAIN_Y
+OUT_LABEL = Point2D(0.8, DRAIN_Y)
+OUT_STUB_X = OUT_LABEL.x - 0.12
 
 GATE_BUS_X = RAIL_X - 1.0
 GATE_BUS_Y = (VCC_Y + GND_Y) * 0.5
@@ -38,6 +40,7 @@ class CmosInverterLayoutPreset:
     orientation_overrides: dict[str, ComponentOrientation] = field(default_factory=dict)
     text_overrides: dict[str, tuple[TextPlacementOverride, ...]] = field(default_factory=dict)
     label_mode_overrides: dict[str, LabelPlacementMode] = field(default_factory=dict)
+    connection_waypoints: dict[str, tuple[Point2D, ...]] = field(default_factory=dict)
 
 
 def cmos_inverter_preset(
@@ -60,4 +63,16 @@ def cmos_inverter_preset(
             in_drv, "out", Point2D(gate_bus.x - IN_DRV_OFFSET_X, gate_bus.y)
         ),
     }
-    return CmosInverterLayoutPreset(overrides=overrides)
+    drain_ids = sorted([pmos.get_pin("drain").id, nmos.get_pin("drain").id])
+    drain_conn_id = f"conn-{drain_ids[0]}--{drain_ids[1]}"
+    return CmosInverterLayoutPreset(
+        overrides=overrides,
+        text_overrides={
+            pmos.element_id: (
+                TextPlacementOverride(role="net_label", world=OUT_LABEL, label="OUT"),
+            ),
+        },
+        connection_waypoints={
+            drain_conn_id: (Point2D(OUT_STUB_X, DRAIN_Y),),
+        },
+    )

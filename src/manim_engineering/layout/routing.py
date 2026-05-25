@@ -165,6 +165,18 @@ def route_through_waypoints(
     avoid_points: tuple[Point2D, ...] = (),
 ) -> tuple[Point2D, ...]:
     """Orthogonal route visiting intermediate waypoints in order."""
+    if _points_close(start, end) and waypoints:
+        merged: list[Point2D] = [start]
+        for waypoint in waypoints:
+            leg = route_orthogonal(
+                merged[-1],
+                waypoint,
+                hints=hints,
+                avoid_points=avoid_points,
+            )
+            merged.extend(leg[1:])
+        return _dedupe_collinear(merged)
+
     chain = (start, *waypoints, end)
     merged: list[Point2D] = [chain[0]]
     for index in range(len(chain) - 1):

@@ -13,10 +13,13 @@ from manim_engineering.layout.presets.cmos_inverter import (
     GATE_BUS_Y,
     GND_Y,
     NMOS_DRAIN_Y,
+    OUT_LABEL,
+    OUT_STUB_X,
     OUT_X,
     PMOS_DRAIN_Y,
     RAIL_X,
     VCC_Y,
+    cmos_inverter_preset,
 )
 
 REPO = Path(__file__).resolve().parents[2]
@@ -68,6 +71,38 @@ def test_cmos_vertical_stack_three_node_topology() -> None:
     assert pmos_gate.y > nmos_gate.y
 
     assert_wires_avoid_footprints(layout)
+
+
+def test_cmos_preset_includes_out_net_label_and_stub_waypoint() -> None:
+    _graph, elements, layout = _load_fixture()
+    preset = cmos_inverter_preset(
+        elements["vcc1"],
+        elements["gnd1"],
+        elements["pm1"],
+        elements["nm1"],
+        elements["in_drv"],
+    )
+    override = preset.text_overrides["pm1"][0]
+    assert override.role == "net_label"
+    assert override.label == "OUT"
+    assert override.world.x == pytest.approx(OUT_LABEL.x)
+    assert override.world.y == pytest.approx(OUT_LABEL.y)
+    drain_ids = sorted(
+        [elements["pm1"].get_pin("drain").id, elements["nm1"].get_pin("drain").id]
+    )
+    drain_conn_id = f"conn-{drain_ids[0]}--{drain_ids[1]}"
+    assert drain_conn_id in preset.connection_waypoints
+    assert preset.connection_waypoints[drain_conn_id][0].x == pytest.approx(OUT_STUB_X)
+    pm_placement = next(p for p in layout.placements if p.element_id == "pm1")
+    assert any(
+        item.role == "net_label" and item.label == "OUT"
+        for item in pm_placement.text_overrides
+    )
+    drain_wire = next(w for w in layout.wires if w.connection_id == drain_conn_id)
+    assert any(
+        seg.start.y == pytest.approx(OUT_LABEL.y) and seg.end.y == pytest.approx(OUT_LABEL.y)
+        for seg in drain_wire.segments
+    )
 
 
 def test_cmos_vertical_spine_sdds_order() -> None:
