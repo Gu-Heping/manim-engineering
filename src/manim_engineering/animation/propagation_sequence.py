@@ -18,6 +18,7 @@ from manim_engineering.animation.beat import play_propagation_beat
 from manim_engineering.animation.focus import dim_topology, restore_topology
 from manim_engineering.animation.pacing import BEAT_CAPTION_HOLD, BEAT_DURATION, BEAT_GAP
 from manim_engineering.animation.scene_protocol import require_scene_methods
+from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
 from manim_engineering.renderers.minimal.immutable import TopologyProjection
@@ -89,7 +90,7 @@ class PropagationSequence:
         topology: TopologyProjection | None = None,
         caption_callback: Callable[[BeatSpec, int], None] | None = None,
         waveform_reveal_callback: Callable[[BeatSpec, int], None] | None = None,
-        reveal_tracker: object | None = None,
+        reveal_tracker: WaveformRevealTracker | None = None,
     ) -> None:
         if dim_inactive and topology is None:
             # Silently no-op'ing here was the root cause of "我以为开了 dim
