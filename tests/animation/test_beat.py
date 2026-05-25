@@ -7,7 +7,7 @@ import pytest
 pytest.importorskip("manim")
 
 from manim import AnimationGroup
-from conftest import RecordingScene
+from recording_scene import RecordingScene
 
 from manim_engineering.animation import BEAT_DURATION, play_propagation_beat
 from manim_engineering.animation.signal_flow import SignalFlow
@@ -46,6 +46,8 @@ def test_play_propagation_beat_rejects_scene_without_play() -> None:
 
 
 def test_beat_single_play_with_parallel_run_time() -> None:
+    from manim_engineering.animation.layers import PROPAGATION_Z_INDEX
+
     graph, layout, clock, data, bundle, panel_spec = _clock_data_fixture()
     scene = RecordingScene()
     used = play_propagation_beat(
@@ -64,6 +66,8 @@ def test_beat_single_play_with_parallel_run_time() -> None:
     assert scene.run_times[0] == pytest.approx(BEAT_DURATION)
     root = scene.played[0][0]
     assert isinstance(root, AnimationGroup)
+    propagation_groups = [mob for mob in scene.added if hasattr(mob, "get_z_index")]
+    assert any(mob.get_z_index() == PROPAGATION_Z_INDEX for mob in propagation_groups)
     assert scene.removed
 
 
@@ -95,6 +99,9 @@ def test_reveal_only_beat_uses_full_duration_when_no_flow_anims() -> None:
         animate = _Anim()
 
     class _RevealTracker:
+        def revealed_time_for(self, _signal_name: str) -> float:
+            return 0.0
+
         def append_through_time(self, _reveal_time: float) -> list[_Line]:
             return [_Line()]
 
@@ -184,8 +191,12 @@ def test_reveal_scope_signal_uses_single_trace_append() -> None:
         animate = _Anim()
 
     class _RevealTracker:
-        all_calls: list[float] = []
-        signal_calls: list[tuple[str, float]] = []
+        def __init__(self) -> None:
+            self.all_calls: list[float] = []
+            self.signal_calls: list[tuple[str, float]] = []
+
+        def revealed_time_for(self, _signal_name: str) -> float:
+            return 0.0
 
         def append_through_time(self, reveal_time: float) -> list[_Line]:
             self.all_calls.append(reveal_time)

@@ -7,7 +7,7 @@ import pytest
 pytest.importorskip("manim")
 
 from manim import AnimationGroup
-from conftest import RecordingScene
+from recording_scene import RecordingScene
 
 from manim_engineering.animation import (
     BEAT_DURATION,
