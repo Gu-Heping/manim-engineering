@@ -10,6 +10,7 @@ from manim_engineering.waveform import (
     MIN_WAVEFORM_GAP,
     derive_bundle_from_signals,
     panel_below_layout,
+    polyline_for_trace,
     step_polyline,
 )
 
@@ -62,3 +63,35 @@ def test_waveform_step_polylines_below_routed_wires() -> None:
     assert polyline_ys
     max_polyline_y = max(polyline_ys)
     assert min_wire_y - max_polyline_y >= MIN_WAVEFORM_GAP
+
+
+def _rc_charge_fixture():
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[2] / "examples/analog/01_rc_charge.py"
+    spec = importlib.util.spec_from_file_location("rc_charge_example", path)
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    graph, elements, layout, _signals, bundle, _records = mod.build_rc_teaching_fixture()
+    return layout, bundle
+
+
+def test_rc_waveform_panel_separated_below_wires() -> None:
+    layout, bundle = _rc_charge_fixture()
+    panel = panel_below_layout(layout, trace_count=len(bundle.traces))
+    max_wire_y = max(point.y for wire in layout.wires for point in wire.points)
+    assert max_wire_y - panel.origin.y >= MIN_WAVEFORM_GAP
+
+
+def test_rc_smooth_polylines_below_routed_wires() -> None:
+    layout, bundle = _rc_charge_fixture()
+    panel = panel_below_layout(layout, trace_count=len(bundle.traces))
+    min_wire_y = min(point.y for wire in layout.wires for point in wire.points)
+    polyline_ys: list[float] = []
+    for index, trace in enumerate(bundle.traces):
+        for pt in polyline_for_trace(trace, panel, index):
+            polyline_ys.append(pt.y)
+    assert polyline_ys
+    assert min_wire_y - max(polyline_ys) >= MIN_WAVEFORM_GAP

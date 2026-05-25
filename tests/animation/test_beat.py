@@ -43,6 +43,7 @@ class _RecordingScene:
         self.added: list[object] = []
         self.played: list[tuple[object, ...]] = []
         self.run_times: list[float | None] = []
+        self.waited: list[float] = []
         self.removed: list[object] = []
 
     def add(self, *mobjects: object) -> None:
@@ -51,6 +52,9 @@ class _RecordingScene:
     def play(self, *animations: object, run_time: float | None = None) -> None:
         self.played.append(animations)
         self.run_times.append(run_time)
+
+    def wait(self, duration: float = 0.0) -> None:
+        self.waited.append(duration)
 
     def remove(self, *mobjects: object) -> None:
         self.removed.extend(mobjects)
@@ -129,3 +133,119 @@ def test_reveal_only_beat_uses_full_duration_when_no_flow_anims() -> None:
     assert used == pytest.approx(BEAT_DURATION)
     assert len(scene.played) == 1
     assert scene.run_times[0] == pytest.approx(BEAT_DURATION)
+
+
+def test_wire_pulse_false_skips_signal_flow_animations() -> None:
+    graph, layout, clock, data, bundle, panel_spec = _clock_data_fixture()
+    scene = _RecordingScene()
+    used = play_propagation_beat(
+        scene,
+        clock,
+        layout=layout,
+        graph=graph,
+        duration=BEAT_DURATION,
+        bundle=bundle,
+        signals=(clock, data),
+        panel_spec=panel_spec,
+        beat=0,
+        wire_pulse=False,
+    )
+    assert used == pytest.approx(BEAT_DURATION)
+    assert len(scene.played) == 2
+    assert scene.played[0][0].__class__.__name__ == "ShowPassingFlash"
+
+
+def test_reveal_and_flow_share_single_beat_play() -> None:
+    from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
+
+    graph, layout, clock, data, bundle, panel_spec = _clock_data_fixture()
+    panel_renderer = WaveformPanelRenderer()
+    panel, _ = panel_renderer.render_with_layout(bundle, layout, idle_only=True)
+    tracker = WaveformRevealTracker(panel, bundle, panel_spec, panel_renderer)
+    scene = _RecordingScene()
+    used = play_propagation_beat(
+        scene,
+        clock,
+        layout=layout,
+        graph=graph,
+        duration=BEAT_DURATION,
+        bundle=bundle,
+        signals=(clock, data),
+        panel_spec=panel_spec,
+        beat=0,
+        reveal_tracker=tracker,
+        reveal_targets=((clock, 0),),
+        wire_pulse=False,
+    )
+    assert used == pytest.approx(BEAT_DURATION)
+    # One beat play (reveal + timing together) plus overlay fade-out removal.
+    assert len(scene.played) == 2
+    assert scene.run_times[0] == pytest.approx(BEAT_DURATION)
+
+
+def test_reveal_scope_signal_uses_single_trace_append() -> None:
+    from unittest.mock import patch
+
+    from manim_engineering.animation.base import AnimationPlan
+    from manim_engineering.animation.signal_flow import SignalFlow
+
+    graph, layout, clock, _data, _bundle, _panel_spec = _clock_data_fixture()
+
+    class _Line:
+        class _Anim:
+            def set_stroke(self, **_kwargs: object) -> str:
+                return "anim"
+
+        animate = _Anim()
+
+    class _RevealTracker:
+        all_calls: list[float] = []
+        signal_calls: list[tuple[str, float]] = []
+
+        def append_through_time(self, reveal_time: float) -> list[_Line]:
+            self.all_calls.append(reveal_time)
+            return [_Line()]
+
+        def append_through_time_for(self, signal_name: str, reveal_time: float) -> list[_Line]:
+            self.signal_calls.append((signal_name, reveal_time))
+            return [_Line()]
+
+    tracker = _RevealTracker()
+    empty_flow = AnimationPlan(
+        overlays=(),
+        propagation_overlays=(),
+        animations=(),
+        run_time=BEAT_DURATION,
+    )
+    scene = _RecordingScene()
+    with patch.object(SignalFlow, "build", return_value=empty_flow):
+        play_propagation_beat(
+            scene,
+            clock,
+            layout=layout,
+            graph=graph,
+            duration=BEAT_DURATION,
+            reveal_tracker=tracker,
+            reveal_time=2.0,
+            reveal_scope="signal",
+            wire_pulse=False,
+        )
+    assert tracker.signal_calls == [("clk", 2.0)]
+    assert tracker.all_calls == []
+
+
+def test_empty_beat_anims_waits_for_duration() -> None:
+    graph, layout, clock, _data, _bundle, _panel_spec = _clock_data_fixture()
+    scene = _RecordingScene()
+    used = play_propagation_beat(
+        scene,
+        clock,
+        layout=layout,
+        graph=graph,
+        duration=BEAT_DURATION,
+        wire_pulse=False,
+    )
+    assert used == pytest.approx(BEAT_DURATION)
+    assert len(scene.waited) == 1
+    assert scene.waited[0] == pytest.approx(BEAT_DURATION)
+    assert len(scene.played) == 0

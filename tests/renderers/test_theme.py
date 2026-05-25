@@ -54,3 +54,4 @@ def test_color_for_signal_type_mapping() -> None:
     assert theme.color_for_signal_type(SignalType.CLOCK) == theme.CLOCK_COLOR
     assert theme.color_for_signal_type(SignalType.DATA) == theme.DATA_COLOR
     assert theme.color_for_signal_type(SignalType.SIGNAL) == theme.SIGNAL_COLOR
+    assert theme.color_for_signal_type(SignalType.ANALOG) == theme.ANALOG_COLOR

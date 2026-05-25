@@ -5,6 +5,7 @@ exported for registry compatibility only — they raise ``NotImplementedError``
 and must not be used in production teaching scenes. See ``docs/ROADMAP.md``.
 """
 
+from manim_engineering.animation.analog_ramp import AnalogRamp
 from manim_engineering.animation.base import AnimationPlan, AnimationPrimitive
 from manim_engineering.animation.beat import play_propagation_beat
 from manim_engineering.animation.focus import (
@@ -48,6 +49,7 @@ from manim_engineering.animation.scene import (
     resolve_scene_camera,
     resolve_topology_scene_camera,
 )
+from manim_engineering.animation.scene_template import play_topology_intro
 from manim_engineering.animation.signal_flow import (
     DEFAULT_PROPAGATION_DURATION,
     SignalFlow,
@@ -66,6 +68,7 @@ from manim_engineering.animation.waveform_sync import (
 )
 
 __all__ = [
+    "AnalogRamp",
     "AnimationPlan",
     "AnimationPrimitive",
     "AnimationPurpose",
@@ -101,6 +104,7 @@ __all__ = [
     "normalize_topology_labels",
     "get_primitive",
     "play_propagation_beat",
+    "play_topology_intro",
     "primitive_registry_view",
     "register_primitive",
     "registered_primitives",

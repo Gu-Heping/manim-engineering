@@ -45,12 +45,14 @@ def _point3(p: Point2D) -> list[float]:
 
 
 def _line_between(start: Point2D, end: Point2D, *, color: object, width: float) -> Line:
-    return Line(
+    line = Line(
         _point3(start),
         _point3(end),
         stroke_color=color,
         stroke_width=width,
     )
+    line.set_fill(opacity=0.0, family=False)
+    return line
 
 
 class MinimalRenderer:

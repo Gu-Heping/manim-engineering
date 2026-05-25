@@ -1,4 +1,4 @@
-"""Minimal renderer: digital timing traces aligned with layout."""
+"""Minimal renderer: timing traces (digital steps and analog curves) aligned with layout."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from manim_engineering.waveform.layout import (
     MIN_WAVEFORM_GAP,
     WaveformPanelSpec,
     panel_below_layout,
-    step_polyline,
+    polyline_for_trace,
     time_scale_for_bundle,
 )
 from manim_engineering.waveform.trace import WaveformBundle, WaveformTrace
@@ -28,7 +28,7 @@ def _trace_color(trace: WaveformTrace) -> object:
 
 
 class WaveformPanelRenderer:
-    """Draw discrete step traces in a panel region below the circuit."""
+    """Draw waveform traces in a panel below the circuit (step or smooth polylines)."""
 
     def panel_spec_for_layout(
         self,
@@ -62,7 +62,7 @@ class WaveformPanelRenderer:
         extend_to_panel: bool | None = None,
     ) -> VGroup:
         group = VGroup()
-        points = step_polyline(
+        points = polyline_for_trace(
             trace,
             spec,
             trace_index,

@@ -68,5 +68,6 @@ jobs:
           pytest tests/layout/test_layout_stress.py -q
           pytest tests/layout/test_analog_geometry_smoke.py -q
           pytest tests/waveform/test_step_polyline_reveal.py -q
+          pytest tests/waveform/test_smooth_polyline_reveal.py -q
           pytest tests/examples/test_smoke_entrypoints.py -q
 

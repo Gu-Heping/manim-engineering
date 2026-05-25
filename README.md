@@ -25,7 +25,7 @@ Extended paths: `layout/`, `protocol/`, `waveform/` (see [docs/architecture.md](
 
 ## Repository status
 
-Phases 0–8 are complete. **Layout-track stabilization is complete** on `main`: analog `01`–`09` scenes are primary, with minimal smoke retained for `basics/graph_only.py` and `protocol/spi_byte_transfer.py`. Next work is a dedicated **feature vertical slice** (Scope B / IEC / I2C — see ROADMAP Feature backlog).
+Phases 0–8 are complete. **Layout-track stabilization is complete** on `main`. **Scope B RC slice** is implemented: `01_rc_charge` uses continuous waveform + teaching beats. Next work: Scope C (RLC damping, CMOS beats) or IEC / I2C — see ROADMAP Feature backlog.
 
 ## Running examples
 

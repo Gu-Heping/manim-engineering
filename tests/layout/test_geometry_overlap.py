@@ -18,6 +18,7 @@ from manim_engineering.waveform import (
     MIN_WAVEFORM_GAP,
     derive_bundle_from_signals,
     panel_below_layout,
+    polyline_for_trace,
     step_polyline,
 )
 
@@ -55,6 +56,27 @@ def _waveform_segments(layout, bundle) -> tuple[Segment, ...]:
     return tuple(segments)
 
 
+def _waveform_segments_for_bundle(layout, bundle) -> tuple[Segment, ...]:
+    panel = panel_below_layout(layout, trace_count=len(bundle.traces))
+    segments: list[Segment] = []
+    for index, trace in enumerate(bundle.traces):
+        segments.extend(points_to_segments(polyline_for_trace(trace, panel, index)))
+    return tuple(segments)
+
+
+def _rc_charge_fixture():
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[2] / "examples/analog/01_rc_charge.py"
+    spec = importlib.util.spec_from_file_location("rc_charge_example", path)
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    graph, elements, layout, _signals, bundle, _records = mod.build_rc_teaching_fixture()
+    return layout, bundle
+
+
 def test_wire_and_waveform_bands_separated_by_min_gap() -> None:
     layout, bundle = _clock_data_fixture()
     wire_boxes = tuple(segment_bbox(seg) for seg in _wire_segments(layout))
@@ -79,3 +101,15 @@ def test_wire_waveform_segment_pairs_no_overlap_or_vertical_gap() -> None:
                 "overlapping wire/waveform segment AABBs require vertical gap "
                 f">= {MIN_WAVEFORM_GAP}, got {gap}"
             )
+
+
+def test_rc_wire_waveform_segment_pairs_no_overlap_or_vertical_gap() -> None:
+    layout, bundle = _rc_charge_fixture()
+    wire_boxes = [segment_bbox(seg) for seg in _wire_segments(layout)]
+    wave_boxes = [segment_bbox(seg) for seg in _waveform_segments_for_bundle(layout, bundle)]
+    for wire_box in wire_boxes:
+        for wave_box in wave_boxes:
+            if not aabb_overlap(wire_box, wave_box):
+                continue
+            gap = vertical_gap_above(wave_box, wire_box)
+            assert gap >= MIN_WAVEFORM_GAP
