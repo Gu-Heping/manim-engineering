@@ -16,6 +16,7 @@ from manim_engineering.animation.scene_protocol import (
     require_scene_methods,
 )
 from manim_engineering.animation.signal_flow import SignalFlow
+from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
 from manim_engineering.animation.waveform_sync import WaveformSync
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
@@ -24,6 +25,23 @@ from manim_engineering.semantic.propagation import PropagationRecord
 from manim_engineering.semantic.signal import Signal
 from manim_engineering.waveform.layout import WaveformPanelSpec
 from manim_engineering.waveform.trace import WaveformBundle
+
+
+def _merge_animation_plans(
+    flow: AnimationPlan,
+    sync: AnimationPlan | None,
+    ramp: AnimationPlan | None,
+) -> tuple[tuple[object, ...], tuple[object, ...], tuple[object, ...]]:
+    propagation_overlays = list(flow.propagation_overlays)
+    overlays = list(flow.overlays)
+    animations = list(flow.animations)
+    for plan in (sync, ramp):
+        if plan is None:
+            continue
+        propagation_overlays.extend(plan.propagation_overlays)
+        overlays.extend(plan.overlays)
+        animations.extend(plan.animations)
+    return tuple(propagation_overlays), tuple(overlays), tuple(animations)
 
 
 def _fade_out_and_remove(scene: TeachingSceneProtocol, *mobjects: object) -> None:
@@ -50,7 +68,7 @@ def play_propagation_beat(
     signals: Sequence[Signal] = (),
     panel_spec: WaveformPanelSpec | None = None,
     beat: int | None = None,
-    reveal_tracker: object | None = None,
+    reveal_tracker: WaveformRevealTracker | None = None,
     reveal_targets: Sequence[tuple[Signal, int]] = (),
     reveal_time: float | None = None,
     reveal_scope: Literal["all", "signal"] = "all",
@@ -86,9 +104,7 @@ def play_propagation_beat(
     ramp_plan = None
     ramp_t_start = 0.0
     if reveal_tracker is not None:
-        revealed_time_for = getattr(reveal_tracker, "revealed_time_for", None)
-        if callable(revealed_time_for):
-            ramp_t_start = revealed_time_for(signal.name)
+        ramp_t_start = reveal_tracker.revealed_time_for(signal.name)
 
     if bundle is not None and panel_spec is not None and signals:
         trace_match = bundle.trace_named(signal.name)
@@ -125,11 +141,9 @@ def play_propagation_beat(
 
     scene = require_scene_methods(scene, require_play=True, require_add=True, require_remove=True)
 
-    propagation_overlays = list(flow_plan.propagation_overlays)
-    if sync_plan is not None:
-        propagation_overlays.extend(sync_plan.propagation_overlays)
-    if ramp_plan is not None:
-        propagation_overlays.extend(ramp_plan.propagation_overlays)
+    propagation_overlays, overlays, flow_anims = _merge_animation_plans(
+        flow_plan, sync_plan, ramp_plan
+    )
 
     propagation_group: VGroup | None = None
     if propagation_overlays:
@@ -137,11 +151,6 @@ def play_propagation_beat(
         propagation_group.set_z_index(PROPAGATION_Z_INDEX)
         scene.add(propagation_group)
 
-    overlays = list(flow_plan.overlays)
-    if sync_plan is not None:
-        overlays.extend(sync_plan.overlays)
-    if ramp_plan is not None:
-        overlays.extend(ramp_plan.overlays)
     if overlays:
         for mob in overlays:
             if hasattr(mob, "set_z_index"):
@@ -150,34 +159,19 @@ def play_propagation_beat(
 
     reveal_anims: list[object] = []
     if reveal_tracker is not None:
-        append = getattr(reveal_tracker, "append_through_beat", None)
-        append_time = getattr(reveal_tracker, "append_through_time", None)
-        append_time_for = getattr(reveal_tracker, "append_through_time_for", None)
         if reveal_time is not None:
-            if reveal_scope == "signal" and append_time_for is not None:
-                lines = append_time_for(signal.name, reveal_time)
-            elif append_time is not None:
-                lines = append_time(reveal_time)
+            if reveal_scope == "signal":
+                lines = reveal_tracker.append_through_time_for(signal.name, reveal_time)
             else:
-                lines = ()
+                lines = reveal_tracker.append_through_time(reveal_time)
             for line in lines:
                 reveal_anims.append(line.animate.set_stroke(width=theme.WAVEFORM_STROKE_WIDTH))
-        elif append is not None and reveal_targets:
+        elif reveal_targets:
             for reveal_signal, target_beat in reveal_targets:
-                for line in append(reveal_signal, target_beat):
+                for line in reveal_tracker.append_through_beat(reveal_signal, target_beat):
                     reveal_anims.append(line.animate.set_stroke(width=theme.WAVEFORM_STROKE_WIDTH))
 
-    flow_anims: list[object] = []
-    for anim in flow_plan.animations:
-        flow_anims.append(anim)
-    if sync_plan is not None:
-        for anim in sync_plan.animations:
-            flow_anims.append(anim)
-    if ramp_plan is not None:
-        for anim in ramp_plan.animations:
-            flow_anims.append(anim)
-
-    beat_anims: list[object] = [*reveal_anims, *flow_anims]
+    beat_anims: list[object] = [*reveal_anims, *list(flow_anims)]
     if beat_anims:
         if len(beat_anims) == 1:
             scene.play(beat_anims[0], run_time=beat_duration)
