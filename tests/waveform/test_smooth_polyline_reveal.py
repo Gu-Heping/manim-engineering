@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+import pytest
+
 from manim_engineering.core.enums import SignalType
 from manim_engineering.layout.types import Point2D
-from manim_engineering.waveform.layout import WaveformPanelSpec, smooth_polyline
+from manim_engineering.semantic.enums import LogicLevel
+from manim_engineering.waveform.layout import (
+    WaveformPanelSpec,
+    _interpolate_sample_at_time,
+    smooth_polyline,
+)
 from manim_engineering.waveform.trace import WaveformSample, WaveformTrace
 
 
@@ -61,3 +68,13 @@ def test_smooth_polyline_hold_before_first_sample_is_monotonic_in_x() -> None:
     pts = smooth_polyline(trace, spec, 0, hold_through_time=0.5, extend_to_panel=False)
     xs = [point.x for point in pts]
     assert xs == sorted(xs)
+
+
+def test_interpolate_sample_holds_digital_level_before_transition() -> None:
+    samples = (
+        WaveformSample(time=0.0, level=LogicLevel.LOW),
+        WaveformSample(time=1.0, level=LogicLevel.HIGH),
+    )
+    result = _interpolate_sample_at_time(samples, 0.5)
+    assert result.time == pytest.approx(0.5)
+    assert result.level == LogicLevel.LOW

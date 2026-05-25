@@ -1,4 +1,4 @@
-"""Minimal renderer: digital timing traces aligned with layout."""
+"""Minimal renderer: timing traces (digital steps and analog curves) aligned with layout."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def _trace_color(trace: WaveformTrace) -> object:
 
 
 class WaveformPanelRenderer:
-    """Draw discrete step traces in a panel region below the circuit."""
+    """Draw waveform traces in a panel below the circuit (step or smooth polylines)."""
 
     def panel_spec_for_layout(
         self,

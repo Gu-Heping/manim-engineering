@@ -250,7 +250,7 @@ def _interpolate_sample_at_time(
             if isinstance(prev_level, float) and isinstance(curr_level, float):
                 level: LogicLevel | float = prev_level + fraction * (curr_level - prev_level)
             else:
-                level = curr_level
+                level = prev_level
             return WaveformSample(time=target_time, level=level)
     last = samples[-1]
     return WaveformSample(time=target_time, level=last.level)
