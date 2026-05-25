@@ -22,8 +22,8 @@ Provided
 
 * Three module-level helpers:
 
-    - :func:`_play_hud_intro` — fades a title (``Write``) + intro caption
-      (``FadeIn``) above the topology.
+    - :func:`_play_hud_intro` — ``FadeIn(title)`` (CJK-stable) + ``FadeIn(intro)``
+      above the topology.
     - :func:`_make_caption_track` — returns a :class:`CaptionTrack` whose
       ``swap`` method is plugged into ``PropagationSequence.caption_callback``.
     - :func:`capture_camera_frame` — writes the current camera image to disk
