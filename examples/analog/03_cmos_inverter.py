@@ -6,25 +6,18 @@ Preview: ``manim -pql examples/analog/03_cmos_inverter.py CMOSInverterScene``
 
 from __future__ import annotations
 
-from manim import UP, Scene
+from manim import UP, Line, Scene
 
 from manim_engineering.animation import configure_topology_scene_camera, subtitle_text
 from manim_engineering.components import NMOS, PMOS, VCC, Ground, InputDriver
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.layout.types import Point2D
-from manim_engineering.renderers.minimal import ManimRenderer
+from manim_engineering.layout.presets import layout_from_preset
+from manim_engineering.layout.presets.cmos_inverter import DRAIN_Y, OUT_X, cmos_inverter_preset
+from manim_engineering.renderers.minimal import ManimRenderer, theme
 from manim_engineering.renderers.minimal.labels import label_text
 
-INVERTER_OVERRIDES: dict[str, Point2D] = {
-    "vcc1": Point2D(0.3, 3.0),
-    "pm1": Point2D(-0.5, 2.0),
-    "nm1": Point2D(-0.5, 0.2),
-    "gnd1": Point2D(0.3, -0.2),
-    "in_drv": Point2D(-3.0, 1.4),
-}
-
-OUT_LABEL_POS = (1.1, 1.6)
+OUT_LABEL_POS = (0.8, DRAIN_Y)
 
 
 def build_inverter_fixture():
@@ -38,11 +31,14 @@ def build_inverter_fixture():
         comp.attach_to(graph)
     graph.connect(vcc.get_pin("vcc"), pmos.get_pin("source"))
     graph.connect(pmos.get_pin("drain"), nmos.get_pin("drain"))
+    graph.connect(pmos.get_pin("bulk"), pmos.get_pin("source"))
     graph.connect(nmos.get_pin("source"), gnd.get_pin("gnd"))
+    graph.connect(nmos.get_pin("bulk"), nmos.get_pin("source"))
     graph.connect(in_drv.get_pin("out"), pmos.get_pin("gate"))
     graph.connect(in_drv.get_pin("out"), nmos.get_pin("gate"))
     elements = {"vcc1": vcc, "gnd1": gnd, "pm1": pmos, "nm1": nmos, "in_drv": in_drv}
-    layout = LayoutEngine().layout(graph, elements, placement_overrides=INVERTER_OVERRIDES)
+    preset = cmos_inverter_preset(vcc, gnd, pmos, nmos, in_drv)
+    layout = layout_from_preset(LayoutEngine(), graph, elements, preset)
     return graph, elements, layout
 
 
@@ -60,5 +56,11 @@ class CMOSInverterScene(Scene):
         self.add(title)
         out_label = label_text("OUT", font_size=20, color="white")
         out_label.move_to([OUT_LABEL_POS[0], OUT_LABEL_POS[1], 0])
-        self.add(out_label)
+        out_wire = Line(
+            [OUT_X, DRAIN_Y, 0.0],
+            [OUT_LABEL_POS[0] - 0.12, DRAIN_Y, 0.0],
+            stroke_color=theme.color_for_signal_type(SignalType.ANALOG),
+            stroke_width=theme.WIRE_STROKE_WIDTH,
+        )
+        self.add(out_wire, out_label)
         self.wait(2)

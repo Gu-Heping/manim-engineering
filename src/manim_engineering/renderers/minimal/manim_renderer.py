@@ -9,6 +9,7 @@ from manim import VGroup
 from manim_engineering.components.element import CircuitElement
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
+from manim_engineering.renderers.minimal.conventions import MosfetSymbolConvention
 from manim_engineering.renderers.minimal.immutable import TopologyProjection, topology_from_render
 from manim_engineering.renderers.minimal.renderer import MinimalRenderer
 
@@ -20,8 +21,12 @@ class ManimRenderer:
     Delegates to :class:`MinimalRenderer`; layout must come from :meth:`LayoutEngine.solve`.
     """
 
-    def __init__(self) -> None:
-        self._inner = MinimalRenderer()
+    def __init__(
+        self,
+        *,
+        mosfet_convention: MosfetSymbolConvention | None = None,
+    ) -> None:
+        self._inner = MinimalRenderer(mosfet_convention=mosfet_convention)
 
     def render(
         self,

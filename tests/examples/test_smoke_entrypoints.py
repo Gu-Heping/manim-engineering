@@ -29,6 +29,7 @@ def _load_module(path: Path):
         ("examples/analog/06_opamp_integrator.py", "build_opamp_integrator_fixture"),
         ("examples/analog/07_zener_regulator.py", "build_zener_regulator_fixture"),
         ("examples/analog/08_rlc_transient.py", "build_rlc_transient_fixture"),
+        ("examples/analog/09_mos_four_types.py", "build_mos_four_types_fixture"),
     ),
 )
 def test_analog_fixture_builders(rel_path: str, builder: str) -> None:
@@ -37,7 +38,10 @@ def test_analog_fixture_builders(rel_path: str, builder: str) -> None:
     graph, elements, layout = fn()
     assert graph.nodes
     assert elements
-    assert layout.wires
+    if builder == "build_mos_four_types_fixture":
+        assert len(layout.placements) == 4
+    else:
+        assert layout.wires
 
 
 def test_basic_graph_only_main_smoke() -> None:

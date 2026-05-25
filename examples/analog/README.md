@@ -12,6 +12,7 @@
 | `06_opamp_integrator.py` | 运放积分电路 | Vin, Rin, Cf, OP, GND | `manim -pql examples/analog/06_opamp_integrator.py OpAmpIntegratorScene` |
 | `07_zener_regulator.py` | 齐纳稳压 | VCC, Rs, Dz, RL, GND | `manim -pql examples/analog/07_zener_regulator.py ZenerRegulatorScene` |
 | `08_rlc_transient.py` | RLC暂态响应 | AC, R, L, C, GND | `manim -pql examples/analog/08_rlc_transient.py RLCTransientScene` |
+| `09_mos_four_types.py` | MOSFET四型符号 | NMOS, PMOS, N-DEP, P-DEP | `manim -pql examples/analog/09_mos_four_types.py MosFourTypesScene` |
 
 ## Fixture smoke contract
 

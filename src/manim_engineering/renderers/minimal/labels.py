@@ -12,6 +12,7 @@ WIRE_Z_INDEX = -1
 LABEL_Z_INDEX = 1
 
 _ME_LABEL_COLOR_ATTR = "_me_label_color"
+_ME_LABEL_ROLE_ATTR = "_me_label_role"
 
 LabelRefreshMode = Literal["full", "stroke_only"]
 
@@ -26,6 +27,12 @@ def _label_color(mob: Mobject) -> ManimColor | None:
 def is_label_root(mob: Mobject) -> bool:
     """True when ``mob`` was created by :func:`label_text`."""
     return _label_color(mob) is not None
+
+
+def label_role(mob: Mobject) -> str | None:
+    """Optional semantic role set by :func:`label_text` (for placement overrides)."""
+    role = getattr(mob, _ME_LABEL_ROLE_ATTR, None)
+    return role if isinstance(role, str) else None
 
 
 def iter_label_roots(root: Mobject) -> tuple[Mobject, ...]:
@@ -114,6 +121,7 @@ def label_text(
     font_size: float,
     color: object,
     font: str | None = None,
+    role: str | None = None,
 ) -> Text:
     """Colored label with no visible glyph stroke; draws above wire segments."""
     kwargs: dict = {"font_size": font_size, "color": color}
@@ -121,5 +129,7 @@ def label_text(
         kwargs["font"] = font
     label = Text(string, **kwargs)
     setattr(label, _ME_LABEL_COLOR_ATTR, ManimColor(color))
+    if role is not None:
+        setattr(label, _ME_LABEL_ROLE_ATTR, role)
     refresh_label_strokes(label)
     return label

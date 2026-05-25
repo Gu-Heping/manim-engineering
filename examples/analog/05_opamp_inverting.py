@@ -12,16 +12,9 @@ from manim_engineering.animation import configure_topology_scene_camera, subtitl
 from manim_engineering.components import Ground, InputDriver, OpAmp, Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.layout.types import Point2D
+from manim_engineering.layout.presets import layout_from_preset
+from manim_engineering.layout.presets.opamp import inverting_integrator_preset
 from manim_engineering.renderers.minimal import ManimRenderer
-
-OPAMP_OVERRIDES: dict[str, Point2D] = {
-    "op1": Point2D(0.0, 0.0),
-    "rin1": Point2D(-2.5, 0.75),
-    "rf1": Point2D(-0.2, 1.5),
-    "in_drv": Point2D(-4.5, 0.75),
-    "gnd1": Point2D(-1.8, -0.6),
-}
 
 
 def build_opamp_inverting_fixture():
@@ -39,7 +32,8 @@ def build_opamp_inverting_fixture():
     graph.connect(rin.get_pin("b"), rf.get_pin("a"))
     graph.connect(rf.get_pin("b"), op1.get_pin("out"))
     elements = {"op1": op1, "rin1": rin, "rf1": rf, "in_drv": in_drv, "gnd1": gnd}
-    layout = LayoutEngine().layout(graph, elements, placement_overrides=OPAMP_OVERRIDES)
+    preset = inverting_integrator_preset(op1, rin, rf, in_drv, gnd)
+    layout = layout_from_preset(LayoutEngine(), graph, elements, preset)
     return graph, elements, layout
 
 

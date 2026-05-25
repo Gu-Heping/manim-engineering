@@ -12,16 +12,9 @@ from manim_engineering.animation import configure_topology_scene_camera, subtitl
 from manim_engineering.components import VCC, Ground, Resistor, ZenerDiode
 from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.layout.types import Point2D
+from manim_engineering.layout.presets import layout_from_preset
+from manim_engineering.layout.presets.zener_regulator import zener_regulator_preset
 from manim_engineering.renderers.minimal import ManimRenderer
-
-ZENER_OVERRIDES: dict[str, Point2D] = {
-    "vcc1": Point2D(0.5, 1.5),
-    "rs1": Point2D(-1.0, 1.8),
-    "zd1": Point2D(0.0, 0.2),
-    "rl1": Point2D(2.0, 0.5),
-    "gnd1": Point2D(0.5, -1.2),
-}
 
 
 def build_zener_regulator_fixture():
@@ -39,7 +32,8 @@ def build_zener_regulator_fixture():
     graph.connect(rs.get_pin("b"), rl.get_pin("a"))
     graph.connect(rl.get_pin("b"), gnd.get_pin("gnd"))
     elements = {"vcc1": vcc, "gnd1": gnd, "rs1": rs, "zd1": zd, "rl1": rl}
-    layout = LayoutEngine().layout(graph, elements, placement_overrides=ZENER_OVERRIDES)
+    preset = zener_regulator_preset(vcc, gnd, rs, zd, rl)
+    layout = layout_from_preset(LayoutEngine(), graph, elements, preset)
     return graph, elements, layout
 
 

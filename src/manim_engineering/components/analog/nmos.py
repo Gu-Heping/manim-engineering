@@ -1,59 +1,34 @@
-"""N-channel MOSFET symbol stub.
-
-Scope A (symbol-only): no continuous physics. ``gate``, ``drain``, ``source``
-are all ``SignalType.ANALOG``; signal propagation between them still uses the
-digital edge engine in ``manim_engineering.semantic.propagation`` — see
-ROADMAP backlog for the continuous-physics upgrade path.
-"""
+"""N-channel enhancement MOSFET (four-terminal textbook-vertical footprint)."""
 
 from __future__ import annotations
 
+from typing import ClassVar
+
+from manim_engineering.components.analog.mosfet import (
+    MOSFET_BOUNDS,
+    NMOS_ANCHORS,
+    ChannelPolarity,
+    ConductionMode,
+    register_mosfet_pins,
+)
 from manim_engineering.components.element import AnchorPoint, CircuitElement
 from manim_engineering.components.types import Bounds
-from manim_engineering.core.enums import PinDirection, SignalType
-
-_NMOS_BOUNDS = Bounds(width=1.0, height=1.0)
-_NMOS_ANCHORS: dict[str, AnchorPoint] = {
-    "gate": (0.0, 0.5),
-    "drain": (1.0, 1.0),
-    "source": (1.0, 0.0),
-    "center": (0.5, 0.5),
-}
 
 
 class NMOS(CircuitElement):
-    """N-channel MOSFET. Channel conducts when ``gate`` is HIGH.
-
-    Pin layout (renderer draws gate on the left, drain on top-right, source
-    on bottom-right; arrow points *into* the channel — N-type convention).
-    """
+    """N-channel enhancement MOSFET. Channel conducts when ``gate`` is HIGH."""
 
     semantic_type = "analog"
+    conduction_mode: ClassVar[ConductionMode] = "enhancement"
+    channel_polarity: ClassVar[ChannelPolarity] = "n"
 
     @property
     def anchor_points(self) -> dict[str, AnchorPoint]:
-        return dict(_NMOS_ANCHORS)
+        return dict(NMOS_ANCHORS)
 
     @property
     def bounds(self) -> Bounds:
-        return _NMOS_BOUNDS
+        return MOSFET_BOUNDS
 
     def _register_pins(self) -> None:
-        self._register_pin(
-            "gate",
-            direction=PinDirection.IN,
-            signal_type=SignalType.ANALOG,
-            routing_hints=("horizontal",),
-        )
-        self._register_pin(
-            "drain",
-            direction=PinDirection.INOUT,
-            signal_type=SignalType.ANALOG,
-            routing_hints=("vertical", "up"),
-        )
-        self._register_pin(
-            "source",
-            direction=PinDirection.INOUT,
-            signal_type=SignalType.ANALOG,
-            routing_hints=("vertical", "down"),
-        )
+        register_mosfet_pins(self, p_channel=False)

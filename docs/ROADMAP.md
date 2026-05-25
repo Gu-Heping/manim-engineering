@@ -254,7 +254,7 @@ Documentation and CI discipline; topology invariants (`Port.id` contract); post-
 
 ### Feature backlog (deferred)
 
-IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `CircuitElement` + render symbols; optional rule 6-file merge; analog **Scope B/C** (continuous physics, RC exponential, `smooth_polyline`, `AnalogRamp` primitive); planned `measurement/` component category.
+IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `CircuitElement` + render symbols; optional rule 6-file merge; analog **Scope B/C** (continuous physics, RC exponential, `smooth_polyline`, `AnalogRamp` primitive); planned `measurement/` component category; **global netlist auto-placer** (preset-first remains default — see [docs/layout-strategy.md](layout-strategy.md) and `experiments/auto_placer_zener_spike.py`).
 
 Short-term experiment track: circuitjs1-inspired stamp/doStep exploration is
 documented in `docs/circuitjs1-borrowing.md` with an isolated prototype at

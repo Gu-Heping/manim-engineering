@@ -13,18 +13,20 @@ from manim_engineering.components.types import Bounds
 from manim_engineering.core.enums import PinDirection, SignalType
 
 _BJT_BOUNDS = Bounds(width=1.0, height=0.8)
+# C/E vertical stubs (keep in sync with renderers/minimal/theme.py BJT_STUB_X).
+BJT_STUB_X = 0.58
 
 _NPN_ANCHORS: dict[str, AnchorPoint] = {
     "base": (0.0, 0.5),
-    "collector": (1.0, 1.0),
-    "emitter": (1.0, 0.0),
+    "collector": (BJT_STUB_X, 1.0),
+    "emitter": (BJT_STUB_X, 0.0),
     "center": (0.5, 0.5),
 }
 
 _PNP_ANCHORS: dict[str, AnchorPoint] = {
     "base": (0.0, 0.5),
-    "collector": (1.0, 0.0),
-    "emitter": (1.0, 1.0),
+    "collector": (BJT_STUB_X, 0.0),
+    "emitter": (BJT_STUB_X, 1.0),
     "center": (0.5, 0.5),
 }
 

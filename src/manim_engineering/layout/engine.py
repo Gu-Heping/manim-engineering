@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from manim_engineering.components.element import CircuitElement
@@ -10,18 +10,22 @@ from manim_engineering.components.types import Bounds
 from manim_engineering.core.exceptions import InvalidPortError
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.exceptions import UnknownElementError
-from manim_engineering.layout.grid import layout_bbox, occupancy_ratio, place_on_grid, scene_bbox
-from manim_engineering.layout.placement import placement_order_for_graph
-from manim_engineering.layout.routing import (
-    merge_routing_hints,
-    points_to_segments,
-    route_orthogonal,
+from manim_engineering.layout.grid import (
+    layout_bbox,
+    occupancy_ratio,
+    place_on_grid_semantic,
+    scene_bbox,
 )
+from manim_engineering.layout.orientation import oriented_footprint, pin_local_in_aabb
+from manim_engineering.layout.placement import placement_order_for_graph
 from manim_engineering.layout.types import (
     DEFAULT_NOMINAL_FRAME,
+    ComponentOrientation,
     ComponentPlacement,
+    LabelPlacementMode,
     LayoutResult,
     Point2D,
+    TextPlacementOverride,
     WirePath,
 )
 
@@ -39,15 +43,16 @@ def pin_world_position(
     element: CircuitElement,
     pin_name: str,
 ) -> Point2D:
-    """Map a port to world coordinates via anchor points and bounds (not renderer geometry)."""
+    """Map a port to world coordinates via anchors, bounds, and optional orientation."""
     anchors = element.anchor_points
     if pin_name not in anchors:
         raise InvalidPortError(f"no anchor for pin {placement.element_id}.{pin_name}")
     anchor_x, anchor_y = anchors[pin_name]
-    bounds = element.get_bounds()
+    nominal = element.get_bounds()
+    local = pin_local_in_aabb(anchor_x, anchor_y, nominal, placement.orientation)
     return Point2D(
-        placement.origin.x + anchor_x * bounds.width,
-        placement.origin.y + anchor_y * bounds.height,
+        placement.origin.x + local.x,
+        placement.origin.y + local.y,
     )
 
 
@@ -80,6 +85,11 @@ class LayoutEngine:
         elements: Mapping[str, CircuitElement],
         *,
         placement_overrides: Mapping[str, Point2D] | None = None,
+        orientation_overrides: Mapping[str, ComponentOrientation] | None = None,
+        text_overrides: Mapping[str, Sequence[TextPlacementOverride]] | None = None,
+        label_mode_overrides: Mapping[str, LabelPlacementMode] | None = None,
+        net_waypoints: Mapping[str, Point2D] | None = None,
+        connection_waypoints: Mapping[str, Sequence[Point2D]] | None = None,
     ) -> LayoutResult:
         """
         Place all graph nodes and route explicit connections.
@@ -91,21 +101,57 @@ class LayoutEngine:
         flow through ``place_on_grid``; pass an override map covering every
         element to bypass automatic placement entirely (canonical vertical-stack
         diagrams, manually-tuned analog topologies, etc.).
+
+        ``net_waypoints`` maps deterministic net ids (see ``layout.nets``) to hub
+        coordinates for star routing on 3+ pin nets.
+
+        ``orientation_overrides`` maps element ids to discrete rotation / mirror
+        transforms applied at placement time (see ``layout.orientation``).
+
+        ``text_overrides`` maps element ids to manual upright label world positions
+        per renderer text role (highest priority at render time).
+
+        ``label_mode_overrides`` maps element ids to ``LabelPlacementMode`` (``AUTO``
+        enables vertical band scoring; ``SLOT_ONLY`` uses type-based slots only).
+
+        ``connection_waypoints`` maps connection ids to intermediate routing
+        points for multi-leg orthogonal paths (e.g. GND detours below a bus).
         """
         self._elements_for_graph(graph, elements)
         overrides: Mapping[str, Point2D] = placement_overrides or {}
+        orientations: Mapping[str, ComponentOrientation] = orientation_overrides or {}
+        text_overrides_map: Mapping[str, Sequence[TextPlacementOverride]] = text_overrides or {}
+        label_modes: Mapping[str, LabelPlacementMode] = label_mode_overrides or {}
         if overrides:
             unknown = sorted(set(overrides) - set(elements))
             if unknown:
                 raise UnknownElementError(
                     f"placement_overrides reference unknown element id(s): {unknown}"
                 )
+        if orientations:
+            unknown_orient = sorted(set(orientations) - set(elements))
+            if unknown_orient:
+                raise UnknownElementError(
+                    f"orientation_overrides reference unknown element id(s): {unknown_orient}"
+                )
+        if text_overrides_map:
+            unknown_text = sorted(set(text_overrides_map) - set(elements))
+            if unknown_text:
+                raise UnknownElementError(
+                    f"text_overrides reference unknown element id(s): {unknown_text}"
+                )
+        if label_modes:
+            unknown_modes = sorted(set(label_modes) - set(elements))
+            if unknown_modes:
+                raise UnknownElementError(
+                    f"label_mode_overrides reference unknown element id(s): {unknown_modes}"
+                )
 
         ordered_elements = placement_order_for_graph(graph, elements)
         grid_elements = tuple(
             element for element in ordered_elements if element.element_id not in overrides
         )
-        grid_placements = place_on_grid(
+        grid_placements = place_on_grid_semantic(
             grid_elements,
             cell_gap=self._config.cell_gap,
         )
@@ -123,6 +169,36 @@ class LayoutEngine:
         placement_by_id = {
             placement.element_id: placement for placement in (*grid_placements, *manual_placements)
         }
+        for element in ordered_elements:
+            orientation = orientations.get(element.element_id)
+            if orientation is None:
+                continue
+            placement = placement_by_id[element.element_id]
+            oriented_bounds, _ = oriented_footprint(element.get_bounds(), orientation)
+            placement_by_id[element.element_id] = ComponentPlacement(
+                element_id=placement.element_id,
+                origin=placement.origin,
+                bounds=oriented_bounds,
+                orientation=orientation,
+                text_overrides=placement.text_overrides,
+                label_mode=placement.label_mode,
+            )
+        for element in ordered_elements:
+            text_override = text_overrides_map.get(element.element_id)
+            label_mode = label_modes.get(element.element_id)
+            if text_override is None and label_mode is None:
+                continue
+            placement = placement_by_id[element.element_id]
+            placement_by_id[element.element_id] = ComponentPlacement(
+                element_id=placement.element_id,
+                origin=placement.origin,
+                bounds=placement.bounds,
+                orientation=placement.orientation,
+                text_overrides=tuple(text_override)
+                if text_override is not None
+                else placement.text_overrides,
+                label_mode=label_mode if label_mode is not None else placement.label_mode,
+            )
         placements = tuple(placement_by_id[element.element_id] for element in ordered_elements)
 
         pin_positions: dict[str, Point2D] = {}
@@ -133,21 +209,24 @@ class LayoutEngine:
                 pin_positions[pin.id] = pin_world_position(placement, element, pin_name)
 
         wires: list[WirePath] = []
-        for connection in graph.connections:
-            start = pin_positions[connection.port_a.id]
-            end = pin_positions[connection.port_b.id]
-            hints = merge_routing_hints(
-                connection.port_a.routing_hints,
-                connection.port_b.routing_hints,
+        from manim_engineering.layout.nets import collect_junction_nodes, route_nets
+
+        net_wp = net_waypoints or {}
+        wires.extend(
+            route_nets(
+                graph.connections,
+                pin_positions,
+                elements,
+                net_waypoints=net_wp,
+                connection_waypoints=connection_waypoints,
+                placements=placements,
             )
-            points = route_orthogonal(start, end, hints=hints)
-            wires.append(
-                WirePath(
-                    connection_id=connection.id,
-                    points=points,
-                    segments=points_to_segments(points),
-                )
-            )
+        )
+        junction_nodes = collect_junction_nodes(
+            graph.connections,
+            pin_positions,
+            net_waypoints=net_wp,
+        )
 
         bbox = layout_bbox(placements)
         scene = scene_bbox(placements, tuple(wires))
@@ -161,6 +240,7 @@ class LayoutEngine:
             occupancy_ratio=ratio,
             layout_bbox=bbox,
             scene_bbox=scene,
+            junction_nodes=junction_nodes,
         )
 
     def _elements_for_graph(

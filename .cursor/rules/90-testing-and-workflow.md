@@ -13,7 +13,7 @@ Meaningful features require:
 
 Bug fixes require regression test or reproducible failing example.
 
-**Renderers**: deterministic geometry, label placement, routing consistency; snapshot tests when stable.
+**Renderers**: deterministic geometry, label placement, routing consistency; snapshot tests when stable. Orientation or upright-label changes require ``tests/renderers/test_orientation_render.py`` and ``tests/renderers/test_vertical_label_placement.py`` (plus ``tests/layout/test_preset_label_api.py`` when preset label fields change).
 
 **Animation**: timing stability, no silent mutation of unrelated systems.
 

@@ -82,3 +82,15 @@ Must not own: animation state, renderer style, simulation scheduler.
 ## Granularity
 
 Prefer `NMOS`, `ANDGate` over `EntireCPU`, `MegaMotherboard`.
+
+## Layout integration
+
+Components supply `anchor_points`, `bounds`, and per-pin `routing_hints` for
+``LayoutEngine``; they do not route wires themselves.
+
+For scene authors: linear chains use ``LayoutEngine.solve``; canonical teaching
+topologies use ``layout/presets/`` or ``placement_overrides``. MOSFET types expose
+four pins (`gate`, `drain`, `source`, `bulk`); typical teaching tie-off connects
+``bulk`` to ``source``. Symbol variants use ``MinimalRenderer(mosfet_convention=...)`` — see
+[mosfet-symbols.md](mosfet-symbols.md). Layout strategy:
+[layout-strategy.md](layout-strategy.md).

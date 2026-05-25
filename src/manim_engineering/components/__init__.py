@@ -1,6 +1,16 @@
 """Component layer: reusable circuit elements, pins, metadata, layout hints."""
 
-from manim_engineering.components.analog import NMOS, NPN, PMOS, PNP, Diode, OpAmp, ZenerDiode
+from manim_engineering.components.analog import (
+    NMOS,
+    NPN,
+    PMOS,
+    PNP,
+    Diode,
+    NMOSDepletion,
+    OpAmp,
+    PMOSDepletion,
+    ZenerDiode,
+)
 from manim_engineering.components.common import VCC, Ground, InputDriver
 from manim_engineering.components.digital import SPIMaster, SPISlave, UARTPort
 from manim_engineering.components.element import AnchorPoint, CircuitElement
@@ -20,9 +30,11 @@ __all__ = [
     "InputDriver",
     "InvalidBoundsError",
     "NMOS",
+    "NMOSDepletion",
     "NPN",
     "OpAmp",
     "PMOS",
+    "PMOSDepletion",
     "PNP",
     "Resistor",
     "SPIMaster",

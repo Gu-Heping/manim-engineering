@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from manim_engineering.layout.footprint import assert_wires_avoid_footprints
+
 REPO = Path(__file__).resolve().parents[2]
 
 
@@ -39,3 +41,11 @@ def test_analog_layout_has_scene_bbox_and_wires(rel_path: str, builder: str) -> 
     assert layout.wires
     assert layout.scene_bbox.max_x > layout.scene_bbox.min_x
     assert layout.scene_bbox.max_y > layout.scene_bbox.min_y
+    if builder in (
+        "build_inverter_fixture",
+        "build_npn_amplifier_fixture",
+        "build_opamp_inverting_fixture",
+        "build_opamp_integrator_fixture",
+        "build_zener_regulator_fixture",
+    ):
+        assert_wires_avoid_footprints(layout)
