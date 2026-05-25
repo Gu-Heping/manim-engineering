@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from manim import FadeIn, FadeOut, Text
+from manim import AnimationGroup, FadeIn, FadeOut, Text
 
 from manim_engineering.animation.layers import HUD_Z_INDEX
 from manim_engineering.animation.pacing import CAPTION_CROSSFADE, subtitle_text
 from manim_engineering.animation.propagation_sequence import BeatSpec
 from manim_engineering.animation.scene import SceneCamera
-from manim_engineering.animation.scene_protocol import TeachingSceneProtocol
+from manim_engineering.animation.scene_protocol import (
+    TeachingSceneProtocol,
+    require_scene_methods,
+)
 from manim_engineering.waveform import hud_text_y
 
 
@@ -28,6 +31,7 @@ class CaptionTrack:
         *,
         title: Text | None = None,
     ) -> None:
+        scene = require_scene_methods(scene, require_play=True, require_remove=True)
         self._scene = scene
         self._camera = camera
         self.current: Text | None = seed
@@ -36,7 +40,7 @@ class CaptionTrack:
     def swap(self, spec: BeatSpec, index: int) -> None:
         if not spec.caption:
             return
-        next_caption = subtitle_text(spec.caption or "", role="caption")
+        next_caption = subtitle_text(spec.caption, role="caption")
         next_caption.move_to(
             [
                 self._camera.frame_cx,
@@ -47,14 +51,22 @@ class CaptionTrack:
         next_caption.set_z_index(HUD_Z_INDEX)
         current = self.current
         crossfade = CAPTION_CROSSFADE
+        to_remove: list[Text] = []
+        animations: list[object] = []
         if index == 0 and self._title is not None:
-            self._scene.play(FadeOut(self._title, run_time=crossfade))
-            self._scene.remove(self._title)
+            animations.append(FadeOut(self._title, run_time=crossfade))
+            to_remove.append(self._title)
             self._title = None
         if current is not None:
-            self._scene.play(FadeOut(current, run_time=crossfade))
-            self._scene.remove(current)
-        self._scene.play(FadeIn(next_caption, run_time=crossfade))
+            animations.append(FadeOut(current, run_time=crossfade))
+            to_remove.append(current)
+        animations.append(FadeIn(next_caption, run_time=crossfade))
+        if len(animations) == 1:
+            self._scene.play(animations[0], run_time=crossfade)
+        else:
+            self._scene.play(AnimationGroup(*animations), run_time=crossfade)
+        if to_remove:
+            self._scene.remove(*to_remove)
         self.current = next_caption
 
     def close(self) -> None:
@@ -75,6 +87,7 @@ def play_hud_intro(
     Returns the two ``Text`` mobjects so the caller can keep references for
     later (e.g. seeding a :class:`CaptionTrack` or fading out at the end).
     """
+    scene = require_scene_methods(scene, require_play=True)
     title = subtitle_text(title_text, role="title")
     intro = subtitle_text(intro_text, role="intro")
     title.move_to([camera.frame_cx, hud_text_y(camera.frame_cy, camera.frame_height, row=0), 0])

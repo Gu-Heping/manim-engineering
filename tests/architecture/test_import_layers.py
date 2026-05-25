@@ -148,3 +148,22 @@ def test_deleted_semantic_topology_modules_stay_dead(module: str) -> None:
     assert not violations, (
         f"{module} is a deleted shim; topology lives in core. Violations:\n" + "\n".join(violations)
     )
+
+
+def test_animation_does_not_import_renderer_private_symbols() -> None:
+    animation_dir = SRC_ROOT / "animation"
+    private_names = ("_point3", "_trace_color")
+    violations: list[str] = []
+    for py_file in _iter_python_files(animation_dir):
+        rel = py_file.relative_to(SRC_ROOT)
+        source = py_file.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(py_file))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom) or node.module is None:
+                continue
+            if "renderers" not in node.module:
+                continue
+            for alias in node.names:
+                if alias.name in private_names:
+                    violations.append(f"{rel}: imports {node.module}.{alias.name}")
+    assert not violations, "Animation must use public renderer helpers:\n" + "\n".join(violations)

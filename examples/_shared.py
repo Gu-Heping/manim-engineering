@@ -40,8 +40,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from manim import FadeOut, Scene, VGroup
+
+if TYPE_CHECKING:
+    from manim import Text
 
 from manim_engineering.animation import (
     BEAT_GAP,
@@ -115,8 +119,8 @@ class WaveformDemoScene(Scene):
        :class:`WaveformPanelRenderer`.
     3. Configure camera via :func:`configure_waveform_scene_camera`, using
        :attr:`subtitle_band` for HUD reservation.
-    4. Play the 3B1B-style fade-in (``LaggedStart`` over topology pieces).
-    5. Optionally play the HUD intro (``Write(title)`` + ``FadeIn(intro)``)
+    4. Play the 3B1B-style intro via :func:`play_topology_intro`.
+    5. Optionally play the HUD intro (``FadeIn(title)`` + ``FadeIn(intro)``)
        when :meth:`hud_texts` returns a non-``None`` ``(title, intro)`` pair.
     6. Optionally play a :class:`PropagationSequence` when
        :meth:`teaching_beats` returns a non-``None`` tuple of beats.
@@ -221,7 +225,7 @@ class WaveformDemoScene(Scene):
         )
 
         caption_track: CaptionTrack | None = None
-        title_mob: object | None = None
+        title_mob: Text | None = None
         if hud is not None:
             title_text, intro_text = hud
             title_mob, intro_mob = play_hud_intro(self, title_text, intro_text, camera)
