@@ -50,6 +50,7 @@ from manim_engineering.animation.scene import (
     resolve_topology_scene_camera,
 )
 from manim_engineering.animation.scene_template import play_topology_intro
+from manim_engineering.animation.scene_protocol import TeachingSceneProtocol
 from manim_engineering.animation.signal_flow import (
     DEFAULT_PROPAGATION_DURATION,
     SignalFlow,
@@ -94,6 +95,7 @@ __all__ = [
     "SCENE_FADE_OUT",
     "SceneCamera",
     "SignalFlow",
+    "TeachingSceneProtocol",
     "TIMING_Z_INDEX",
     "VoltagePulse",
     "WaveformSync",

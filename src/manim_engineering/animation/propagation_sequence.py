@@ -17,6 +17,7 @@ from typing import Literal
 from manim_engineering.animation.beat import play_propagation_beat
 from manim_engineering.animation.focus import dim_topology, restore_topology
 from manim_engineering.animation.pacing import BEAT_CAPTION_HOLD, BEAT_DURATION, BEAT_GAP
+from manim_engineering.animation.scene_protocol import require_scene_methods
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
 from manim_engineering.renderers.minimal.immutable import TopologyProjection
@@ -136,10 +137,7 @@ class PropagationSequence:
         return self._beats
 
     def play(self, scene: object) -> None:
-        wait = getattr(scene, "wait", None)
-        if wait is None:
-            msg = "scene must provide wait() like manim.Scene"
-            raise TypeError(msg)
+        scene = require_scene_methods(scene, require_play=False, require_wait=True)
 
         for index, spec in enumerate(self._beats):
             if self._dim_inactive and self._topology is not None:
@@ -149,7 +147,7 @@ class PropagationSequence:
                 # Hold the caption briefly so the viewer reads *before* the
                 # pulse fires. Skipped when no caption (e.g. clock_data demo).
                 if spec.caption and self._caption_hold > 0:
-                    wait(self._caption_hold)
+                    scene.wait(self._caption_hold)
             reveal_time = spec.reveal_time
             reveal_targets = spec.reveal_targets
             if reveal_time is None:
@@ -177,6 +175,6 @@ class PropagationSequence:
                 wire_pulse=spec.wire_pulse,
             )
             if index < len(self._beats) - 1:
-                wait(self._beat_gap)
+                scene.wait(self._beat_gap)
                 if self._dim_inactive and self._topology is not None:
                     dim_topology(self._topology)

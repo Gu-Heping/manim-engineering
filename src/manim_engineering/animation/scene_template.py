@@ -5,6 +5,7 @@ from __future__ import annotations
 from manim import Animation, Create, FadeIn, LaggedStart, VGroup
 
 from manim_engineering.animation.focus import normalize_topology_labels
+from manim_engineering.animation.scene_protocol import require_scene_methods
 from manim_engineering.renderers.minimal.immutable import TopologyProjection
 from manim_engineering.renderers.minimal.labels import (
     apply_symbol_opacity,
@@ -46,11 +47,7 @@ def play_topology_intro(
     Avoids ``FadeIn`` / ``set_opacity`` on heterogeneous ``topology.components`` groups,
     which activates default white fill on Manim ``Line`` symbols (resistor zig-zag bug).
     """
-    add = getattr(scene, "add", None)
-    play = getattr(scene, "play", None)
-    if add is None or play is None:
-        msg = "scene must provide add() and play() like manim.Scene"
-        raise TypeError(msg)
+    scene = require_scene_methods(scene, require_play=True, require_add=True)
 
     component_strokes = iter_symbol_strokes(topology.components)
     wire_strokes = iter_symbol_strokes(topology.wires)
@@ -60,8 +57,8 @@ def play_topology_intro(
 
     hide_labels(topology.components)
     hide_labels(waveform_panel)
-    add(content)
-    play(
+    scene.add(content)
+    scene.play(
         LaggedStart(
             _lagged_creates(component_strokes, components_run_time, create_lag_ratio),
             _lagged_creates(wire_strokes, wires_run_time, create_lag_ratio),
