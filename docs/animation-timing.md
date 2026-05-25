@@ -172,24 +172,28 @@ Examples (`examples/protocol/*.py`, `examples/basics/*.py`) follow the same
 opening / closing template:
 
 ```python
-from manim import FadeIn, FadeOut, LaggedStart, Write
-from manim_engineering.animation import SCENE_FADE_OUT, scene_final_fade_enabled
-
-# Entry — add content first; hide pin/trace labels, FadeIn bodies, then reveal labels:
-# (WaveformDemoScene in examples/_shared.py implements this via hide_labels / show_labels.)
-self.add(content)
-self.play(
-    LaggedStart(
-        FadeIn(topology.components, shift=0.15, run_time=0.7),
-        FadeIn(topology.wires, run_time=0.5),
-        FadeIn(waveform_panel, run_time=0.6),
-        lag_ratio=0.25,
-    ),
-    run_time=1.4,
+from manim import FadeIn, FadeOut
+from manim_engineering.animation import (
+    INTRO_PAUSE,
+    SCENE_FADE_OUT,
+    play_topology_intro,
+    play_hud_intro,
+    scene_final_fade_enabled,
 )
-# show_labels(topology.components); show_labels(waveform_panel)
-self.play(Write(title), run_time=0.9)
-self.play(FadeIn(intro, shift=0.15), run_time=0.55)
+
+# Entry — stroke-first topology reveal (package API; do NOT FadeIn(topology.components)):
+play_topology_intro(
+    scene,
+    topology,
+    waveform_panel,
+    content,
+    components_run_time=0.7,
+    wires_run_time=0.5,
+    panel_run_time=0.6,
+    lag_ratio=0.25,
+    total_run_time=1.4,
+)
+title, intro = play_hud_intro(scene, title_text, intro_text, camera)
 self.wait(INTRO_PAUSE - 0.6)
 
 # ... beats ...
@@ -210,7 +214,8 @@ deterministic captures).
 
 | Symptom | Layer | Typical cause |
 |---------|-------|----------------|
-| Pin label white halo | Renderer + scene | `FadeIn` / `set_opacity` on a parent of `label_text`; fix with body-only intro fade and `refresh_label_strokes(..., mode="stroke_only")` after dim |
+| Pin label white halo | Renderer + scene | `FadeIn` / `set_opacity` on a parent of `label_text`; fix with `play_topology_intro` (stroke-first) and `refresh_label_strokes(..., mode="stroke_only")` after dim |
+| Resistor zig-zag solid white fill | Animation | `topology.components.set_opacity(1.0)` on mixed VGroup; use `play_topology_intro` + `apply_symbol_opacity` instead |
 | Symbol dims but labels stay bright | Animation | `dim_topology` followed by full label refresh; use `stroke_only` during dim |
 | Pulse or trace flash vanishes instantly | Animation | Overlay removed after beat; `OVERLAY_FADE_OUT` softens removal |
 | Static intro caption disappears at beat 0 | Scene glue | `CaptionTrack.swap` crossfade; tune `CAPTION_CROSSFADE` |
