@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import ClassVar
 
 from manim_engineering.components.analog.mosfet import (
-    ChannelPolarity,
-    ConductionMode,
     MOSFET_BOUNDS,
     PMOS_ANCHORS,
+    ChannelPolarity,
+    ConductionMode,
     register_mosfet_pins,
 )
 from manim_engineering.components.element import AnchorPoint, CircuitElement

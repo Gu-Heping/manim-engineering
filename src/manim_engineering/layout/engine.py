@@ -10,7 +10,12 @@ from manim_engineering.components.types import Bounds
 from manim_engineering.core.exceptions import InvalidPortError
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.exceptions import UnknownElementError
-from manim_engineering.layout.grid import layout_bbox, occupancy_ratio, place_on_grid, place_on_grid_semantic, scene_bbox
+from manim_engineering.layout.grid import (
+    layout_bbox,
+    occupancy_ratio,
+    place_on_grid_semantic,
+    scene_bbox,
+)
 from manim_engineering.layout.orientation import oriented_footprint, pin_local_in_aabb
 from manim_engineering.layout.placement import placement_order_for_graph
 from manim_engineering.layout.types import (

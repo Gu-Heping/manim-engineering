@@ -9,8 +9,8 @@ from manim import VGroup
 from manim_engineering.components.element import CircuitElement
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
-from manim_engineering.renderers.minimal.immutable import TopologyProjection, topology_from_render
 from manim_engineering.renderers.minimal.conventions import MosfetSymbolConvention
+from manim_engineering.renderers.minimal.immutable import TopologyProjection, topology_from_render
 from manim_engineering.renderers.minimal.renderer import MinimalRenderer
 
 

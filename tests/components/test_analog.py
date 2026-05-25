@@ -9,13 +9,13 @@ import pytest
 
 from manim_engineering.components import (
     NMOS,
-    NMOSDepletion,
     NPN,
     PMOS,
-    PMOSDepletion,
     PNP,
     Diode,
+    NMOSDepletion,
     OpAmp,
+    PMOSDepletion,
     ZenerDiode,
 )
 from manim_engineering.core import CircuitGraph, PinDirection, SignalType

@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import pytest
-
 from manim import UL, UR
 
 from manim_engineering.components import OpAmp, Resistor
 from manim_engineering.layout.engine import pin_world_position
 from manim_engineering.layout.orientation import oriented_footprint
-from manim_engineering.layout.types import ComponentOrientation, ComponentPlacement, LabelPlacementMode, Point2D
+from manim_engineering.layout.types import (
+    ComponentOrientation,
+    ComponentPlacement,
+    LabelPlacementMode,
+    Point2D,
+)
 from manim_engineering.renderers.minimal.labels import iter_label_roots, label_role
 from manim_engineering.renderers.minimal.renderer import MinimalRenderer
 
@@ -39,7 +43,9 @@ def _label_by_role(placed: object, role: str):
     raise AssertionError(f"no label with role {role!r}")
 
 
-def _pin_dot_positions(renderer: MinimalRenderer, element, placement) -> dict[str, tuple[float, float]]:
+def _pin_dot_positions(
+    renderer: MinimalRenderer, element, placement
+) -> dict[str, tuple[float, float]]:
     from manim_engineering.renderers.minimal.text_placement import detach_label_roots
 
     mob = renderer.render(element)

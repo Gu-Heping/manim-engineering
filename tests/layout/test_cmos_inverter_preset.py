@@ -9,7 +9,6 @@ import pytest
 
 from manim_engineering.layout.footprint import assert_wires_avoid_footprints
 from manim_engineering.layout.presets.cmos_inverter import (
-    DRAIN_Y,
     GATE_BUS_X,
     GATE_BUS_Y,
     GND_Y,

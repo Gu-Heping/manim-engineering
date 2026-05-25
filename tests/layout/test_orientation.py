@@ -7,8 +7,8 @@ import pytest
 from manim_engineering.components import OpAmp, Resistor
 from manim_engineering.layout import (
     LayoutEngine,
-    origin_for_pin_at,
     oriented_footprint,
+    origin_for_pin_at,
     pin_world_position,
 )
 from manim_engineering.layout.types import ComponentOrientation, ComponentPlacement, Point2D

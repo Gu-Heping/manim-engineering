@@ -8,7 +8,7 @@ pytest.importorskip("manim")
 
 from manim import Circle, Dot, Line, VGroup
 
-from manim_engineering.components import NMOS, NMOSDepletion, PMOS, PMOSDepletion
+from manim_engineering.components import NMOS, PMOS, NMOSDepletion, PMOSDepletion
 from manim_engineering.components.analog.mosfet import (
     MOSFET_CHANNEL_X,
     MOSFET_DRAIN_STUB_X,
@@ -132,7 +132,9 @@ def test_enhancement_three_channel_bars_vs_depletion_solid(
     channel_lines = _vertical_channel_lines(body, channel_x)
     if expect_three_channel_bars:
         assert len(channel_lines) == 3
-        lengths = sorted(abs(float(line.get_end()[1] - line.get_start()[1])) for line in channel_lines)
+        lengths = sorted(
+            abs(float(line.get_end()[1] - line.get_start()[1])) for line in channel_lines
+        )
         assert lengths[0] == pytest.approx(lengths[1], rel=0.05)
         assert lengths[1] == pytest.approx(lengths[2], rel=0.05)
     else:

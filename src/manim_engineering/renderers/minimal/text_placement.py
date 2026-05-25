@@ -10,16 +10,16 @@ from manim import Mobject, VGroup
 
 from manim_engineering.components.analog import (
     NMOS,
-    NMOSDepletion,
     NPN,
     PMOS,
-    PMOSDepletion,
     PNP,
     Diode,
+    NMOSDepletion,
     OpAmp,
+    PMOSDepletion,
     ZenerDiode,
 )
-from manim_engineering.components.common import Ground, InputDriver, VCC
+from manim_engineering.components.common import VCC, Ground, InputDriver
 from manim_engineering.components.element import CircuitElement
 from manim_engineering.components.passive import Capacitor, Inductor, Resistor
 from manim_engineering.components.types import Bounds
@@ -170,7 +170,11 @@ def _band_collision_score(
     return score
 
 
-def _horizontal_clearance(band: LayoutBBox, placement: ComponentPlacement, layout: LayoutResult) -> float:
+def _horizontal_clearance(
+    band: LayoutBBox,
+    placement: ComponentPlacement,
+    layout: LayoutResult,
+) -> float:
     """Distance from band outer edge to nearest foreign footprint on the same side."""
     self_box = _placement_bbox(placement)
     if band.max_x <= self_box.min_x + _LABEL_BAND_EPS:
@@ -293,7 +297,7 @@ def _world_for_slot(
     local_fallback: Point2D,
 ) -> Point2D:
     min_x, min_y, max_x, max_y = footprint_world_rect(placement)
-    width = max_x - min_x
+    max_x - min_x
     height = max_y - min_y
     center_x = (min_x + max_x) * 0.5
     center_y = (min_y + max_y) * 0.5

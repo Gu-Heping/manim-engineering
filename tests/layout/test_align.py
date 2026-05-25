@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from manim_engineering.components import Resistor, VCC
-from manim_engineering.layout import LayoutEngine, origin_for_pin_at, pin_world_position
+from manim_engineering.components import Resistor
+from manim_engineering.layout import origin_for_pin_at, pin_world_position
 from manim_engineering.layout.presets.opamp import GND_CHANNEL_Y
 from manim_engineering.layout.types import ComponentPlacement, Point2D
 
@@ -31,7 +31,7 @@ def test_opamp_gnd_route_avoids_in_n() -> None:
     _graph, elements, layout = mod.build_opamp_inverting_fixture()
     op = elements["op1"]
     in_n = layout.pin_positions[op.get_pin("in_n").id]
-    in_p = layout.pin_positions[op.get_pin("in_p").id]
+    layout.pin_positions[op.get_pin("in_p").id]
     gnd_pin = layout.pin_positions[elements["gnd1"].get_pin("gnd").id]
 
     gnd_wire = next(

@@ -158,7 +158,7 @@ def _body_endpoint_coords(body) -> set[tuple[float, float]]:
 
 
 def test_vcc_and_ground_labels_clear_of_symbol_body() -> None:
-    from manim_engineering.components import Ground, VCC
+    from manim_engineering.components import VCC, Ground
 
     vcc = VCC("vcc1", label="VCC")
     gnd = Ground("gnd1", label="GND")
@@ -167,7 +167,7 @@ def test_vcc_and_ground_labels_clear_of_symbol_body() -> None:
     vcc_label = vcc_mob.submobjects[-1]
     gnd_label = gnd_mob.submobjects[-1]
     _, vh = vcc.get_bounds().width, vcc.get_bounds().height
-    _, gh = gnd.get_bounds().width, gnd.get_bounds().height
+    _, _gh = gnd.get_bounds().width, gnd.get_bounds().height
 
     assert float(vcc_label.get_center()[1]) > vh
     assert float(gnd_label.get_center()[1]) < 0.0

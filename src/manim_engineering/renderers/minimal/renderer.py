@@ -7,29 +7,29 @@ import os
 from collections.abc import Mapping
 
 import numpy as np
-from manim import DashedLine, Dot, Line, Polygon, Rectangle, RIGHT, Text, UP, VGroup, VMobject
+from manim import RIGHT, UP, DashedLine, Dot, Line, Polygon, Rectangle, Text, VGroup, VMobject
 
 from manim_engineering.components.analog import (
     NMOS,
-    NMOSDepletion,
     NPN,
     PMOS,
-    PMOSDepletion,
     PNP,
     Diode,
+    NMOSDepletion,
     OpAmp,
+    PMOSDepletion,
     ZenerDiode,
 )
+from manim_engineering.components.analog.mosfet import ConductionMode
 from manim_engineering.components.common import VCC, Ground, InputDriver
 from manim_engineering.components.element import CircuitElement
-from manim_engineering.components.types import Bounds
 from manim_engineering.components.passive import Capacitor, Inductor, Resistor
+from manim_engineering.components.types import Bounds
 from manim_engineering.core.enums import SignalType
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.nets import connection_for_wire
 from manim_engineering.layout.orientation import oriented_footprint
 from manim_engineering.layout.types import ComponentPlacement, LayoutResult, Point2D
-from manim_engineering.components.analog.mosfet import ConductionMode
 from manim_engineering.renderers.minimal import theme
 from manim_engineering.renderers.minimal.conventions import MosfetSymbolConvention
 from manim_engineering.renderers.minimal.labels import WIRE_Z_INDEX, label_text
@@ -282,7 +282,6 @@ class MinimalRenderer:
         """Dashed bounds rect + anchor dots when ``DEBUG_RENDERER=1``."""
         bounds = component.get_bounds()
         w, h = bounds.width, bounds.height
-        from manim import DashedLine
 
         dash_kw = {"stroke_color": "#FF00FF", "stroke_width": 1.0, "dash_length": 0.08}
         rect_lines = [
@@ -1055,8 +1054,16 @@ def _mosfet_symbol_textbook_vertical(
         [
             Line([channel_x, drain_branch_y, 0.0], [drain_stub_x, drain_branch_y, 0.0], **stroke),
             Line([drain_stub_x, drain_branch_y, 0.0], [drain_stub_x, drain_pin_y, 0.0], **stroke),
-            Line([channel_x, source_branch_y, 0.0], [source_stub_x, source_branch_y, 0.0], **stroke),
-            Line([source_stub_x, source_branch_y, 0.0], [source_stub_x, source_pin_y, 0.0], **stroke),
+            Line(
+                [channel_x, source_branch_y, 0.0],
+                [source_stub_x, source_branch_y, 0.0],
+                **stroke,
+            ),
+            Line(
+                [source_stub_x, source_branch_y, 0.0],
+                [source_stub_x, source_pin_y, 0.0],
+                **stroke,
+            ),
             Line([channel_x, y_mid, 0.0], [source_stub_x, y_mid, 0.0], **stroke),
             Line([source_stub_x, y_mid, 0.0], tie_point, **stroke),
         ]

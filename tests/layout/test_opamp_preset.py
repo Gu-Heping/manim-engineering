@@ -8,8 +8,14 @@ from pathlib import Path
 import pytest
 
 from manim_engineering.layout.footprint import assert_wires_avoid_footprints
-from manim_engineering.layout.presets.opamp import FEEDBACK_Y, GND_CHANNEL_Y, INPUT_COL_X, OP_X, SUMMATION_Y
-from manim_engineering.layout.routing import points_to_segments, segments_intersect
+from manim_engineering.layout.presets.opamp import (
+    FEEDBACK_Y,
+    GND_CHANNEL_Y,
+    INPUT_COL_X,
+    OP_X,
+    SUMMATION_Y,
+)
+from manim_engineering.layout.routing import segments_intersect
 
 REPO = Path(__file__).resolve().parents[2]
 

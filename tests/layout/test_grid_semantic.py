@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from manim_engineering.components import Capacitor, Ground, InputDriver, Resistor, VCC
+from manim_engineering.components import VCC, Capacitor, Ground, InputDriver, Resistor
 from manim_engineering.core import SignalType
 from manim_engineering.layout import place_on_grid_semantic
 

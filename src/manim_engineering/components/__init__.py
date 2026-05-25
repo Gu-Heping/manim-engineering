@@ -2,13 +2,13 @@
 
 from manim_engineering.components.analog import (
     NMOS,
-    NMOSDepletion,
     NPN,
     PMOS,
-    PMOSDepletion,
     PNP,
     Diode,
+    NMOSDepletion,
     OpAmp,
+    PMOSDepletion,
     ZenerDiode,
 )
 from manim_engineering.components.common import VCC, Ground, InputDriver

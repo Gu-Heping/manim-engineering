@@ -67,6 +67,7 @@ __all__ = [
     "LayoutEngine",
     "assert_wires_avoid_footprints",
     "collect_junction_nodes",
+    "connection_for_wire",
     "ensure_visible_connection",
     "LayoutError",
     "LayoutResult",
@@ -95,6 +96,7 @@ __all__ = [
     "route_orthogonal",
     "route_through_waypoints",
     "segments_intersect",
+    "sibling_pins_to_avoid",
     "stub_direction_for_connection",
     "wires_avoid_footprints",
 ]

@@ -85,7 +85,7 @@ def test_bjt_has_vertical_base_bar_and_diagonal_legs() -> None:
 def test_bjt_collector_emitter_stubs_have_no_horizontal_tail() -> None:
     npn = NPN("q1")
     body = MinimalRenderer().render(npn).submobjects[0]
-    w, h = npn.get_bounds().width, npn.get_bounds().height
+    w, _h = npn.get_bounds().width, npn.get_bounds().height
     bar_x = theme.BJT_BASE_BAR_X * w
     pin_tails = [
         sub
@@ -101,7 +101,7 @@ def test_bjt_collector_emitter_stubs_have_no_horizontal_tail() -> None:
 def test_npn_emitter_arrow_points_outward_from_base_bar() -> None:
     npn = NPN("q1")
     body = MinimalRenderer().render(npn).submobjects[0]
-    w, h = npn.get_bounds().width, npn.get_bounds().height
+    w, _h = npn.get_bounds().width, npn.get_bounds().height
     arrow = next(sub for sub in body.submobjects if isinstance(sub, Polygon))
     bar_x = theme.BJT_BASE_BAR_X * w
     tip = arrow.get_vertices()[0]
@@ -117,7 +117,7 @@ def test_npn_pnp_emitter_arrow_leg_fracs_sum_to_one() -> None:
 def test_pnp_emitter_arrow_points_inward_toward_base_bar() -> None:
     pnp = PNP("q2")
     body = MinimalRenderer().render(pnp).submobjects[0]
-    w, h = pnp.get_bounds().width, pnp.get_bounds().height
+    w, _h = pnp.get_bounds().width, pnp.get_bounds().height
     arrow = next(sub for sub in body.submobjects if isinstance(sub, Polygon))
     bar_x = theme.BJT_BASE_BAR_X * w
     tip = arrow.get_vertices()[0]

@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from manim_engineering.layout.routing import route_orthogonal, points_to_segments, route_through_waypoints, segments_intersect
+from manim_engineering.layout.routing import (
+    points_to_segments,
+    route_orthogonal,
+    route_through_waypoints,
+    segments_intersect,
+)
 from manim_engineering.layout.types import Point2D, Segment
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from manim_engineering.components import Resistor, ZenerDiode
+from manim_engineering.components import Resistor
 from manim_engineering.layout.orientation import oriented_footprint
 from manim_engineering.layout.types import (
     DEFAULT_NOMINAL_FRAME,

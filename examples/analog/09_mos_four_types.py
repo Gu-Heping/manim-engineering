@@ -9,7 +9,7 @@ from __future__ import annotations
 from manim import UP, Scene
 
 from manim_engineering.animation import configure_topology_scene_camera, subtitle_text
-from manim_engineering.components import NMOS, NMOSDepletion, PMOS, PMOSDepletion
+from manim_engineering.components import NMOS, PMOS, NMOSDepletion, PMOSDepletion
 from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.layout.types import Point2D
