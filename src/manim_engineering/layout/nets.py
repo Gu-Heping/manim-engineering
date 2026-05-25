@@ -343,10 +343,6 @@ def route_nets(
             connection = connections_by_id[connection_id]
             if _connection_on_same_element(connection):
                 continue
-            start = pin_positions[connection.port_a.id]
-            end = pin_positions[connection.port_b.id]
-            if _points_close(start, end):
-                continue
             routed.append(
                 _route_connection(
                     connection,

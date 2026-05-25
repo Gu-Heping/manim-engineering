@@ -116,6 +116,13 @@ def test_zener_vcc_rs_connection_is_visible() -> None:
     rs_a = layout.pin_positions[elements["rs1"].get_pin("a").id]
     assert vcc_pin.x == pytest.approx(rs_a.x)
     assert vcc_pin.y == pytest.approx(rs_a.y)
+    wire = next(
+        w for w in layout.wires if "vcc" in w.connection_id and "rs1.a" in w.connection_id
+    )
+    assert len(wire.segments) == 1
+    seg = wire.segments[0]
+    length = abs(seg.end.x - seg.start.x) + abs(seg.end.y - seg.start.y)
+    assert length >= MIN_VISIBLE_STUB - 1e-6
     assert vcc_pin in layout.junction_nodes
     assert_wires_avoid_footprints(layout)
 
