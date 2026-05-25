@@ -58,3 +58,22 @@ Full branch naming, pre-push gates, review triage, fix loop, and merge criteria:
 ## Conflict resolution
 
 Rule precedence (high → low): Foundation → Semantic → Layer boundaries → Domain → Renderer → Layout → Animation → Education → Engineering standards → Testing/workflow.
+
+## Cursor Cloud specific instructions
+
+This is a pure Python library (no web servers, databases, or Docker needed).
+
+### Quick reference
+
+- **Lint:** `ruff check src tests`
+- **Test:** `pytest`
+- **Run examples (no rendering):** `python3 examples/basics/graph_only.py`
+- **Render Manim scene:** `manim --disable_caching -ql examples/analog/01_rc_charge.py RCChargeScene`
+
+### Gotchas
+
+- `python` is not aliased on the VM; use `python3` explicitly.
+- pip installs to `/home/ubuntu/.local/bin` (user-level); ensure `PATH` includes it (the update script handles this, but if commands like `ruff`, `pytest`, or `manim` are not found, prepend `export PATH="/home/ubuntu/.local/bin:$PATH"`).
+- System deps (`libcairo2-dev`, `libpango1.0-dev`, `pkg-config`, `ffmpeg`, `python3-dev`) are required for building `pycairo`/`manimpango` — these are pre-installed in the VM snapshot.
+- The project has zero runtime dependencies by default; `manim==0.19.1` is in the `[dev]` extra.
+- All 391 tests run in ~3 seconds; no external services needed.
