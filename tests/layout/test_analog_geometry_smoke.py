@@ -31,6 +31,7 @@ def _load_module(path: Path):
         ("examples/analog/06_opamp_integrator.py", "build_opamp_integrator_fixture"),
         ("examples/analog/07_zener_regulator.py", "build_zener_regulator_fixture"),
         ("examples/analog/08_rlc_transient.py", "build_rlc_transient_fixture"),
+        ("examples/analog/09_mos_four_types.py", "build_mos_four_types_fixture"),
     ),
 )
 def test_analog_layout_has_scene_bbox_and_wires(rel_path: str, builder: str) -> None:
@@ -38,9 +39,13 @@ def test_analog_layout_has_scene_bbox_and_wires(rel_path: str, builder: str) -> 
     graph, elements, layout = getattr(mod, builder)()
     assert graph.nodes
     assert elements
-    assert layout.wires
     assert layout.scene_bbox.max_x > layout.scene_bbox.min_x
     assert layout.scene_bbox.max_y > layout.scene_bbox.min_y
+    if builder == "build_mos_four_types_fixture":
+        assert len(layout.placements) == 4
+        assert_wires_avoid_footprints(layout)
+        return
+    assert layout.wires
     if builder in (
         "build_inverter_fixture",
         "build_npn_amplifier_fixture",

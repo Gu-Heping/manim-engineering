@@ -22,6 +22,7 @@ python examples/protocol/spi_byte_transfer.py
 ```bash
 manim --disable_caching -pql examples/analog/01_rc_charge.py RCChargeScene
 manim --disable_caching -pql examples/analog/03_cmos_inverter.py CMOSInverterScene
+manim --disable_caching -pql examples/analog/09_mos_four_types.py MosFourTypesScene
 manim --disable_caching -pql examples/protocol/spi_byte_transfer.py SPIByteTransferDemo
 ```
 

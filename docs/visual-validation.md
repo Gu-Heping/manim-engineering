@@ -13,6 +13,7 @@ Blocking checks focus on deterministic coordinates and spacing contracts:
 - `tests/layout/test_layout_stress.py` — deterministic wire replay hash + occupancy
 - `tests/waveform/test_step_polyline_reveal.py` — reveal-time waveform polyline geometry
 - `tests/layout/test_analog_geometry_smoke.py` — analog fixture bbox/wire geometry smoke
+  (scene `09_mos_four_types` has no cross-element wires — only placement/bbox checks)
 - `tests/examples/test_smoke_entrypoints.py` — analog fixture builders + retained smoke entrypoints
 
 These checks replace legacy dHash/PNG golden gates.

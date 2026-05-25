@@ -157,7 +157,7 @@ Deliverables:
 - [x] `examples/` layout established and now converging to analog-first catalog with minimal protocol/basic smoke retained
 - [x] Per-directory README (purpose, one-concept table, run commands)
 - [x] Master index [examples/README.md](../examples/README.md); root README "Running examples"
-- [x] Analog 01–08 scene catalog (`examples/analog/01_rc_charge.py` … `08_rlc_transient.py`)
+- [x] Analog 01–09 scene catalog (`examples/analog/01_rc_charge.py` … `09_mos_four_types.py`)
 - [x] Minimal protocol/basic smoke retained (`examples/protocol/spi_byte_transfer.py`, `examples/basics/graph_only.py`)
 - [ ] Renderer variants (IEC) — deferred until minimal renderer stable
 
@@ -210,7 +210,7 @@ Deliverables:
 **Step 7 (complete):**
 
 - [x] Geometry-only gate retained without raster dHash dependency
-- [x] Analog catalog expanded to 01–08 scenes with deterministic layout contracts
+- [x] Analog catalog expanded to 01–09 scenes with deterministic layout contracts
 - [x] Minimal protocol/basic smoke retained for anti-regression coverage
 - [x] Layout stress fixture (`tests/layout/test_layout_stress.py`) — 5-passive chain, occupancy band, wire AABB, replay hash
 
@@ -251,8 +251,15 @@ Documentation and CI discipline; topology invariants (`Port.id` contract); post-
 - [x] Manim cache + geometry golden update discipline documented
 - [x] `Port.id` invariant documented + tested; `Connection.involves` semantics locked
 - [x] Animation stubs (`VoltagePulse`, `LogicTransition`) marked deferred — not for production scenes
+- [x] **Layout orientation + upright labels**: `ComponentOrientation`, screen-fixed label slots,
+      vertical AUTO side-picking, `text_overrides` / `label_mode_overrides`; presets 03–07 via
+      `layout_from_preset`; 07 vertical Rs/Dz; coincident cross-element stub routing in
+      `route_nets` (`tests/layout/test_visible_connection.py`)
 
 ### Feature backlog (deferred)
+
+Layout preset track is stable on `main`; pick the next feature vertical slice in a dedicated
+planning session (Scope B / IEC / I2C — not bundled with stabilization).
 
 IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `CircuitElement` + render symbols; optional rule 6-file merge; analog **Scope B/C** (continuous physics, RC exponential, `smooth_polyline`, `AnalogRamp` primitive); planned `measurement/` component category; **global netlist auto-placer** (preset-first remains default — see [docs/layout-strategy.md](layout-strategy.md) and `experiments/auto_placer_zener_spike.py`).
 
