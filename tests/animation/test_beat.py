@@ -7,6 +7,7 @@ import pytest
 pytest.importorskip("manim")
 
 from manim import AnimationGroup
+from recording_scene import RecordingScene
 
 from manim_engineering.animation import BEAT_DURATION, play_propagation_beat
 from manim_engineering.animation.signal_flow import SignalFlow
@@ -38,31 +39,17 @@ def _clock_data_fixture():
     return graph, layout, clock, data, bundle, panel_spec
 
 
-class _RecordingScene:
-    def __init__(self) -> None:
-        self.added: list[object] = []
-        self.played: list[tuple[object, ...]] = []
-        self.run_times: list[float | None] = []
-        self.waited: list[float] = []
-        self.removed: list[object] = []
-
-    def add(self, *mobjects: object) -> None:
-        self.added.extend(mobjects)
-
-    def play(self, *animations: object, run_time: float | None = None) -> None:
-        self.played.append(animations)
-        self.run_times.append(run_time)
-
-    def wait(self, duration: float = 0.0) -> None:
-        self.waited.append(duration)
-
-    def remove(self, *mobjects: object) -> None:
-        self.removed.extend(mobjects)
+def test_play_propagation_beat_rejects_scene_without_play() -> None:
+    graph, layout, clock, _data, _bundle, _panel_spec = _clock_data_fixture()
+    with pytest.raises(TypeError, match="play\\(\\)"):
+        play_propagation_beat(object(), clock, layout=layout, graph=graph)
 
 
 def test_beat_single_play_with_parallel_run_time() -> None:
+    from manim_engineering.animation.layers import PROPAGATION_Z_INDEX
+
     graph, layout, clock, data, bundle, panel_spec = _clock_data_fixture()
-    scene = _RecordingScene()
+    scene = RecordingScene()
     used = play_propagation_beat(
         scene,
         clock,
@@ -79,6 +66,8 @@ def test_beat_single_play_with_parallel_run_time() -> None:
     assert scene.run_times[0] == pytest.approx(BEAT_DURATION)
     root = scene.played[0][0]
     assert isinstance(root, AnimationGroup)
+    propagation_groups = [mob for mob in scene.added if hasattr(mob, "get_z_index")]
+    assert any(mob.get_z_index() == PROPAGATION_Z_INDEX for mob in propagation_groups)
     assert scene.removed
 
 
@@ -110,6 +99,9 @@ def test_reveal_only_beat_uses_full_duration_when_no_flow_anims() -> None:
         animate = _Anim()
 
     class _RevealTracker:
+        def revealed_time_for(self, _signal_name: str) -> float:
+            return 0.0
+
         def append_through_time(self, _reveal_time: float) -> list[_Line]:
             return [_Line()]
 
@@ -119,7 +111,7 @@ def test_reveal_only_beat_uses_full_duration_when_no_flow_anims() -> None:
         animations=(),
         run_time=BEAT_DURATION,
     )
-    scene = _RecordingScene()
+    scene = RecordingScene()
     with patch.object(SignalFlow, "build", return_value=empty_flow):
         used = play_propagation_beat(
             scene,
@@ -137,7 +129,7 @@ def test_reveal_only_beat_uses_full_duration_when_no_flow_anims() -> None:
 
 def test_wire_pulse_false_skips_signal_flow_animations() -> None:
     graph, layout, clock, data, bundle, panel_spec = _clock_data_fixture()
-    scene = _RecordingScene()
+    scene = RecordingScene()
     used = play_propagation_beat(
         scene,
         clock,
@@ -162,7 +154,7 @@ def test_reveal_and_flow_share_single_beat_play() -> None:
     panel_renderer = WaveformPanelRenderer()
     panel, _ = panel_renderer.render_with_layout(bundle, layout, idle_only=True)
     tracker = WaveformRevealTracker(panel, bundle, panel_spec, panel_renderer)
-    scene = _RecordingScene()
+    scene = RecordingScene()
     used = play_propagation_beat(
         scene,
         clock,
@@ -199,8 +191,12 @@ def test_reveal_scope_signal_uses_single_trace_append() -> None:
         animate = _Anim()
 
     class _RevealTracker:
-        all_calls: list[float] = []
-        signal_calls: list[tuple[str, float]] = []
+        def __init__(self) -> None:
+            self.all_calls: list[float] = []
+            self.signal_calls: list[tuple[str, float]] = []
+
+        def revealed_time_for(self, _signal_name: str) -> float:
+            return 0.0
 
         def append_through_time(self, reveal_time: float) -> list[_Line]:
             self.all_calls.append(reveal_time)
@@ -217,7 +213,7 @@ def test_reveal_scope_signal_uses_single_trace_append() -> None:
         animations=(),
         run_time=BEAT_DURATION,
     )
-    scene = _RecordingScene()
+    scene = RecordingScene()
     with patch.object(SignalFlow, "build", return_value=empty_flow):
         play_propagation_beat(
             scene,
@@ -236,7 +232,7 @@ def test_reveal_scope_signal_uses_single_trace_append() -> None:
 
 def test_empty_beat_anims_waits_for_duration() -> None:
     graph, layout, clock, _data, _bundle, _panel_spec = _clock_data_fixture()
-    scene = _RecordingScene()
+    scene = RecordingScene()
     used = play_propagation_beat(
         scene,
         clock,

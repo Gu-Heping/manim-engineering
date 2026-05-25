@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from manim import VGroup
+
 from manim_engineering.renderers.minimal.immutable import TopologyProjection
 from manim_engineering.renderers.minimal.labels import (
     LabelRefreshMode,
@@ -45,7 +47,7 @@ def restore_topology(topology: TopologyProjection) -> None:
 def normalize_topology_labels(
     topology: TopologyProjection,
     *,
-    waveform_panel: object | None = None,
+    waveform_panel: VGroup | None = None,
     mode: LabelRefreshMode = "full",
 ) -> None:
     """Reconcile pin/trace labels after opacity animations (``FadeIn``, ``Create``).
@@ -63,5 +65,5 @@ def normalize_topology_labels(
     refresh_label_strokes(topology.components, mode=mode)
 
     if waveform_panel is not None:
-        normalize_stroke_only_geometry(waveform_panel)  # type: ignore[arg-type]
-        refresh_label_strokes(waveform_panel, mode=mode)  # type: ignore[arg-type]
+        normalize_stroke_only_geometry(waveform_panel)
+        refresh_label_strokes(waveform_panel, mode=mode)

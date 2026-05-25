@@ -7,6 +7,7 @@ import pytest
 pytest.importorskip("manim")
 
 from manim import AnimationGroup
+from recording_scene import RecordingScene
 
 from manim_engineering.animation import (
     BEAT_DURATION,
@@ -73,34 +74,10 @@ def test_sequence_plays_one_wait_per_gap() -> None:
     assert all(w == pytest.approx(BEAT_GAP) for w in waits)
 
 
-class _RecordingScene:
-    """Scene stand-in: captures every ``play`` invocation and its ``run_time``."""
-
-    def __init__(self) -> None:
-        self.added: list[object] = []
-        self.removed: list[object] = []
-        self.waits: list[float] = []
-        self.played: list[tuple[object, ...]] = []
-        self.run_times: list[float | None] = []
-
-    def add(self, *mobjects: object) -> None:
-        self.added.extend(mobjects)
-
-    def remove(self, *mobjects: object) -> None:
-        self.removed.extend(mobjects)
-
-    def wait(self, duration: float) -> None:
-        self.waits.append(duration)
-
-    def play(self, *animations: object, run_time: float | None = None) -> None:
-        self.played.append(animations)
-        self.run_times.append(run_time)
-
-
 def test_sequence_real_link_runs_each_beat_at_beat_duration() -> None:
     """No mocks: every beat must call ``scene.play(... run_time=BEAT_DURATION)``."""
     graph, layout, signal = _three_beat_signal_fixture()
-    scene = _RecordingScene()
+    scene = RecordingScene()
 
     seq = PropagationSequence(
         signal,
@@ -116,7 +93,7 @@ def test_sequence_real_link_runs_each_beat_at_beat_duration() -> None:
         rt for rt in scene.run_times if rt is not None and rt == pytest.approx(BEAT_DURATION)
     ]
     assert len(beat_plays) == 3
-    assert len(scene.waits) == 2
+    assert len(scene.waited) == 2
 
 
 def test_sequence_with_heterogeneous_beats_invokes_caption_callback() -> None:
@@ -133,7 +110,7 @@ def test_sequence_with_heterogeneous_beats_invokes_caption_callback() -> None:
     def on_caption(spec: BeatSpec, index: int) -> None:
         captions_seen.append((index, spec.caption))
 
-    scene = _RecordingScene()
+    scene = RecordingScene()
     seq = PropagationSequence(
         layout=layout,
         graph=graph,
@@ -168,7 +145,7 @@ def test_sequence_with_captions_holds_for_reading_before_each_beat() -> None:
         BeatSpec(signal=signal, record=record, wave_beat=i, caption=f"b{i}")
         for i, record in enumerate(signal.propagation_history[:3])
     )
-    scene = _RecordingScene()
+    scene = RecordingScene()
     PropagationSequence(
         layout=layout,
         graph=graph,
@@ -179,9 +156,9 @@ def test_sequence_with_captions_holds_for_reading_before_each_beat() -> None:
         caption_callback=lambda _spec, _i: None,
     ).play(scene)
 
-    hold_count = sum(1 for w in scene.waits if w == pytest.approx(BEAT_CAPTION_HOLD))
+    hold_count = sum(1 for w in scene.waited if w == pytest.approx(BEAT_CAPTION_HOLD))
     assert hold_count == 3, (
-        f"expected 3 reading holds (one per captioned beat), got waits={scene.waits}"
+        f"expected 3 reading holds (one per captioned beat), got waits={scene.waited}"
     )
 
 
