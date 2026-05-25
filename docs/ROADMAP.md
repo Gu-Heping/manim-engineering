@@ -2,7 +2,7 @@
 
 Phased plan for long-running implementation. Each phase completes with **tests + one minimal example** before the next.
 
-**Status**: Phase 8 complete — example library and docs are under **analog-first stabilization**. **3-layer refactor complete** (`core/` graph model, `LayoutEngine.solve`, `MinimalRenderer.render_circuit`, `Port` API with `Pin` aliases). **Phase 7 protocol slice** includes SPI and UART (`protocol/spi/`, `protocol/uart/`) with minimal smoke examples retained.
+**Status**: Phase 8 complete — **layout-track stabilization complete** on `main`. Example library is **analog-first** (`01`–`09`). **3-layer refactor complete** (`core/` graph model, `LayoutEngine.solve`, `MinimalRenderer.render_circuit`, `Port` API with `Pin` aliases). **Phase 7 protocol slice** includes SPI and UART libraries (`protocol/spi/`, `protocol/uart/`); **smoke example retained for SPI only** (`examples/protocol/spi_byte_transfer.py`).
 
 ---
 
@@ -139,10 +139,10 @@ Deliverables:
 - [x] `SPIController.transfer_byte` — deterministic `TimingEvent`s + `Signal` updates via `apply_level_between_pins`
 - [x] `SPIBusBinding` — graph + clk/mosi/miso/cs; `from_graph_nodes` / `create_bus`; `SPIMaster` / `SPISlave` components
 - [x] `protocol/uart/` — FSM (idle / start / data / stop), 8N1 TX timing, `UARTController.transfer_byte`
-- [x] `UARTBinding` — graph + tx/rx; example `examples/protocol/uart_byte_transfer.py`
-- [x] Waveform via `derive_bundle_from_signals`; examples use `PropagationSequence` + `WaveformSync`
+- [x] `UARTBinding` — graph + tx/rx; covered by `tests/protocol/test_uart_*.py` (no standalone smoke example)
+- [x] Waveform via `derive_bundle_from_signals`; SPI example uses `PropagationSequence` + `WaveformSync`
 - [x] `tests/protocol/` — FSM, transfer ordering, waveform alignment (SPI + UART)
-- [x] Examples `examples/protocol/spi_byte_transfer.py`, `examples/protocol/uart_byte_transfer.py`
+- [x] Smoke example `examples/protocol/spi_byte_transfer.py` (UART library retained; example deferred during analog-first catalog)
 
 **Exit criteria**: ownership and timing visible; protocol tests deterministic.
 
@@ -243,7 +243,7 @@ Deliverables:
       `signal_chain_demo`; RC acceptance (`InputDriver`→R→C→GND); CMOS gate +
       OUT pull paths; UART horizontal TX→RX layout. Geometry gates refreshed.
 
-### Stabilization (current track)
+### Stabilization (layout track — complete)
 
 Documentation and CI discipline; topology invariants (`Port.id` contract); post-merge review nits; deferred animation stubs clearly marked. Does **not** add new protocol features or continuous physics.
 

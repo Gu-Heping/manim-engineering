@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from manim_engineering.components import Resistor
 from manim_engineering.core import CircuitGraph
-from manim_engineering.layout import LayoutEngine, group_connections_into_nets, net_id_for_pins
+from manim_engineering.layout import (
+    MIN_VISIBLE_STUB,
+    LayoutEngine,
+    group_connections_into_nets,
+    net_id_for_pins,
+)
+from manim_engineering.layout.align import origin_for_pin_at
 from manim_engineering.layout.nets import connection_for_wire
 from manim_engineering.layout.types import Point2D
 
@@ -47,6 +53,26 @@ def test_star_routing_uses_single_vertical_trunk() -> None:
         )
     ]
     assert vertical_at_hub
+
+
+def test_star_net_hub_coincident_pin_gets_visible_stub() -> None:
+    graph, elements = _three_pin_net_graph()
+    hub = Point2D(0.0, 0.0)
+    net_id = net_id_for_pins(frozenset({"r1.b", "r2.a", "r3.a"}))
+    r2 = elements["r2"]
+    layout = LayoutEngine().layout(
+        graph,
+        elements,
+        placement_overrides={r2.element_id: origin_for_pin_at(r2, "a", hub)},
+        net_waypoints={net_id: hub},
+    )
+    hub_branch = next(
+        wire for wire in layout.wires if wire.connection_id == f"{net_id}/r2.a"
+    )
+    assert len(hub_branch.segments) == 1
+    seg = hub_branch.segments[0]
+    length = abs(seg.end.x - seg.start.x) + abs(seg.end.y - seg.start.y)
+    assert length >= MIN_VISIBLE_STUB - 1e-6
 
 
 def test_connection_for_wire_resolves_net_branch_ids() -> None:

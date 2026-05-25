@@ -32,7 +32,7 @@ from manim_engineering.layout.orientation import oriented_footprint
 from manim_engineering.layout.types import ComponentPlacement, LayoutResult, Point2D
 from manim_engineering.renderers.minimal import theme
 from manim_engineering.renderers.minimal.conventions import MosfetSymbolConvention
-from manim_engineering.renderers.minimal.labels import WIRE_Z_INDEX, label_text
+from manim_engineering.renderers.minimal.labels import LABEL_Z_INDEX, WIRE_Z_INDEX, label_text
 from manim_engineering.renderers.minimal.text_placement import place_component_mob
 
 _MOS_P_TYPES = (PMOS, PMOSDepletion)
@@ -237,7 +237,7 @@ class MinimalRenderer:
         def _orient(geometry: VMobject, oriented_placement: ComponentPlacement) -> VMobject:
             return self._place_geometry_at(geometry, oriented_placement, nominal)
 
-        return place_component_mob(
+        placed = place_component_mob(
             mob,
             placement,
             nominal,
@@ -245,6 +245,22 @@ class MinimalRenderer:
             place_geometry=_orient,
             layout=layout,
         )
+        net_labels = self._render_net_labels(placement)
+        if net_labels.submobjects:
+            return VGroup(placed, net_labels)
+        return placed
+
+    def _render_net_labels(self, placement: ComponentPlacement) -> VGroup:
+        """Preset-driven net annotations (``role=\"net_label\"`` on ``text_overrides``)."""
+        labels: list[VMobject] = []
+        for override in placement.text_overrides:
+            if override.role != "net_label" or not override.label:
+                continue
+            label = label_text(override.label, font_size=20, color="white")
+            label.move_to([override.world.x, override.world.y, 0.0])
+            label.set_z_index(LABEL_Z_INDEX)
+            labels.append(label)
+        return VGroup(*labels) if labels else VGroup()
 
     def _place_at(
         self,

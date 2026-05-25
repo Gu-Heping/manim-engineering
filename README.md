@@ -25,7 +25,7 @@ Extended paths: `layout/`, `protocol/`, `waveform/` (see [docs/architecture.md](
 
 ## Repository status
 
-Phases 0–8 are complete and the example layer is now in **analog-first stabilization**: analog `01`–`08` scenes are primary, with minimal smoke retained for `basics/graph_only.py` and `protocol/spi_byte_transfer.py`. Feature backlog (IEC renderer, I2C/CAN, continuous analog physics) stays under **Feature backlog** in the ROADMAP.
+Phases 0–8 are complete. **Layout-track stabilization is complete** on `main`: analog `01`–`09` scenes are primary, with minimal smoke retained for `basics/graph_only.py` and `protocol/spi_byte_transfer.py`. Next work is a dedicated **feature vertical slice** (Scope B / IEC / I2C — see ROADMAP Feature backlog).
 
 ## Running examples
 
