@@ -270,7 +270,14 @@ IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `Circuit
 - [x] `AnalogRamp` animation primitive + beat integration
 - [x] `01_rc_charge` upgraded to `WaveformDemoScene` with teaching beats
 
-**Animation orchestration debt (P0+P1 — in progress):** HUD stage + SceneProtocol + beat merge; see animation-layer split plan (6 PRs: contract sync → protocol → HUD → beat → reveal decouple → tests).
+**Animation orchestration debt (P0+P1 — in progress)**
+
+- [x] contract sync (#15)
+- [x] protocol / SceneProtocol (#11)
+- [x] HUD stage (#10)
+- [x] beat merge (#12)
+- [x] reveal decouple (#13)
+- [ ] tests (#14)
 
 Short-term experiment track: circuitjs1-inspired stamp/doStep exploration is
 documented in `docs/circuitjs1-borrowing.md` with an isolated prototype at
