@@ -114,6 +114,8 @@ def apply_symbol_opacity(root: Mobject, opacity: float) -> None:
             mob.set_fill(opacity=opacity, family=False)
         elif mob.get_stroke_width() > 0:
             mob.set_stroke(opacity=opacity, family=False)
+        elif mob.get_fill_opacity() > 0:
+            mob.set_fill(opacity=opacity, family=False)
 
 
 def apply_label_opacity(root: Mobject, opacity: float) -> None:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.core.port import Pin
-from manim_engineering.semantic.enums import LogicLevel
+from manim_engineering.semantic.enums import LogicLevel, PropagationState
 from manim_engineering.semantic.exceptions import PropagationError
 from manim_engineering.semantic.propagation import (
     PropagationRecord,
@@ -28,9 +28,11 @@ def record_analog_level_between_pins(
         raise PropagationError(msg)
 
     previous = signal.value
+    signal.propagation_state = PropagationState.PROPAGATING
     signal.value = level
     signal.source_pin = from_pin
     signal.sink_pin = to_pin
+    signal.propagation_state = PropagationState.SETTLED
 
     record = PropagationRecord(
         from_pin_id=from_pin.id,

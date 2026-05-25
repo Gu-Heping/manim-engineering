@@ -373,6 +373,8 @@ def test_fade_in_opacity_on_components_then_normalize_fixes_pin_labels() -> None
 
 def test_refresh_label_strokes_preserves_component_line_stroke_width() -> None:
     """Empty VGroup containers must not cascade stroke width=0 onto symbol Lines."""
+    from manim import Line
+
     from manim_engineering.components import Capacitor, Resistor
     from manim_engineering.core import CircuitGraph
     from manim_engineering.layout import LayoutEngine
@@ -390,7 +392,7 @@ def test_refresh_label_strokes_preserves_component_line_stroke_width() -> None:
     lines = [
         mob
         for mob in topology.components.get_family()
-        if mob.__class__.__name__ == "Line" and len(mob.points) > 0
+        if isinstance(mob, Line) and len(mob.points) > 0
     ]
     assert lines
     widths_before = [mob.get_stroke_width() for mob in lines]
@@ -401,6 +403,8 @@ def test_refresh_label_strokes_preserves_component_line_stroke_width() -> None:
 
 
 def test_set_opacity_restore_does_not_fill_resistor_lines() -> None:
+    from manim import Line
+
     from manim_engineering.animation.focus import normalize_topology_labels
     from manim_engineering.components import Resistor
     from manim_engineering.core import CircuitGraph
@@ -415,7 +419,7 @@ def test_set_opacity_restore_does_not_fill_resistor_lines() -> None:
     lines = [
         mob
         for mob in topology.components.get_family()
-        if mob.__class__.__name__ == "Line" and len(mob.points) > 0
+        if isinstance(mob, Line) and len(mob.points) > 0
     ]
     assert lines
     assert all(mob.get_fill_opacity() == 0.0 for mob in lines)

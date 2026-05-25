@@ -9,6 +9,7 @@ from manim_engineering.core.enums import SignalType
 from manim_engineering.semantic.enums import LogicLevel
 from manim_engineering.semantic.signal import Signal
 from manim_engineering.waveform.derive import _resolve_pin_id
+from manim_engineering.waveform.exceptions import InvalidWaveformParamsError
 from manim_engineering.waveform.trace import WaveformBundle, WaveformSample, WaveformTrace
 
 
@@ -25,6 +26,9 @@ class RCStepParams:
 
 def rc_charge_voltage(t: float, params: RCStepParams) -> float:
     """Physical voltage at semantic time ``t`` (volts, not normalized)."""
+    if params.tau <= 0.0:
+        msg = "tau must be > 0"
+        raise InvalidWaveformParamsError(msg)
     if t < params.t_step:
         return 0.0
     return params.v_src * (1.0 - math.exp(-(t - params.t_step) / params.tau))
@@ -39,9 +43,15 @@ def rc_charge_level_normalized(t: float, params: RCStepParams) -> float:
 
 def rc_charge_samples(params: RCStepParams) -> tuple[WaveformSample, ...]:
     """Dense analog samples for ``V_C(t)`` on the shared semantic time axis."""
+    if params.tau <= 0.0:
+        msg = "tau must be > 0"
+        raise InvalidWaveformParamsError(msg)
+    if params.t_end < params.t_step:
+        msg = "t_end must be >= t_step"
+        raise InvalidWaveformParamsError(msg)
     if params.sample_count < 2:
         msg = "sample_count must be >= 2"
-        raise ValueError(msg)
+        raise InvalidWaveformParamsError(msg)
     samples: list[WaveformSample] = []
     samples.append(WaveformSample(time=0.0, level=0.0))
     span = params.t_end - params.t_step

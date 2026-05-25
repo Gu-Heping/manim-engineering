@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from typing import Literal
 
 from manim_engineering.animation.beat import play_propagation_beat
 from manim_engineering.animation.focus import dim_topology, restore_topology
@@ -56,7 +57,7 @@ class BeatSpec:
     caption: str | None = None
     reveal_targets: tuple[tuple[Signal, int], ...] | None = None
     reveal_time: float | None = None
-    reveal_scope: str = "all"
+    reveal_scope: Literal["all", "signal"] = "all"
     wire_pulse: bool = True
     duration: float | None = None
 

@@ -7,6 +7,7 @@ import pytest
 from manim_engineering.core.enums import SignalType
 from manim_engineering.semantic import LogicLevel, LogicState, Signal
 from manim_engineering.waveform import (
+    InvalidWaveformParamsError,
     RCStepParams,
     derive_rc_waveform_bundle,
     rc_charge_level_normalized,
@@ -51,3 +52,18 @@ def test_derive_rc_waveform_bundle_trace_shapes() -> None:
     assert vc_trace is not None and not vc_trace.is_discrete
     assert len(vin_trace.samples) == 2
     assert len(vc_trace.samples) == params.sample_count
+
+
+def test_rc_charge_samples_rejects_non_positive_tau() -> None:
+    with pytest.raises(InvalidWaveformParamsError, match="tau"):
+        rc_charge_samples(RCStepParams(tau=0.0))
+
+
+def test_rc_charge_samples_rejects_inverted_time_span() -> None:
+    with pytest.raises(InvalidWaveformParamsError, match="t_end"):
+        rc_charge_samples(RCStepParams(t_step=2.0, t_end=1.0))
+
+
+def test_rc_charge_samples_rejects_low_sample_count() -> None:
+    with pytest.raises(InvalidWaveformParamsError, match="sample_count"):
+        rc_charge_samples(RCStepParams(sample_count=1))

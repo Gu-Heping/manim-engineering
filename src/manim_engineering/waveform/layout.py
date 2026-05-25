@@ -225,7 +225,7 @@ def _samples_through_time(
         else:
             break
     if not included:
-        included.append(samples[0])
+        included.append(_interpolate_sample_at_time(samples, hold_through_time))
     last = included[-1]
     if last.time < hold_through_time - 1e-9:
         included.append(_interpolate_sample_at_time(samples, hold_through_time))
@@ -338,7 +338,7 @@ def step_polyline(
         return ()
 
     if extend_to_panel is None:
-        extend_to_panel = idle_only or max_beat is None
+        extend_to_panel = idle_only or (max_beat is None and hold_through_time is None)
 
     points: list[Point2D] = []
     for index, sample in enumerate(sample_slice):

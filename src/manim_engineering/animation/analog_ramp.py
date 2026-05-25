@@ -48,7 +48,7 @@ def segment_points_for_time_range(
             break
         clipped.append(point)
     if not clipped:
-        return points[:2] if len(points) >= 2 else points
+        return ()
     if clipped[0].x > x_start + 1e-9 and len(points) >= 2:
         prev = next((pt for pt in reversed(points) if pt.x <= x_start + 1e-9), points[0])
         next_pt = next((pt for pt in points if pt.x >= x_start - 1e-9), points[-1])

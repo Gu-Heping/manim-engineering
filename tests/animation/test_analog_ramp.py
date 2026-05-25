@@ -52,3 +52,24 @@ def test_analog_ramp_clips_segment_when_t_start_positive() -> None:
     assert len(full) >= 2
     assert len(partial) >= 2
     assert partial[0].x >= spec.origin.x + 1.0 * spec.time_scale - 1e-6
+
+
+def test_segment_points_for_time_range_no_overlap_returns_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from manim_engineering.animation import analog_ramp
+    from manim_engineering.animation.analog_ramp import segment_points_for_time_range
+
+    def _stub_polyline(*_args, **_kwargs) -> tuple[Point2D, ...]:
+        return (Point2D(x=0.0, y=-1.8), Point2D(x=1.0, y=-1.6), Point2D(x=2.0, y=-1.4))
+
+    monkeypatch.setattr(analog_ramp, "smooth_polyline", _stub_polyline)
+    spec = WaveformPanelSpec(origin=Point2D(0.0, -2.0), width=4.0, trace_height=0.4, trace_gap=0.5)
+    segment = segment_points_for_time_range(
+        _trace(),
+        spec,
+        0,
+        t_start=10.0,
+        t_end=11.0,
+    )
+    assert segment == ()

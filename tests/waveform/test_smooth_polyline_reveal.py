@@ -43,3 +43,21 @@ def test_smooth_polyline_connects_samples_directly() -> None:
     spec = WaveformPanelSpec(origin=Point2D(0.0, -2.0), width=4.0, trace_height=0.4, trace_gap=0.5)
     pts = smooth_polyline(_analog_trace(), spec, 0, extend_to_panel=False)
     assert len(pts) >= 4
+
+
+def test_smooth_polyline_hold_before_first_sample_is_monotonic_in_x() -> None:
+    spec = WaveformPanelSpec(origin=Point2D(0.0, -2.0), width=4.0, trace_height=0.4, trace_gap=0.5)
+    trace = WaveformTrace(
+        signal_name="vc",
+        signal_type=SignalType.ANALOG,
+        pin_id="c1.a",
+        samples=(
+            WaveformSample(time=1.0, level=0.0),
+            WaveformSample(time=2.0, level=0.5),
+            WaveformSample(time=3.0, level=0.9),
+        ),
+        is_discrete=False,
+    )
+    pts = smooth_polyline(trace, spec, 0, hold_through_time=0.5, extend_to_panel=False)
+    xs = [point.x for point in pts]
+    assert xs == sorted(xs)

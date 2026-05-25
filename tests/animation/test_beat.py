@@ -43,6 +43,7 @@ class _RecordingScene:
         self.added: list[object] = []
         self.played: list[tuple[object, ...]] = []
         self.run_times: list[float | None] = []
+        self.waited: list[float] = []
         self.removed: list[object] = []
 
     def add(self, *mobjects: object) -> None:
@@ -51,6 +52,9 @@ class _RecordingScene:
     def play(self, *animations: object, run_time: float | None = None) -> None:
         self.played.append(animations)
         self.run_times.append(run_time)
+
+    def wait(self, duration: float = 0.0) -> None:
+        self.waited.append(duration)
 
     def remove(self, *mobjects: object) -> None:
         self.removed.extend(mobjects)
@@ -228,3 +232,20 @@ def test_reveal_scope_signal_uses_single_trace_append() -> None:
         )
     assert tracker.signal_calls == [("clk", 2.0)]
     assert tracker.all_calls == []
+
+
+def test_empty_beat_anims_waits_for_duration() -> None:
+    graph, layout, clock, _data, _bundle, _panel_spec = _clock_data_fixture()
+    scene = _RecordingScene()
+    used = play_propagation_beat(
+        scene,
+        clock,
+        layout=layout,
+        graph=graph,
+        duration=BEAT_DURATION,
+        wire_pulse=False,
+    )
+    assert used == pytest.approx(BEAT_DURATION)
+    assert len(scene.waited) == 1
+    assert scene.waited[0] == pytest.approx(BEAT_DURATION)
+    assert len(scene.played) == 0

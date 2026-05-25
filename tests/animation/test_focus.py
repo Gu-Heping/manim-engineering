@@ -25,8 +25,16 @@ def _filled_vmob() -> VMobject:
     return mob
 
 
+def _fill_only_vmob() -> VMobject:
+    mob = VMobject()
+    mob.set_points_as_corners([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0]])
+    mob.set_stroke(width=0.0, opacity=0.0)
+    mob.set_fill(opacity=1.0)
+    return mob
+
+
 def _projection() -> TopologyProjection:
-    components = VGroup(_filled_vmob(), _filled_vmob())
+    components = VGroup(_filled_vmob(), _fill_only_vmob())
     wires = VGroup(_filled_vmob())
     return TopologyProjection(components=components, wires=wires, n_components=2)
 
@@ -35,15 +43,26 @@ def test_dim_topology_lowers_stroke_opacity() -> None:
     projection = _projection()
     dim_topology(projection)
     for mob in projection.components.submobjects:
-        assert mob.get_stroke_opacity() == pytest.approx(DEFAULT_DIM_OPACITY)
+        if mob.get_stroke_width() > 0:
+            assert mob.get_stroke_opacity() == pytest.approx(DEFAULT_DIM_OPACITY)
+
+
+def test_dim_topology_lowers_fill_only_symbol_opacity() -> None:
+    projection = _projection()
+    dim_topology(projection)
+    fill_only = projection.components.submobjects[1]
+    assert fill_only.get_stroke_width() == pytest.approx(0.0)
+    assert fill_only.get_fill_opacity() == pytest.approx(DEFAULT_DIM_OPACITY)
 
 
 def test_restore_topology_brings_back_full_stroke_opacity() -> None:
     projection = _projection()
     dim_topology(projection)
     restore_topology(projection)
-    for mob in projection.components.submobjects:
-        assert mob.get_stroke_opacity() == pytest.approx(1.0)
+    stroke_mob = projection.components.submobjects[0]
+    fill_mob = projection.components.submobjects[1]
+    assert stroke_mob.get_stroke_opacity() == pytest.approx(1.0)
+    assert fill_mob.get_fill_opacity() == pytest.approx(1.0)
 
 
 def test_propagation_sequence_dim_inactive_restores_between_beats() -> None:

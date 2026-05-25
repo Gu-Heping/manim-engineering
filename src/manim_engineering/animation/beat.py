@@ -186,6 +186,10 @@ def play_propagation_beat(
             play(beat_anims[0], run_time=beat_duration)
         else:
             play(AnimationGroup(*beat_anims), run_time=beat_duration)
+    else:
+        wait = getattr(scene, "wait", None)
+        if wait is not None:
+            wait(beat_duration)
 
     to_remove: list[object] = []
     if propagation_group is not None:

@@ -7,6 +7,7 @@ from manim_engineering.waveform.derive import (
     record_for_beat,
     timing_events_from_propagation,
 )
+from manim_engineering.waveform.exceptions import InvalidWaveformParamsError
 from manim_engineering.waveform.layout import (
     MIN_WAVEFORM_GAP,
     WaveformPanelSpec,
@@ -34,6 +35,7 @@ from manim_engineering.waveform.spi import derive_spi_waveform_bundle
 from manim_engineering.waveform.trace import WaveformBundle, WaveformSample, WaveformTrace
 
 __all__ = [
+    "InvalidWaveformParamsError",
     "MIN_WAVEFORM_GAP",
     "WaveformBundle",
     "WaveformPanelSpec",

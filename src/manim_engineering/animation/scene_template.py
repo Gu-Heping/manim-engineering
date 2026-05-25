@@ -19,7 +19,7 @@ def _lagged_creates(mobjects: tuple[object, ...], run_time: float, lag_ratio: fl
     if not mobjects:
         from manim import Wait
 
-        return Wait(0.0, run_time=run_time)
+        return Wait(run_time=run_time)
     if len(mobjects) == 1:
         return Create(mobjects[0], run_time=run_time)
     return LaggedStart(

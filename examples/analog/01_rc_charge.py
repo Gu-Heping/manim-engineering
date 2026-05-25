@@ -94,6 +94,8 @@ if __name__ == "__main__":
     main()
 
 
+RCChargeScene = None
+
 try:
     import sys
     from pathlib import Path
@@ -132,4 +134,4 @@ try:
             return _teaching_beats(fixture.signals, self._records)
 
 except ImportError:
-    pass
+    RCChargeScene = None
