@@ -7,8 +7,8 @@ from manim import Line, VGroup
 from manim_engineering.renderers.minimal import theme
 from manim_engineering.renderers.minimal.waveform import (
     WaveformPanelRenderer,
-    _point3,
-    _trace_color,
+    point3,
+    trace_color,
 )
 from manim_engineering.semantic.signal import Signal
 from manim_engineering.waveform.layout import WaveformPanelSpec, beat_for_time, polyline_for_trace
@@ -122,7 +122,7 @@ class WaveformRevealTracker:
             changed = index >= len(previous_keys) or new_keys[index] != previous_keys[index]
             if changed:
                 line.set_stroke(
-                    color=_trace_color(trace),
+                    color=trace_color(trace),
                     width=0.0,
                     opacity=1.0,
                 )
@@ -193,15 +193,15 @@ class WaveformRevealTracker:
             extend_to_panel=extend_to_panel,
             hold_through_time=hold_through_time,
         )
-        color = _trace_color(trace)
+        color = trace_color(trace)
         segments: list[Line] = []
         for start, end in zip(points, points[1:], strict=False):
             if start.x == end.x and start.y == end.y:
                 continue
             segments.append(
                 Line(
-                    _point3(start),
-                    _point3(end),
+                    point3(start),
+                    point3(end),
                     stroke_color=color,
                     stroke_width=theme.WAVEFORM_STROKE_WIDTH,
                 )

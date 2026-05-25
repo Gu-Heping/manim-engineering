@@ -19,12 +19,16 @@ from manim_engineering.waveform.layout import (
 from manim_engineering.waveform.trace import WaveformBundle, WaveformTrace
 
 
-def _point3(p: Point2D) -> list[float]:
+def point3(p: Point2D) -> list[float]:
     return [p.x, p.y, 0.0]
 
 
-def _trace_color(trace: WaveformTrace) -> object:
+def trace_color(trace: WaveformTrace) -> object:
     return theme.color_for_signal_type(trace.signal_type)
+
+
+_point3 = point3
+_trace_color = trace_color
 
 
 class WaveformPanelRenderer:
