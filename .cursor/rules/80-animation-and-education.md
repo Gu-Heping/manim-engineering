@@ -26,7 +26,7 @@ Forbidden: visual-only propagation without semantic backing.
 ### HUD subtitles
 
 - Use `subtitle_text(label, role="title|intro|caption")` from `manim_engineering.animation.pacing` for any on-screen text so font (CJK fallback stack), color, and size stay consistent. Position via `hud_text_y(camera.frame_cy, camera.frame_height, row=...)`.
-- Caption transitions between beats: `FadeOut(prev) + FadeIn(next)` over ~0.30s — never `ReplacementTransform` on long Chinese strings (the morph is illegible).
+- Caption transitions between beats: `FadeOut(prev) + FadeIn(next)` over ~0.45s (`CAPTION_CROSSFADE` in `pacing.py`; slightly longer for CJK readability) — never `ReplacementTransform` on long Chinese strings (the morph is illegible).
 - `PropagationSequence` automatically waits `BEAT_CAPTION_HOLD` after every captioned beat's `caption_callback` so the viewer reads the caption before the pulse fires. Do not also hand-roll an extra `self.wait()` between caption and beat — it doubles the gap.
 
 ### Camera framing

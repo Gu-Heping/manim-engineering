@@ -57,6 +57,7 @@ from manim_engineering.animation.signal_flow import (
     SignalFlow,
 )
 from manim_engineering.animation.stubs import LogicTransition, VoltagePulse
+from manim_engineering.animation.teaching_scene import WaveformDemoScene, WaveformFixture
 from manim_engineering.animation.theme import (
     BACKGROUND_COLORS,
     DEFAULT_BACKGROUND,
@@ -102,6 +103,8 @@ __all__ = [
     "VoltagePulse",
     "WaveformSync",
     "WaveformRevealTracker",
+    "WaveformDemoScene",
+    "WaveformFixture",
     "configure_topology_scene_camera",
     "configure_waveform_scene_camera",
     "dim_topology",

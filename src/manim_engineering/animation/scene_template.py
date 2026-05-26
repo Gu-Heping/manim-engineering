@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from manim import Animation, Create, FadeIn, LaggedStart, VGroup
+from manim import Animation, Create, LaggedStart, VGroup
 
 from manim_engineering.animation.focus import normalize_topology_labels
 from manim_engineering.animation.scene_protocol import require_scene_methods
@@ -42,18 +42,21 @@ def play_topology_intro(
     total_run_time: float,
     create_lag_ratio: float = 0.1,
 ) -> None:
-    """Reveal circuit bodies with ``Create`` on strokes; fade the timing panel separately.
+    """Reveal circuit bodies with ``Create`` on strokes; panel traces use the same path.
 
     Avoids ``FadeIn`` / ``set_opacity`` on heterogeneous ``topology.components`` groups,
     which activates default white fill on Manim ``Line`` symbols (resistor zig-zag bug).
+    The waveform panel uses ``prepare_stroke_reveal`` + ``Create`` on trace strokes instead
+    of ``VGroup.set_opacity(0)`` + ``FadeIn``.
     """
     scene = require_scene_methods(scene, require_play=True, require_add=True)
 
     component_strokes = iter_symbol_strokes(topology.components)
     wire_strokes = iter_symbol_strokes(topology.wires)
+    panel_strokes = iter_symbol_strokes(waveform_panel)
     prepare_stroke_reveal(component_strokes)
     prepare_stroke_reveal(wire_strokes)
-    waveform_panel.set_opacity(0.0)
+    prepare_stroke_reveal(panel_strokes)
 
     hide_labels(topology.components)
     hide_labels(waveform_panel)
@@ -62,13 +65,14 @@ def play_topology_intro(
         LaggedStart(
             _lagged_creates(component_strokes, components_run_time, create_lag_ratio),
             _lagged_creates(wire_strokes, wires_run_time, create_lag_ratio),
-            FadeIn(waveform_panel, run_time=panel_run_time),
+            _lagged_creates(panel_strokes, panel_run_time, create_lag_ratio),
             lag_ratio=lag_ratio,
         ),
         run_time=total_run_time,
     )
     apply_symbol_opacity(topology.components, 1.0)
     apply_symbol_opacity(topology.wires, 1.0)
+    apply_symbol_opacity(waveform_panel, 1.0)
     show_labels(topology.components)
     show_labels(waveform_panel)
     normalize_topology_labels(topology, waveform_panel=waveform_panel)

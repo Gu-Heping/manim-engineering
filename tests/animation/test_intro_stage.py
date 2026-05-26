@@ -64,6 +64,35 @@ def test_play_topology_intro_keeps_symbol_lines_stroke_only() -> None:
                 assert float(line.get_fill_opacity()) == pytest.approx(0.0)
                 assert line.get_stroke_width() > 0
                 assert float(line.get_stroke_opacity()) == pytest.approx(1.0)
+            panel_lines = _symbol_lines(panel)
+            assert panel_lines
+            for line in panel_lines:
+                assert float(line.get_fill_opacity()) == pytest.approx(0.0)
+                assert line.get_stroke_width() > 0
+                assert float(line.get_stroke_opacity()) == pytest.approx(1.0)
+
+    with tempconfig({"quality": "low_quality", "disable_caching": True, "write_to_movie": False}):
+        _IntroScene().render()
+
+
+def test_play_topology_intro_does_not_call_panel_set_opacity() -> None:
+    topology, panel, content = _rc_fixture()
+
+    class _IntroScene(Scene):
+        def construct(self) -> None:
+            with patch.object(panel, "set_opacity") as panel_opacity:
+                play_topology_intro(
+                    self,
+                    topology,
+                    panel,
+                    content,
+                    components_run_time=0.2,
+                    wires_run_time=0.2,
+                    panel_run_time=0.2,
+                    lag_ratio=0.25,
+                    total_run_time=0.4,
+                )
+            panel_opacity.assert_not_called()
 
     with tempconfig({"quality": "low_quality", "disable_caching": True, "write_to_movie": False}):
         _IntroScene().render()

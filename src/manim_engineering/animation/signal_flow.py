@@ -13,6 +13,7 @@ from manim_engineering.animation.layers import PROPAGATION_Z_INDEX, PULSE_Z_INDE
 from manim_engineering.animation.pacing import BEAT_DURATION
 from manim_engineering.animation.purpose import AnimationPurpose
 from manim_engineering.animation.registry import register_primitive
+from manim_engineering.animation.scene_protocol import require_scene_methods
 from manim_engineering.animation.wires import (
     connection_id_for_pins,
     oriented_wire_points,
@@ -140,17 +141,13 @@ class SignalFlow(AnimationPrimitive["SignalFlow"]):
     def play(self, scene: object) -> None:
         """Add overlay groups and play built animations on a Manim scene."""
         plan = self.build()
-        add = getattr(scene, "add", None)
-        play = getattr(scene, "play", None)
-        if add is None or play is None:
-            msg = "scene must provide add() and play() like manim.Scene"
-            raise TypeError(msg)
+        scene = require_scene_methods(scene, require_play=True, require_add=True)
         if plan.propagation_overlays:
             propagation = VGroup(*plan.propagation_overlays)
             propagation.set_z_index(PROPAGATION_Z_INDEX)
-            add(propagation)
-        add(*plan.overlays)
-        play(*plan.animations, run_time=plan.run_time)
+            scene.add(propagation)
+        scene.add(*plan.overlays)
+        scene.play(*plan.animations, run_time=plan.run_time)
 
     def _resolve_connection_id(self, record: PropagationRecord) -> str:
         if self._graph is not None:
