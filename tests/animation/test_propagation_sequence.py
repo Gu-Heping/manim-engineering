@@ -12,6 +12,7 @@ from recording_scene import RecordingScene
 from manim_engineering.animation import (
     BEAT_DURATION,
     BEAT_GAP,
+    BeatAnimationError,
     BeatSpec,
     PropagationSequence,
 )
@@ -212,3 +213,68 @@ def test_sequence_dim_inactive_requires_topology() -> None:
             max_beats=3,
             dim_inactive=True,
         )
+
+
+def test_sequence_wraps_beat_failure_as_beat_animation_error() -> None:
+    graph, layout, signal = _three_beat_signal_fixture()
+    calls = 0
+
+    class Scene:
+        def wait(self, duration: float) -> None:
+            pass
+
+    def failing_beat(scene, sig, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("boom")
+
+    import manim_engineering.animation.propagation_sequence as ps_mod
+
+    original = ps_mod.play_propagation_beat
+    ps_mod.play_propagation_beat = failing_beat
+    try:
+        with pytest.raises(BeatAnimationError) as exc_info:
+            PropagationSequence(signal, layout=layout, graph=graph, max_beats=3).play(Scene())
+    finally:
+        ps_mod.play_propagation_beat = original
+
+    err = exc_info.value
+    assert err.beat_index == 1
+    assert err.signal_name == "edge"
+    assert err.stage == "beat.play"
+    assert isinstance(err.cause, RuntimeError)
+
+
+def test_sequence_snapshot_checkpoints_when_env_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    graph, layout, signal = _three_beat_signal_fixture()
+    calls: list[str] = []
+
+    def fake_snapshot(scene: object, label: str) -> None:
+        calls.append(label)
+
+    monkeypatch.setenv("ME_ANIMATION_SNAPSHOT", "1")
+    import manim_engineering.debug.snapshot as snapshot_mod
+
+    monkeypatch.setattr(snapshot_mod, "snapshot_frame", fake_snapshot)
+    monkeypatch.setattr(snapshot_mod, "snapshot_topology", lambda _scene, _label: None)
+
+    class Scene:
+        def wait(self, duration: float) -> None:
+            pass
+
+    def noop_beat(scene, sig, **kwargs):
+        pass
+
+    import manim_engineering.animation.propagation_sequence as ps_mod
+
+    original = ps_mod.play_propagation_beat
+    ps_mod.play_propagation_beat = noop_beat
+    try:
+        PropagationSequence(signal, layout=layout, graph=graph, max_beats=2).play(Scene())
+    finally:
+        ps_mod.play_propagation_beat = original
+
+    assert calls == ["beat_00_before", "beat_00_after", "beat_01_before", "beat_01_after"]

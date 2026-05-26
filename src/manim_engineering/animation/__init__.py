@@ -8,6 +8,8 @@ and must not be used in production teaching scenes. See ``docs/ROADMAP.md``.
 from manim_engineering.animation.analog_ramp import AnalogRamp
 from manim_engineering.animation.base import AnimationPlan, AnimationPrimitive
 from manim_engineering.animation.beat import play_propagation_beat
+from manim_engineering.animation.errors import BeatAnimationError
+from manim_engineering.animation.beat_factory import TimingMode, build_beat_plans
 from manim_engineering.animation.focus import (
     dim_topology,
     normalize_topology_labels,
@@ -56,8 +58,10 @@ from manim_engineering.animation.signal_flow import (
     DEFAULT_PROPAGATION_DURATION,
     SignalFlow,
 )
+from manim_engineering.animation.style import TeachingStyle
 from manim_engineering.animation.stubs import LogicTransition, VoltagePulse
 from manim_engineering.animation.teaching_scene import WaveformDemoScene, WaveformFixture
+from manim_engineering.animation.trace import flush_trace, record_stage, reset_tracer, trace_enabled
 from manim_engineering.animation.theme import (
     BACKGROUND_COLORS,
     DEFAULT_BACKGROUND,
@@ -80,6 +84,7 @@ __all__ = [
     "BEAT_DURATION",
     "BEAT_GAP",
     "CAPTION_CROSSFADE",
+    "BeatAnimationError",
     "BeatSpec",
     "CaptionTrack",
     "DEFAULT_BACKGROUND",
@@ -99,27 +104,34 @@ __all__ = [
     "SceneCamera",
     "SignalFlow",
     "TeachingSceneProtocol",
+    "TeachingStyle",
     "TIMING_Z_INDEX",
+    "TimingMode",
     "VoltagePulse",
     "WaveformSync",
     "WaveformRevealTracker",
     "WaveformDemoScene",
     "WaveformFixture",
+    "build_beat_plans",
     "configure_topology_scene_camera",
     "configure_waveform_scene_camera",
     "dim_topology",
     "normalize_topology_labels",
     "make_caption_track",
+    "flush_trace",
     "get_primitive",
     "play_hud_intro",
     "play_propagation_beat",
     "play_topology_intro",
     "primitive_registry_view",
+    "record_stage",
     "register_primitive",
     "registered_primitives",
+    "reset_tracer",
     "resolve_scene_camera",
     "resolve_topology_scene_camera",
     "restore_topology",
     "scene_final_fade_enabled",
+    "trace_enabled",
     "subtitle_text",
 ]

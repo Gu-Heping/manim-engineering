@@ -12,6 +12,7 @@ from manim_engineering.animation.scene_protocol import (
     TeachingSceneProtocol,
     require_scene_methods,
 )
+from manim_engineering.animation.trace import record_stage
 from manim_engineering.waveform import hud_text_y
 
 
@@ -30,12 +31,14 @@ class CaptionTrack:
         camera: SceneCamera,
         *,
         title: Text | None = None,
+        crossfade: float = CAPTION_CROSSFADE,
     ) -> None:
         scene = require_scene_methods(scene, require_play=True, require_remove=True)
         self._scene = scene
         self._camera = camera
         self.current: Text | None = seed
         self._title: Text | None = title
+        self._crossfade = crossfade
 
     def swap(self, spec: BeatSpec, index: int) -> None:
         if not spec.caption:
@@ -50,7 +53,7 @@ class CaptionTrack:
         )
         next_caption.set_z_index(HUD_Z_INDEX)
         current = self.current
-        crossfade = CAPTION_CROSSFADE
+        crossfade = self._crossfade
         to_remove: list[Text] = []
         animations: list[object] = []
         if index == 0 and self._title is not None:
@@ -68,10 +71,17 @@ class CaptionTrack:
         if to_remove:
             self._scene.remove(*to_remove)
         self.current = next_caption
+        record_stage(
+            "hud.caption",
+            beat_index=index,
+            signal_name=spec.signal.name,
+            run_time=crossfade,
+            caption_len=len(spec.caption),
+        )
 
     def close(self) -> None:
         if self.current is not None:
-            self._scene.play(FadeOut(self.current, run_time=CAPTION_CROSSFADE))
+            self._scene.play(FadeOut(self.current, run_time=self._crossfade))
             self._scene.remove(self.current)
             self.current = None
 
@@ -96,6 +106,7 @@ def play_hud_intro(
     intro.set_z_index(HUD_Z_INDEX)
     scene.play(FadeIn(title, shift=0.08), run_time=0.5)
     scene.play(FadeIn(intro, shift=0.15), run_time=0.55)
+    record_stage("hud.intro", run_time=1.05, title_len=len(title_text), intro_len=len(intro_text))
     return title, intro
 
 
@@ -105,7 +116,8 @@ def make_caption_track(
     camera: SceneCamera,
     *,
     title: Text | None = None,
+    crossfade: float = CAPTION_CROSSFADE,
 ) -> CaptionTrack:
     """Return a :class:`CaptionTrack` whose ``swap`` matches the
     :class:`PropagationSequence.caption_callback` protocol."""
-    return CaptionTrack(scene, seed, camera, title=title)
+    return CaptionTrack(scene, seed, camera, title=title, crossfade=crossfade)

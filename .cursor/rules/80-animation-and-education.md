@@ -94,3 +94,17 @@ Preserve mental continuity (transforms, guided movement). Forbidden: teleportati
 ## Reusable Primitives
 
 Prefer shared animation abstractions over scene-specific hacks.
+
+## Observability
+
+- Trace and snapshot are **env-gated** (`ME_ANIMATION_TRACE`, `ME_ANIMATION_SNAPSHOT`). Default renders and CI must not depend on them.
+- Use `record_stage` checkpoints (intro → HUD → sequence → beat) for machine-readable timelines; flush via `WaveformDemoScene.construct` or `flush_trace(scene)`.
+- Beat failures must surface as `BeatAnimationError` with `beat_index`, `signal_name`, and `stage` — do not swallow exceptions inside sequence loops.
+- Full env table and triage flow: [docs/animation-timing.md § Debugging](../docs/animation-timing.md#debugging-trace--snapshot) and [docs/animation-extensibility.md](../docs/animation-extensibility.md).
+
+## Style overrides
+
+- Scene defaults: `WaveformDemoScene.style = TeachingStyle(...)`.
+- Beat overrides: `BeatSpec.style` or `BeatSpec.duration` (duration merges into resolved style).
+- Timing dispatch: `BeatSpec.timing_mode` (`auto` | `sync` | `ramp` | `none`) — do not fork `play_propagation_beat` for per-beat waveform choice.
+- Extend beats via `build_beat_plans` + registry primitives; forbidden: arbitrary callables in scene scripts.
