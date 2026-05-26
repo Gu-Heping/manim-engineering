@@ -36,7 +36,7 @@ Default path for shipping changes:
 
 **feature branch → PR → CI green → actionable review addressed → squash merge**
 
-Full branch naming, pre-push gates, review triage, fix loop, and merge criteria: [`.cursor/rules/90-testing-and-workflow.md` § PR and merge workflow](.cursor/rules/90-testing-and-workflow.md#pr-and-merge-workflow).
+PR descriptions must start with `@copilot` (see rule 90). Full branch naming, pre-push gates, review triage, fix loop, and merge criteria: [`.cursor/rules/90-testing-and-workflow.md` § PR and merge workflow](.cursor/rules/90-testing-and-workflow.md#pr-and-merge-workflow).
 
 **Agent constraints** (repo policy):
 

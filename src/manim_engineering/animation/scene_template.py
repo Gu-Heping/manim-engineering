@@ -92,19 +92,19 @@ def play_topology_intro(
     panel_run_time: float,
     lag_ratio: float,
     total_run_time: float,
-    create_lag_ratio: float = 0.1,
     intro_style: IntroStyle | None = None,
 ) -> None:
     """Reveal circuit bodies with stroke-first intro animations.
 
     ``Line`` bodies use ``Create``; ``Polygon``/``Dot`` use ``DrawBorderThenFill`` when
-    :attr:`IntroStyle.use_border_fill` is enabled.
+    :attr:`IntroStyle.use_border_fill` is enabled. Lag/stroke timing comes from
+    ``intro_style`` (default :class:`IntroStyle`).
 
     Avoids ``FadeIn`` / ``set_opacity`` on heterogeneous ``topology.components`` groups,
     which activates default white fill on Manim ``Line`` symbols (resistor zig-zag bug).
     """
     scene = require_scene_methods(scene, require_play=True, require_add=True)
-    style = intro_style or IntroStyle(create_lag_ratio=create_lag_ratio)
+    style = intro_style or IntroStyle()
 
     component_strokes = iter_symbol_strokes(topology.components)
     wire_strokes = iter_symbol_strokes(topology.wires)

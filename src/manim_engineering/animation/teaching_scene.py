@@ -136,7 +136,6 @@ class WaveformDemoScene(Scene, ABC):
             panel_run_time=self.intro_panel_run_time,
             lag_ratio=self.intro_lag_ratio,
             total_run_time=self.intro_total_run_time,
-            create_lag_ratio=self.intro_style.create_lag_ratio,
             intro_style=self.intro_style,
         )
 
