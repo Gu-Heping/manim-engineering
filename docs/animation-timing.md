@@ -168,20 +168,22 @@ a `self.wait()` between caption and beat — it doubles the gap.
 
 ## 3B1B-style entry and exit
 
-Examples (`examples/protocol/*.py`, `examples/basics/*.py`) follow the same
-opening / closing template:
+Examples (`examples/protocol/*.py`, `examples/analog/*.py`) follow the same
+opening / closing template via `WaveformDemoScene` (or explicit calls):
 
 ```python
 from manim import FadeIn, FadeOut
 from manim_engineering.animation import (
     INTRO_PAUSE,
+    IntroStyle,
     SCENE_FADE_OUT,
     play_topology_intro,
     play_hud_intro,
     scene_final_fade_enabled,
 )
 
-# Entry — stroke-first topology reveal (package API; do NOT FadeIn(topology.components)):
+# Entry — geometry-aware topology reveal (package API; do NOT FadeIn(topology.components)):
+# Line bodies → Create; Polygon/Dot → DrawBorderThenFill (IntroStyle.use_border_fill, default True)
 play_topology_intro(
     scene,
     topology,
@@ -192,7 +194,10 @@ play_topology_intro(
     panel_run_time=0.6,
     lag_ratio=0.25,
     total_run_time=1.4,
+    intro_style=IntroStyle(border_fill_run_time=0.5, use_border_fill=True),
 )
+
+# Or subclass WaveformDemoScene and override play_intro() for per-demo reveal order.
 title, intro = play_hud_intro(scene, title_text, intro_text, camera)
 self.wait(INTRO_PAUSE - 0.6)
 
@@ -273,4 +278,4 @@ ME_ANIMATION_TRACE=1 ME_ANIMATION_SNAPSHOT=1 manim --disable_caching -pql exampl
 3. With snapshot on, diff `beat_NN_before.png` vs `beat_NN_after.png` for visual regressions.
 4. Cross-check pacing overrides via `TeachingStyle` / `BeatSpec.style` before editing primitive code.
 
-See [animation-extensibility.md](animation-extensibility.md) for `TeachingStyle`, `BeatSpec.timing_mode`, and registry extension.
+See [animation-extensibility.md](animation-extensibility.md) for `IntroStyle`, `TeachingStyle`, `BeatSpec.timing_mode`, and registry extension.

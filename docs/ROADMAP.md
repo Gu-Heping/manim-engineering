@@ -297,6 +297,18 @@ IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `Circuit
 - [x] `build_beat_plans` factory + `BeatSpec.timing_mode` (`animation/beat_factory.py`)
 - [x] Docs: `animation-timing.md` Debugging, `animation-extensibility.md`, rule 80 Observability + Style
 
+**Intro animation (Tier A — complete)**
+
+- [x] `partition_symbol_strokes` + geometry-aware `play_topology_intro` (`Create` / `DrawBorderThenFill`)
+- [x] `IntroStyle` + `WaveformDemoScene.play_intro()` hook
+- [x] Trace detail: `line_stroke_count`, `filled_stroke_count`, `use_border_fill`
+
+**Intro animation backlog (Tier B/C — not started)**
+
+- [ ] Per-symbol / per-layout-order intro factory (`build_intro_plan`)
+- [ ] Renderer metadata (`element_id` / `connection_id` on mobjects) for semantic wire draw order
+- [ ] Pin-label `Write` intro mode (conflicts with default label stroke pipeline)
+
 Short-term experiment track: circuitjs1-inspired stamp/doStep exploration is
 documented in `docs/circuitjs1-borrowing.md` with an isolated prototype at
 `experiments/circuitjs1_stamp_prototype.py` (no runtime coupling).

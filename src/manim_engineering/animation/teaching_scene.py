@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from manim import Text
 
 from manim_engineering.animation.hud import CaptionTrack, make_caption_track, play_hud_intro
+from manim_engineering.animation.intro_style import IntroStyle
 from manim_engineering.animation.pacing import (
     INTRO_PAUSE,
     OUTRO_PAUSE,
@@ -57,7 +58,7 @@ class WaveformDemoScene(Scene, ABC):
        :class:`WaveformPanelRenderer`.
     3. Configure camera via :func:`configure_waveform_scene_camera`, using
        :attr:`subtitle_band` for HUD reservation.
-    4. Play the 3B1B-style intro via :func:`play_topology_intro`.
+    4. Play the 3B1B-style intro via :meth:`play_intro` (default: :func:`play_topology_intro`).
     5. Optionally play the HUD intro (``FadeIn(title)`` + ``FadeIn(intro)``)
        when :meth:`hud_texts` returns a non-``None`` ``(title, intro)`` pair.
     6. Optionally play a :class:`PropagationSequence` when
@@ -88,6 +89,9 @@ class WaveformDemoScene(Scene, ABC):
     style: TeachingStyle = TeachingStyle()
     """Scene-level animation tuning passed to beats and HUD crossfades."""
 
+    intro_style: IntroStyle = IntroStyle()
+    """Topology intro: Line ``Create`` vs Polygon ``DrawBorderThenFill``."""
+
     @abstractmethod
     def build_fixture(self) -> WaveformFixture:
         """Return the demo fixture (graph, layout, bundle, signals)."""
@@ -114,6 +118,27 @@ class WaveformDemoScene(Scene, ABC):
         camera: SceneCamera,
     ) -> None:
         """Called after beats/outro hold, *before* the optional ``FadeOut``."""
+
+    def play_intro(
+        self,
+        topology: object,
+        waveform_panel: VGroup,
+        content: VGroup,
+    ) -> None:
+        """Play topology + panel intro; override for per-demo reveal order."""
+        play_topology_intro(
+            self,
+            topology,
+            waveform_panel,
+            content,
+            components_run_time=self.intro_components_run_time,
+            wires_run_time=self.intro_wires_run_time,
+            panel_run_time=self.intro_panel_run_time,
+            lag_ratio=self.intro_lag_ratio,
+            total_run_time=self.intro_total_run_time,
+            create_lag_ratio=self.intro_style.create_lag_ratio,
+            intro_style=self.intro_style,
+        )
 
     def construct(self) -> None:
         reset_tracer()
@@ -145,17 +170,7 @@ class WaveformDemoScene(Scene, ABC):
             ),
         )
 
-        play_topology_intro(
-            self,
-            topology,
-            waveform_panel,
-            content,
-            components_run_time=self.intro_components_run_time,
-            wires_run_time=self.intro_wires_run_time,
-            panel_run_time=self.intro_panel_run_time,
-            lag_ratio=self.intro_lag_ratio,
-            total_run_time=self.intro_total_run_time,
-        )
+        self.play_intro(topology, waveform_panel, content)
         maybe_snapshot_stage(self, "01_after_intro")
 
         caption_track: CaptionTrack | None = None

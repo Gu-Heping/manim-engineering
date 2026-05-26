@@ -89,6 +89,20 @@ def iter_symbol_strokes(root: Mobject) -> tuple[Mobject, ...]:
     return tuple(strokes)
 
 
+def partition_symbol_strokes(
+    strokes: tuple[Mobject, ...],
+) -> tuple[tuple[Mobject, ...], tuple[Mobject, ...]]:
+    """Split intro strokes into line-only bodies and filled bodies (Polygon/Dot)."""
+    line_strokes: list[Mobject] = []
+    filled_strokes: list[Mobject] = []
+    for mob in strokes:
+        if mob.__class__.__name__ == "Line":
+            line_strokes.append(mob)
+        elif mob.__class__.__name__ in ("Polygon", "Dot"):
+            filled_strokes.append(mob)
+    return tuple(line_strokes), tuple(filled_strokes)
+
+
 def prepare_stroke_reveal(mobjects: tuple[Mobject, ...]) -> None:
     """Hide symbol strokes/fills before ``Create`` without touching label subtrees."""
     for mob in mobjects:

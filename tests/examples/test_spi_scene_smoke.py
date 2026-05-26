@@ -9,7 +9,7 @@ import pytest
 
 pytest.importorskip("manim")
 
-from manim import AnimationGroup, Create, LaggedStart, Scene
+from manim import AnimationGroup, Create, DrawBorderThenFill, LaggedStart, Scene
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -25,11 +25,11 @@ def _load_spi_module():
     return mod
 
 
-def _contains_create(animation: object) -> bool:
-    if isinstance(animation, Create):
+def _contains_intro_reveal(animation: object) -> bool:
+    if isinstance(animation, (Create, DrawBorderThenFill)):
         return True
     if isinstance(animation, (LaggedStart, AnimationGroup)):
-        return any(_contains_create(child) for child in animation.animations)
+        return any(_contains_intro_reveal(child) for child in animation.animations)
     return False
 
 
@@ -60,4 +60,4 @@ def test_spi_scene_construct_smoke() -> None:
     assert scene.played
     assert scene._waited > 0
     intro_anims, _ = scene.played[0]
-    assert any(_contains_create(anim) for anim in intro_anims)
+    assert any(_contains_intro_reveal(anim) for anim in intro_anims)
