@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -30,8 +31,12 @@ def test_trace_disabled_by_default() -> None:
     assert flush_trace(object()) is None
 
 
-def test_trace_records_stage_order_and_beat_index(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_trace_records_stage_order_and_beat_index(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
     monkeypatch.setenv("ME_ANIMATION_TRACE", "1")
+    monkeypatch.setenv("DEBUG_SNAPSHOT_DIR", str(tmp_path))
     reset_tracer()
 
     record_stage("intro.topology", run_time=1.3, component_strokes=4)

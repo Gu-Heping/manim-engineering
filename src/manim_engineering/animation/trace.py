@@ -11,7 +11,10 @@ from typing import Protocol
 TRACE_ENV = "ME_ANIMATION_TRACE"
 TRACE_STDOUT_ENV = "ME_ANIMATION_TRACE_STDOUT"
 SNAPSHOT_ENV = "ME_ANIMATION_SNAPSHOT"
-DEBUG_OUTPUT_DIR = Path(os.environ.get("DEBUG_SNAPSHOT_DIR", "media/debug"))
+
+
+def _debug_output_dir() -> Path:
+    return Path(os.environ.get("DEBUG_SNAPSHOT_DIR", "media/debug"))
 
 
 def trace_enabled() -> bool:
@@ -121,7 +124,7 @@ class AnimationTracer:
 
     def dump_json(self, path: Path | None = None) -> str:
         payload = self.as_dict()
-        text = json.dumps(payload, indent=2)
+        text = json.dumps(payload, indent=2, default=str)
         if path is not None:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(text, encoding="utf-8")
@@ -132,8 +135,9 @@ class AnimationTracer:
             return None
         scene_name = getattr(getattr(scene, "__class__", type(scene)), "__name__", "Scene")
         self._scene_name = scene_name
-        target = DEBUG_OUTPUT_DIR / scene_name / "trace.json"
+        target = _debug_output_dir() / scene_name / "trace.json"
         self.dump_json(target)
+        self._records.clear()
         return target
 
 
@@ -151,7 +155,7 @@ def get_tracer() -> TracerProtocol:
 
 
 def reset_tracer() -> None:
-    """Clear the active tracer (tests only)."""
+    """Reset module tracer state before a new teaching scene construct."""
     global _active_tracer
     _active_tracer = None
 
@@ -187,4 +191,5 @@ def maybe_snapshot_stage(scene: object, label: str) -> Path | None:
 
     snapshot_frame(scene, label)
     snapshot_topology(scene, label)
-    return DEBUG_OUTPUT_DIR / getattr(getattr(scene, "__class__", type(scene)), "__name__", "Scene")
+    scene_name = getattr(getattr(scene, "__class__", type(scene)), "__name__", "Scene")
+    return _debug_output_dir() / scene_name

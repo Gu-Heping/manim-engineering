@@ -80,7 +80,7 @@ def build_beat_plans(
             use_ramp = False
 
         if use_ramp:
-            if trace_match is None or reveal_time is None:
+            if trace_match is None or reveal_time is None or trace_match.is_discrete:
                 msg = "timing_mode='ramp' requires analog trace and reveal_time"
                 raise ValueError(msg)
             trace_index = next(

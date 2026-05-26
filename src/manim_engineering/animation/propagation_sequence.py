@@ -237,6 +237,6 @@ class PropagationSequence:
             )
 
             if index < len(self._beats) - 1:
-                scene.wait(self._style.beat_gap)
+                scene.wait(beat_style.beat_gap)
                 if self._dim_inactive and self._topology is not None:
-                    dim_topology(self._topology, opacity=self._style.dim_opacity)
+                    dim_topology(self._topology, opacity=beat_style.dim_opacity)

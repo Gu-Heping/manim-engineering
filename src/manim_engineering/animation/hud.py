@@ -104,9 +104,16 @@ def play_hud_intro(
     intro.move_to([camera.frame_cx, hud_text_y(camera.frame_cy, camera.frame_height, row=1), 0])
     title.set_z_index(HUD_Z_INDEX)
     intro.set_z_index(HUD_Z_INDEX)
-    scene.play(FadeIn(title, shift=0.08), run_time=0.5)
-    scene.play(FadeIn(intro, shift=0.15), run_time=0.55)
-    record_stage("hud.intro", run_time=1.05, title_len=len(title_text), intro_len=len(intro_text))
+    title_run_time = 0.5
+    intro_run_time = 0.55
+    scene.play(FadeIn(title, shift=0.08), run_time=title_run_time)
+    scene.play(FadeIn(intro, shift=0.15), run_time=intro_run_time)
+    record_stage(
+        "hud.intro",
+        run_time=title_run_time + intro_run_time,
+        title_len=len(title_text),
+        intro_len=len(intro_text),
+    )
     return title, intro
 
 

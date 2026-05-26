@@ -91,7 +91,14 @@ class WaveformRevealTracker:
                 f"bundle_traces={len(self._bundle.traces)}"
             )
             raise ValueError(msg)
-        return self._panel.submobjects[trace_index]
+        group = self._panel.submobjects[trace_index]
+        if not isinstance(group, VGroup):
+            msg = (
+                "waveform panel structure mismatch: "
+                f"trace_index={trace_index} expected VGroup, got {type(group).__name__}"
+            )
+            raise ValueError(msg)
+        return group
 
     def _sync_trace_to_time(
         self,

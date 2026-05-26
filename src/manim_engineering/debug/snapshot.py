@@ -17,6 +17,11 @@ if TYPE_CHECKING:
 
 
 DEBUG_OUTPUT_DIR = Path(os.environ.get("DEBUG_SNAPSHOT_DIR", "media/debug"))
+_SNAPSHOT_ENV_KEYS = ("DEBUG_SNAPSHOT", "ME_ANIMATION_SNAPSHOT")
+
+
+def _snapshots_enabled() -> bool:
+    return any(os.environ.get(key, "") == "1" for key in _SNAPSHOT_ENV_KEYS)
 
 
 def _ensure_output_dir(scene: object) -> Path:
@@ -29,9 +34,9 @@ def _ensure_output_dir(scene: object) -> Path:
 def snapshot_frame(scene: Scene, label: str) -> Path | None:
     """Save a PNG of the current camera frame with a descriptive label.
 
-    Returns the output path, or None if ``DEBUG_SNAPSHOT`` is not set.
+    Returns the output path, or None if snapshot env is not set.
     """
-    if os.environ.get("DEBUG_SNAPSHOT", "") != "1":
+    if not _snapshots_enabled():
         return None
     target = _ensure_output_dir(scene)
     path = target / f"{label}.png"
@@ -57,9 +62,9 @@ def _mobject_bounds(mob: Mobject) -> list[float] | None:
 def snapshot_topology(scene: Scene, label: str) -> dict[str, Any] | None:
     """Dump JSON bounds for every mobject in the scene with the given label.
 
-    Returns the dict, or None if ``DEBUG_SNAPSHOT`` is not set.
+    Returns the dict, or None if snapshot env is not set.
     """
-    if os.environ.get("DEBUG_SNAPSHOT", "") != "1":
+    if not _snapshots_enabled():
         return None
     target = _ensure_output_dir(scene)
     path = target / f"{label}.json"
