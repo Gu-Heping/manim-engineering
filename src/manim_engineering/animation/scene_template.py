@@ -6,6 +6,7 @@ from manim import Animation, Create, LaggedStart, VGroup
 
 from manim_engineering.animation.focus import normalize_topology_labels
 from manim_engineering.animation.scene_protocol import require_scene_methods
+from manim_engineering.animation.trace import record_stage
 from manim_engineering.renderers.minimal.immutable import TopologyProjection
 from manim_engineering.renderers.minimal.labels import (
     apply_symbol_opacity,
@@ -76,3 +77,10 @@ def play_topology_intro(
     show_labels(topology.components)
     show_labels(waveform_panel)
     normalize_topology_labels(topology, waveform_panel=waveform_panel)
+    record_stage(
+        "intro.topology",
+        run_time=total_run_time,
+        component_strokes=len(component_strokes),
+        wire_strokes=len(wire_strokes),
+        panel_strokes=len(panel_strokes),
+    )

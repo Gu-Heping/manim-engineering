@@ -249,3 +249,28 @@ pip install -e ".[manim]"
 CI smoke and `scripts/export_example_videos.py` pass `--disable_caching`
 (or equivalent `disable_caching` in `tempconfig`) so exported MP4s reflect
 current code.
+
+## Debugging (trace + snapshot)
+
+Animation observability is **env-gated** — default CI and renders are unchanged.
+
+| Variable | Behavior |
+|----------|----------|
+| `ME_ANIMATION_TRACE=1` | Record intro → HUD → sequence → beat stages; flush `media/debug/<SceneName>/trace.json` at scene end |
+| `ME_ANIMATION_TRACE_STDOUT=1` | Optional one-line log per stage (requires trace enabled) |
+| `ME_ANIMATION_SNAPSHOT=1` | Save PNG + bounds JSON at checkpoints (`01_after_intro`, `beat_NN_before/after`, `99_after_beats`) |
+
+Example:
+
+```bash
+ME_ANIMATION_TRACE=1 ME_ANIMATION_SNAPSHOT=1 manim --disable_caching -pql examples/analog/01_rc_charge.py RCChargeDemo
+```
+
+**Typical triage flow**
+
+1. Re-run with trace on; open `trace.json` and confirm stage order and `beat_index`.
+2. If a beat fails, catch `BeatAnimationError` — fields `stage`, `beat_index`, `signal_name`, and `cause` identify the failing beat.
+3. With snapshot on, diff `beat_NN_before.png` vs `beat_NN_after.png` for visual regressions.
+4. Cross-check pacing overrides via `TeachingStyle` / `BeatSpec.style` before editing primitive code.
+
+See [animation-extensibility.md](animation-extensibility.md) for `TeachingStyle`, `BeatSpec.timing_mode`, and registry extension.

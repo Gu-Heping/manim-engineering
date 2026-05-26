@@ -287,6 +287,16 @@ IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `Circuit
 - [x] `CAPTION_CROSSFADE` rule/doc alignment (0.45s, CJK readability)
 - [x] primitive `.play()` protocol + E2E smoke (Create assertion, SPI construct)
 
+**Animation observability (P3 — complete)**
+
+- [x] `AnimationTracer` + `ME_ANIMATION_TRACE` / `ME_ANIMATION_TRACE_STDOUT` (`animation/trace.py`)
+- [x] Stage wiring: intro, HUD, caption, sequence, beat (`record_stage` checkpoints)
+- [x] `BeatAnimationError` with `beat_index` / `signal_name` / `stage` context
+- [x] `ME_ANIMATION_SNAPSHOT` beat/intro checkpoints (wraps `debug.snapshot`)
+- [x] `TeachingStyle` scene/beat overrides (`animation/style.py`)
+- [x] `build_beat_plans` factory + `BeatSpec.timing_mode` (`animation/beat_factory.py`)
+- [x] Docs: `animation-timing.md` Debugging, `animation-extensibility.md`, rule 80 Observability + Style
+
 Short-term experiment track: circuitjs1-inspired stamp/doStep exploration is
 documented in `docs/circuitjs1-borrowing.md` with an isolated prototype at
 `experiments/circuitjs1_stamp_prototype.py` (no runtime coupling).

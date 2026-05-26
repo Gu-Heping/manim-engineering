@@ -15,9 +15,13 @@ from dataclasses import dataclass
 from typing import Literal
 
 from manim_engineering.animation.beat import play_propagation_beat
+from manim_engineering.animation.beat_factory import TimingMode
+from manim_engineering.animation.errors import BeatAnimationError
 from manim_engineering.animation.focus import dim_topology, restore_topology
 from manim_engineering.animation.pacing import BEAT_CAPTION_HOLD, BEAT_DURATION, BEAT_GAP
 from manim_engineering.animation.scene_protocol import require_scene_methods
+from manim_engineering.animation.style import TeachingStyle
+from manim_engineering.animation.trace import maybe_snapshot_stage, record_stage
 from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
@@ -51,6 +55,9 @@ class BeatSpec:
         duration: Per-beat run_time override; ``None`` defers to the
             sequence-level ``beat_duration``. Use for emphasis (slower) or
             quick setup transitions (faster).
+        style: Optional beat-level :class:`TeachingStyle` override.
+        timing_mode: Override waveform timing dispatch (``auto`` | ``sync`` |
+            ``ramp`` | ``none``).
     """
 
     signal: Signal
@@ -62,6 +69,8 @@ class BeatSpec:
     reveal_scope: Literal["all", "signal"] = "all"
     wire_pulse: bool = True
     duration: float | None = None
+    style: TeachingStyle | None = None
+    timing_mode: TimingMode = "auto"
 
 
 class PropagationSequence:
@@ -90,10 +99,9 @@ class PropagationSequence:
         topology: TopologyProjection | None = None,
         caption_callback: Callable[[BeatSpec, int], None] | None = None,
         reveal_tracker: WaveformRevealTracker | None = None,
+        style: TeachingStyle | None = None,
     ) -> None:
         if dim_inactive and topology is None:
-            # Silently no-op'ing here was the root cause of "我以为开了 dim
-            # 但是看不出来" — make the misconfiguration loud.
             msg = (
                 "PropagationSequence(dim_inactive=True) requires topology= "
                 "(a TopologyProjection); otherwise dim/restore have no target."
@@ -101,8 +109,6 @@ class PropagationSequence:
             raise ValueError(msg)
         self._layout = layout
         self._graph = graph
-        self._beat_duration = beat_duration
-        self._beat_gap = beat_gap
         self._caption_hold = caption_hold
         self._bundle = bundle
         self._sync_signals = tuple(sync_signals)
@@ -111,6 +117,17 @@ class PropagationSequence:
         self._topology = topology
         self._caption_callback = caption_callback
         self._reveal_tracker = reveal_tracker
+        base_style = style or TeachingStyle()
+        self._style = TeachingStyle(
+            beat_duration=beat_duration,
+            beat_gap=beat_gap,
+            caption_crossfade=base_style.caption_crossfade,
+            dim_opacity=base_style.dim_opacity,
+            pulse_flash_width=base_style.pulse_flash_width,
+            wire_flash_width=base_style.wire_flash_width,
+            waveform_flash_width=base_style.waveform_flash_width,
+            overlay_fade_out=base_style.overlay_fade_out,
+        )
 
         if beats is not None:
             specs = list(beats)
@@ -135,16 +152,41 @@ class PropagationSequence:
     def beats(self) -> tuple[BeatSpec, ...]:
         return self._beats
 
+    def _resolve_style(self, spec: BeatSpec) -> TeachingStyle:
+        base = spec.style or self._style
+        if spec.duration is None:
+            return base
+        return TeachingStyle(
+            beat_duration=spec.duration,
+            beat_gap=base.beat_gap,
+            caption_crossfade=base.caption_crossfade,
+            dim_opacity=base.dim_opacity,
+            pulse_flash_width=base.pulse_flash_width,
+            wire_flash_width=base.wire_flash_width,
+            waveform_flash_width=base.waveform_flash_width,
+            overlay_fade_out=base.overlay_fade_out,
+        )
+
     def play(self, scene: object) -> None:
         scene = require_scene_methods(scene, require_play=False, require_wait=True)
 
         for index, spec in enumerate(self._beats):
+            beat_style = self._resolve_style(spec)
+            record_stage(
+                "sequence.beat_start",
+                beat_index=index,
+                signal_name=spec.signal.name,
+                run_time=beat_style.beat_duration,
+                wire_pulse=spec.wire_pulse,
+                timing_mode=spec.timing_mode,
+                caption_len=len(spec.caption or ""),
+            )
+            maybe_snapshot_stage(scene, f"beat_{index:02d}_before")
+
             if self._dim_inactive and self._topology is not None:
                 restore_topology(self._topology)
             if self._caption_callback is not None:
                 self._caption_callback(spec, index)
-                # Hold the caption briefly so the viewer reads *before* the
-                # pulse fires. Skipped when no caption (e.g. clock_data demo).
                 if spec.caption and self._caption_hold > 0:
                     scene.wait(self._caption_hold)
             reveal_time = spec.reveal_time
@@ -153,25 +195,48 @@ class PropagationSequence:
                 if reveal_targets is None:
                     wave_beat = spec.wave_beat if spec.wave_beat is not None else index
                     reveal_targets = ((spec.signal, wave_beat),)
-            beat_duration = spec.duration if spec.duration is not None else self._beat_duration
-            play_propagation_beat(
-                scene,
-                spec.signal,
-                layout=self._layout,
-                graph=self._graph,
-                record=spec.record,
-                duration=beat_duration,
-                bundle=self._bundle,
-                signals=self._sync_signals,
-                panel_spec=self._panel_spec,
-                beat=spec.wave_beat if spec.wave_beat is not None else index,
-                reveal_tracker=self._reveal_tracker,
-                reveal_targets=reveal_targets,
-                reveal_time=reveal_time,
-                reveal_scope=spec.reveal_scope,
-                wire_pulse=spec.wire_pulse,
+            try:
+                play_propagation_beat(
+                    scene,
+                    spec.signal,
+                    layout=self._layout,
+                    graph=self._graph,
+                    record=spec.record,
+                    duration=beat_style.beat_duration,
+                    bundle=self._bundle,
+                    signals=self._sync_signals,
+                    panel_spec=self._panel_spec,
+                    beat=spec.wave_beat if spec.wave_beat is not None else index,
+                    beat_index=index,
+                    reveal_tracker=self._reveal_tracker,
+                    reveal_targets=reveal_targets,
+                    reveal_time=reveal_time,
+                    reveal_scope=spec.reveal_scope,
+                    wire_pulse=spec.wire_pulse,
+                    style=beat_style,
+                    timing_mode=spec.timing_mode,
+                )
+            except Exception as exc:
+                if isinstance(exc, BeatAnimationError):
+                    raise
+                msg = f"beat animation failed for signal {spec.signal.name!r}"
+                raise BeatAnimationError(
+                    msg,
+                    beat_index=index,
+                    signal_name=spec.signal.name,
+                    stage="beat.play",
+                    cause=exc,
+                ) from exc
+
+            maybe_snapshot_stage(scene, f"beat_{index:02d}_after")
+            record_stage(
+                "sequence.beat_end",
+                beat_index=index,
+                signal_name=spec.signal.name,
+                run_time=beat_style.beat_duration,
             )
+
             if index < len(self._beats) - 1:
-                scene.wait(self._beat_gap)
+                scene.wait(beat_style.beat_gap)
                 if self._dim_inactive and self._topology is not None:
-                    dim_topology(self._topology)
+                    dim_topology(self._topology, opacity=beat_style.dim_opacity)

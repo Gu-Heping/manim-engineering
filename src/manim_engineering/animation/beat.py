@@ -7,17 +7,17 @@ from typing import Literal
 
 from manim import AnimationGroup, FadeOut, VGroup
 
-from manim_engineering.animation.analog_ramp import AnalogRamp
 from manim_engineering.animation.base import AnimationPlan
+from manim_engineering.animation.beat_factory import TimingMode, build_beat_plans
 from manim_engineering.animation.layers import PROPAGATION_Z_INDEX, PULSE_Z_INDEX
-from manim_engineering.animation.pacing import BEAT_DURATION, OVERLAY_FADE_OUT
+from manim_engineering.animation.purpose import AnimationPurpose
 from manim_engineering.animation.scene_protocol import (
     TeachingSceneProtocol,
     require_scene_methods,
 )
-from manim_engineering.animation.signal_flow import SignalFlow
+from manim_engineering.animation.style import TeachingStyle
+from manim_engineering.animation.trace import record_stage
 from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
-from manim_engineering.animation.waveform_sync import WaveformSync
 from manim_engineering.core.graph import CircuitGraph
 from manim_engineering.layout.types import LayoutResult
 from manim_engineering.renderers.minimal import theme
@@ -44,14 +44,18 @@ def _merge_animation_plans(
     return tuple(propagation_overlays), tuple(overlays), tuple(animations)
 
 
-def _fade_out_and_remove(scene: TeachingSceneProtocol, *mobjects: object) -> None:
+def _fade_out_and_remove(
+    scene: TeachingSceneProtocol,
+    style: TeachingStyle,
+    *mobjects: object,
+) -> None:
     """Fade overlays out briefly, then remove so beats do not stack ghosts."""
     if not mobjects:
         return
-    if OVERLAY_FADE_OUT > 0:
+    if style.overlay_fade_out > 0:
         scene.play(
-            *[FadeOut(mob, run_time=OVERLAY_FADE_OUT) for mob in mobjects],
-            run_time=OVERLAY_FADE_OUT,
+            *[FadeOut(mob, run_time=style.overlay_fade_out) for mob in mobjects],
+            run_time=style.overlay_fade_out,
         )
     scene.remove(*mobjects)
 
@@ -68,11 +72,14 @@ def play_propagation_beat(
     signals: Sequence[Signal] = (),
     panel_spec: WaveformPanelSpec | None = None,
     beat: int | None = None,
+    beat_index: int | None = None,
     reveal_tracker: WaveformRevealTracker | None = None,
     reveal_targets: Sequence[tuple[Signal, int]] = (),
     reveal_time: float | None = None,
     reveal_scope: Literal["all", "signal"] = "all",
     wire_pulse: bool = True,
+    style: TeachingStyle | None = None,
+    timing_mode: TimingMode = "auto",
 ) -> float:
     """
     Play propagation and optional waveform timing on the same beat (one ``run_time``).
@@ -81,63 +88,25 @@ def play_propagation_beat(
     overlay/propagation mobject added by this beat is faded out and removed
     so a subsequent beat does not stack ghost VGroups on top of the topology.
     """
-    beat_duration = duration if duration is not None else BEAT_DURATION
+    resolved_style = style or TeachingStyle()
+    beat_duration = duration if duration is not None else resolved_style.beat_duration
 
-    if wire_pulse:
-        flow = SignalFlow(
-            signal,
-            record=record,
-            layout=layout,
-            graph=graph,
-            duration=beat_duration,
-        )
-        flow_plan = flow.build()
-    else:
-        flow_plan = AnimationPlan(
-            overlays=(),
-            propagation_overlays=(),
-            animations=(),
-            run_time=beat_duration,
-        )
-
-    sync_plan = None
-    ramp_plan = None
-    ramp_t_start = 0.0
-    if reveal_tracker is not None:
-        ramp_t_start = reveal_tracker.revealed_time_for(signal.name)
-
-    if bundle is not None and panel_spec is not None and signals:
-        trace_match = bundle.trace_named(signal.name)
-        use_ramp = (
-            reveal_time is not None
-            and trace_match is not None
-            and not trace_match.is_discrete
-        )
-        if use_ramp:
-            trace_index = next(
-                index
-                for index, trace in enumerate(bundle.traces)
-                if trace.signal_name == signal.name
-            )
-            ramp = AnalogRamp(
-                trace_match,
-                panel_spec=panel_spec,
-                trace_index=trace_index,
-                t_start=ramp_t_start,
-                t_end=reveal_time,
-                duration=beat_duration,
-            )
-            ramp_plan = ramp.build()
-        else:
-            sync = WaveformSync(
-                bundle,
-                signals,
-                panel_spec=panel_spec,
-                beat=beat,
-                duration=beat_duration,
-                active_signal=signal,
-            )
-            sync_plan = sync.build()
+    flow_plan, sync_plan, ramp_plan, timing_purpose = build_beat_plans(
+        signal,
+        layout=layout,
+        graph=graph,
+        record=record,
+        style=resolved_style,
+        beat_duration=beat_duration,
+        bundle=bundle,
+        signals=signals,
+        panel_spec=panel_spec,
+        beat=beat,
+        reveal_tracker=reveal_tracker,
+        reveal_time=reveal_time,
+        wire_pulse=wire_pulse,
+        timing_mode=timing_mode,
+    )
 
     scene = require_scene_methods(
         scene,
@@ -149,6 +118,20 @@ def play_propagation_beat(
 
     propagation_overlays, overlays, flow_anims = _merge_animation_plans(
         flow_plan, sync_plan, ramp_plan
+    )
+
+    record_stage(
+        "beat.play",
+        beat_index=beat_index if beat_index is not None else beat,
+        signal_name=signal.name,
+        run_time=beat_duration,
+        purpose=AnimationPurpose.PROPAGATION.value,
+        wire_pulse=wire_pulse,
+        timing_mode=timing_mode,
+        propagation_overlay_count=len(propagation_overlays),
+        overlay_count=len(overlays),
+        animation_count=len(flow_anims),
+        timing_purpose=timing_purpose,
     )
 
     propagation_group: VGroup | None = None
@@ -191,6 +174,6 @@ def play_propagation_beat(
         to_remove.append(propagation_group)
     if overlays:
         to_remove.extend(overlays)
-    _fade_out_and_remove(scene, *to_remove)
+    _fade_out_and_remove(scene, resolved_style, *to_remove)
 
     return beat_duration

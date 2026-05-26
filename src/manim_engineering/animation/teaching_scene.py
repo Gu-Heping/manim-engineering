@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 from manim_engineering.animation.hud import CaptionTrack, make_caption_track, play_hud_intro
 from manim_engineering.animation.pacing import (
-    BEAT_GAP,
     INTRO_PAUSE,
     OUTRO_PAUSE,
     SCENE_FADE_OUT,
@@ -23,6 +22,8 @@ from manim_engineering.animation.pacing import (
 from manim_engineering.animation.propagation_sequence import BeatSpec, PropagationSequence
 from manim_engineering.animation.scene import SceneCamera, configure_waveform_scene_camera
 from manim_engineering.animation.scene_template import play_topology_intro
+from manim_engineering.animation.style import TeachingStyle
+from manim_engineering.animation.trace import flush_trace, maybe_snapshot_stage, reset_tracer
 from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
 from manim_engineering.components import CircuitElement
 from manim_engineering.core import CircuitGraph
@@ -84,6 +85,9 @@ class WaveformDemoScene(Scene, ABC):
     """Subtracted from ``INTRO_PAUSE`` for the post-stage hold; HUD demos
     typically use 0.6 to account for the title+intro plays."""
 
+    style: TeachingStyle = TeachingStyle()
+    """Scene-level animation tuning passed to beats and HUD crossfades."""
+
     @abstractmethod
     def build_fixture(self) -> WaveformFixture:
         """Return the demo fixture (graph, layout, bundle, signals)."""
@@ -112,6 +116,7 @@ class WaveformDemoScene(Scene, ABC):
         """Called after beats/outro hold, *before* the optional ``FadeOut``."""
 
     def construct(self) -> None:
+        reset_tracer()
         fixture = self.build_fixture()
         hud = self.hud_texts(fixture)
 
@@ -151,13 +156,20 @@ class WaveformDemoScene(Scene, ABC):
             lag_ratio=self.intro_lag_ratio,
             total_run_time=self.intro_total_run_time,
         )
+        maybe_snapshot_stage(self, "01_after_intro")
 
         caption_track: CaptionTrack | None = None
         title_mob: Text | None = None
         if hud is not None:
             title_text, intro_text = hud
             title_mob, intro_mob = play_hud_intro(self, title_text, intro_text, camera)
-            caption_track = make_caption_track(self, intro_mob, camera, title=title_mob)
+            caption_track = make_caption_track(
+                self,
+                intro_mob,
+                camera,
+                title=title_mob,
+                crossfade=self.style.caption_crossfade,
+            )
 
         self.after_intro_hook(fixture, camera)
         self.wait(max(INTRO_PAUSE - self.intro_pause_offset, 0.3))
@@ -176,13 +188,15 @@ class WaveformDemoScene(Scene, ABC):
                 bundle=fixture.bundle,
                 sync_signals=fixture.signals,
                 panel_spec=panel_spec,
-                beat_gap=BEAT_GAP,
+                beat_gap=self.style.beat_gap,
                 caption_callback=caption_track.swap if caption_track is not None else None,
                 reveal_tracker=reveal_tracker,
+                style=self.style,
                 **options,
             )
             sequence.play(self)
             reveal_tracker.reveal_all()
+            maybe_snapshot_stage(self, "99_after_beats")
 
         if caption_track is not None:
             caption_track.close()
@@ -194,3 +208,4 @@ class WaveformDemoScene(Scene, ABC):
             self.play(FadeOut(*self.mobjects, run_time=SCENE_FADE_OUT))
         else:
             self.wait(SCENE_FADE_OUT)
+        flush_trace(self)

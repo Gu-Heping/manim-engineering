@@ -75,6 +75,31 @@ class WaveformRevealTracker:
         """Last semantic time revealed for ``signal_name`` (0.0 when still idle)."""
         return max(0.0, self._revealed_time.get(signal_name, -1.0))
 
+    def _trace_index_for(self, name: str) -> int:
+        for index, trace in enumerate(self._bundle.traces):
+            if trace.signal_name == name:
+                return index
+        known = [trace.signal_name for trace in self._bundle.traces]
+        msg = f"unknown waveform trace {name!r}; panel traces={known}"
+        raise ValueError(msg)
+
+    def _trace_group_for(self, trace_index: int) -> VGroup:
+        if trace_index < 0 or trace_index >= len(self._panel.submobjects):
+            msg = (
+                "waveform panel structure mismatch: "
+                f"trace_index={trace_index}, panel_groups={len(self._panel.submobjects)}, "
+                f"bundle_traces={len(self._bundle.traces)}"
+            )
+            raise ValueError(msg)
+        group = self._panel.submobjects[trace_index]
+        if not isinstance(group, VGroup):
+            msg = (
+                "waveform panel structure mismatch: "
+                f"trace_index={trace_index} expected VGroup, got {type(group).__name__}"
+            )
+            raise ValueError(msg)
+        return group
+
     def _sync_trace_to_time(
         self,
         name: str,
@@ -85,9 +110,7 @@ class WaveformRevealTracker:
         if name not in self._revealed:
             return ()
 
-        trace_index = next(
-            i for i, trace in enumerate(self._bundle.traces) if trace.signal_name == name
-        )
+        trace_index = self._trace_index_for(name)
         trace = self._bundle.traces[trace_index]
         if target_beat is None:
             if hold_through_time is None:
@@ -101,7 +124,7 @@ class WaveformRevealTracker:
         ):
             return ()
 
-        trace_group = self._panel.submobjects[trace_index]
+        trace_group = self._trace_group_for(trace_index)
         label = trace_group.submobjects[-1]
         previous_keys = self._segment_snapshots[name]
 
@@ -157,7 +180,7 @@ class WaveformRevealTracker:
                 hold_time = min(trace.end_time, panel_end_time)
                 self._revealed[name] = beat_for_time(trace, hold_time)
                 self._revealed_time[name] = hold_time
-                trace_group = self._panel.submobjects[trace_index]
+                trace_group = self._trace_group_for(trace_index)
                 label = trace_group.submobjects[-1]
                 for line in self._line_children(trace_group):
                     trace_group.remove(line)
@@ -209,9 +232,7 @@ class WaveformRevealTracker:
         return segments
 
     def _refresh_trace(self, signal_name: str, *, extend_to_panel: bool | None = None) -> None:
-        trace_index = next(
-            i for i, t in enumerate(self._bundle.traces) if t.signal_name == signal_name
-        )
+        trace_index = self._trace_index_for(signal_name)
         trace = self._bundle.traces[trace_index]
         max_beat = self._revealed[signal_name]
         if extend_to_panel is None:

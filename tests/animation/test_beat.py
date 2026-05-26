@@ -9,7 +9,7 @@ pytest.importorskip("manim")
 from manim import AnimationGroup
 from recording_scene import RecordingScene
 
-from manim_engineering.animation import BEAT_DURATION, play_propagation_beat
+from manim_engineering.animation import BEAT_DURATION, TeachingStyle, play_propagation_beat
 from manim_engineering.animation.signal_flow import SignalFlow
 from manim_engineering.animation.waveform_sync import WaveformSync
 from manim_engineering.components import Resistor
@@ -245,3 +245,27 @@ def test_empty_beat_anims_waits_for_duration() -> None:
     assert len(scene.waited) == 1
     assert scene.waited[0] == pytest.approx(BEAT_DURATION)
     assert len(scene.played) == 0
+
+
+def test_teaching_style_overrides_beat_duration() -> None:
+    graph, layout, clock, data, bundle, panel_spec = _clock_data_fixture()
+    scene = RecordingScene()
+    custom_duration = 2.5
+    style = TeachingStyle(beat_duration=custom_duration)
+    used = play_propagation_beat(
+        scene,
+        clock,
+        layout=layout,
+        graph=graph,
+        bundle=bundle,
+        signals=(clock, data),
+        panel_spec=panel_spec,
+        beat=0,
+        style=style,
+    )
+    assert used == pytest.approx(custom_duration)
+    assert scene.run_times[0] == pytest.approx(custom_duration)
+
+
+def test_default_teaching_style_matches_beat_duration_constant() -> None:
+    assert TeachingStyle().beat_duration == pytest.approx(BEAT_DURATION)
