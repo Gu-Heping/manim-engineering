@@ -121,9 +121,13 @@ Review any geometry digest/assertion updates in the touched tests. Do not rely o
 
 Use `gh pr create`. On Windows, pass the body with multiple `-m` flags (avoid shell heredoc).
 
+**Copilot review**: start the PR body with `@copilot` on its own line (first line) so GitHub Copilot is invited to review. When updating an existing PR description (`gh pr edit`), preserve or add this line.
+
 **Body template** (required sections):
 
 ```markdown
+@copilot
+
 ## Summary
 - …
 

@@ -4,6 +4,37 @@ How to customize teaching scenes without forking orchestration code. Timing
 defaults live in [animation-timing.md](animation-timing.md); motion philosophy
 in [`.cursor/rules/80-animation-and-education.md`](../.cursor/rules/80-animation-and-education.md).
 
+## IntroStyle
+
+Topology reveal before beats uses `IntroStyle` (`manim_engineering.animation.intro_style`):
+
+```python
+from manim_engineering.animation import IntroStyle, WaveformDemoScene
+
+class CMOSDemo(WaveformDemoScene):
+    intro_style = IntroStyle(
+        border_fill_run_time=0.5,
+        create_lag_ratio=0.1,
+        use_border_fill=True,
+    )
+```
+
+| Field | Default | Effect |
+|-------|---------|--------|
+| `border_fill_run_time` | 0.5s | Per-`Polygon`/`Dot` `DrawBorderThenFill` duration (capped; avoids Manim 2s default) |
+| `create_lag_ratio` | 0.1 | Lag between stroke animations within each bulk stage |
+| `use_border_fill` | `True` | `False` → all bodies use `Create` (legacy stroke-only intro) |
+
+`play_topology_intro` partitions strokes via `partition_symbol_strokes`: `Line` →
+`Create`; filled bodies → `DrawBorderThenFill` when enabled. Bulk order unchanged:
+components → wires → waveform panel.
+
+Override `WaveformDemoScene.play_intro()` for per-demo reveal order without
+replacing the full `construct()` template.
+
+**Backlog (not Tier A):** per-symbol intro factory (Tier B), semantic wire-path
+draw order (Tier C), pin-label `Write` intro mode.
+
 ## TeachingStyle
 
 Scene- or beat-level tuning via `TeachingStyle` (`manim_engineering.animation.style`):
@@ -102,7 +133,9 @@ Subclass `WaveformDemoScene` and implement `build_fixture()`. Optional hooks:
 - `teaching_beats(fixture)` → `BeatSpec` tuple
 - `hud_texts(fixture)` → `(title, intro)` or `None`
 - `style` class attribute → passed to `PropagationSequence` and HUD crossfade
+- `intro_style` class attribute → passed to `play_intro()` / `play_topology_intro`
 - `propagation_options()` → extra `PropagationSequence` kwargs (`dim_inactive`, etc.)
+- `play_intro(topology, waveform_panel, content)` → override for custom reveal order
 
 `construct()` resets/flushes the tracer automatically when trace env is set.
 

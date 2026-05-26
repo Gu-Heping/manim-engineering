@@ -16,6 +16,7 @@ from manim_engineering.animation.focus import (
     restore_topology,
 )
 from manim_engineering.animation.hud import CaptionTrack, make_caption_track, play_hud_intro
+from manim_engineering.animation.intro_style import IntroStyle
 from manim_engineering.animation.layers import (
     HUD_Z_INDEX,
     PROPAGATION_Z_INDEX,
@@ -93,6 +94,7 @@ __all__ = [
     "HIGHLIGHT_COLOR",
     "HUD_Z_INDEX",
     "INTRO_PAUSE",
+    "IntroStyle",
     "LogicTransition",
     "MUTED_COLOR",
     "OUTRO_PAUSE",
