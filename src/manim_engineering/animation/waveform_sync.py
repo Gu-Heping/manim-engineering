@@ -124,7 +124,8 @@ class WaveformSync(AnimationPrimitive["WaveformSync"]):
             timing.set_z_index(TIMING_Z_INDEX)
             scene.add(timing)
         scene.add(*plan.overlays)
-        scene.play(*plan.animations, run_time=plan.run_time)
+        if plan.animations:
+            scene.play(*plan.animations, run_time=plan.run_time)
 
     def aligns_with_signal_flow(self, flow_duration: float) -> bool:
         """Same run_time as a paired SignalFlow (sync contract)."""

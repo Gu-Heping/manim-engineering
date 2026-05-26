@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -44,7 +45,7 @@ class WaveformFixture:
     signals: tuple[Signal, ...] = field(default_factory=tuple)
 
 
-class WaveformDemoScene(Scene):
+class WaveformDemoScene(Scene, ABC):
     """Template-method base for waveform-centric teaching demos.
 
     Subclasses must implement :meth:`build_fixture`. The default
@@ -83,8 +84,9 @@ class WaveformDemoScene(Scene):
     """Subtracted from ``INTRO_PAUSE`` for the post-stage hold; HUD demos
     typically use 0.6 to account for the title+intro plays."""
 
+    @abstractmethod
     def build_fixture(self) -> WaveformFixture:
-        raise NotImplementedError
+        """Return the demo fixture (graph, layout, bundle, signals)."""
 
     def teaching_beats(self, fixture: WaveformFixture) -> tuple[BeatSpec, ...] | None:
         return None

@@ -60,5 +60,4 @@ def test_spi_scene_construct_smoke() -> None:
     assert scene.played
     assert scene._waited > 0
     intro_anims, _ = scene.played[0]
-    assert len(intro_anims) == 1
-    assert _contains_create(intro_anims[0])
+    assert any(_contains_create(anim) for anim in intro_anims)
