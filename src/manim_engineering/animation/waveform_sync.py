@@ -12,12 +12,14 @@ from manim_engineering.animation.layers import TIMING_Z_INDEX
 from manim_engineering.animation.pacing import BEAT_DURATION
 from manim_engineering.animation.purpose import AnimationPurpose
 from manim_engineering.animation.registry import register_primitive
+from manim_engineering.animation.scene_protocol import require_scene_methods
 from manim_engineering.animation.wires import path_mobject_from_points
 from manim_engineering.renderers.minimal import theme
 from manim_engineering.renderers.minimal.immutable import copy_for_animation
+from manim_engineering.renderers.minimal.waveform import trace_color
 from manim_engineering.semantic.signal import Signal
 from manim_engineering.waveform.layout import WaveformPanelSpec, transition_segment_for_beat
-from manim_engineering.waveform.trace import WaveformBundle, WaveformTrace
+from manim_engineering.waveform.trace import WaveformBundle
 
 DEFAULT_TIMING_DURATION = BEAT_DURATION
 
@@ -85,7 +87,7 @@ class WaveformSync(AnimationPrimitive["WaveformSync"]):
                 continue
             path = path_mobject_from_points(segment)
             path.set_stroke(
-                color=_trace_color(trace),
+                color=trace_color(trace),
                 width=theme.WAVEFORM_STROKE_WIDTH,
                 opacity=1.0,
             )
@@ -114,24 +116,17 @@ class WaveformSync(AnimationPrimitive["WaveformSync"]):
 
     def play(self, scene: object) -> None:
         plan = self.build()
-        add = getattr(scene, "add", None)
-        play = getattr(scene, "play", None)
-        if add is None or play is None:
-            msg = "scene must provide add() and play() like manim.Scene"
-            raise TypeError(msg)
+        scene = require_scene_methods(scene, require_play=True, require_add=True)
         if plan.propagation_overlays:
             from manim import VGroup
 
             timing = VGroup(*plan.propagation_overlays)
             timing.set_z_index(TIMING_Z_INDEX)
-            add(timing)
-        add(*plan.overlays)
-        play(*plan.animations, run_time=plan.run_time)
+            scene.add(timing)
+        scene.add(*plan.overlays)
+        if plan.animations:
+            scene.play(*plan.animations, run_time=plan.run_time)
 
     def aligns_with_signal_flow(self, flow_duration: float) -> bool:
         """Same run_time as a paired SignalFlow (sync contract)."""
         return self.duration == flow_duration
-
-
-def _trace_color(trace: WaveformTrace) -> object:
-    return theme.color_for_signal_type(trace.signal_type)

@@ -89,7 +89,6 @@ class PropagationSequence:
         dim_inactive: bool = False,
         topology: TopologyProjection | None = None,
         caption_callback: Callable[[BeatSpec, int], None] | None = None,
-        waveform_reveal_callback: Callable[[BeatSpec, int], None] | None = None,
         reveal_tracker: WaveformRevealTracker | None = None,
     ) -> None:
         if dim_inactive and topology is None:
@@ -111,7 +110,6 @@ class PropagationSequence:
         self._dim_inactive = dim_inactive
         self._topology = topology
         self._caption_callback = caption_callback
-        self._waveform_reveal_callback = waveform_reveal_callback
         self._reveal_tracker = reveal_tracker
 
         if beats is not None:
@@ -155,8 +153,6 @@ class PropagationSequence:
                 if reveal_targets is None:
                     wave_beat = spec.wave_beat if spec.wave_beat is not None else index
                     reveal_targets = ((spec.signal, wave_beat),)
-            if self._waveform_reveal_callback is not None and self._reveal_tracker is None:
-                self._waveform_reveal_callback(spec, index)
             beat_duration = spec.duration if spec.duration is not None else self._beat_duration
             play_propagation_beat(
                 scene,

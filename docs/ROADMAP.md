@@ -270,7 +270,7 @@ IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `Circuit
 - [x] `AnalogRamp` animation primitive + beat integration
 - [x] `01_rc_charge` upgraded to `WaveformDemoScene` with teaching beats
 
-**Animation orchestration debt (P0+P1 — in progress)**
+**Animation orchestration debt (P0+P1 — complete)**
 
 - [x] contract sync (#15)
 - [x] protocol / SceneProtocol (#11)
@@ -278,6 +278,14 @@ IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `Circuit
 - [x] beat merge (#12)
 - [x] reveal decouple (#13)
 - [x] tests (#14)
+
+**Animation orchestration debt (P2 — complete)**
+
+- [x] panel intro stroke-first (remove `waveform_panel.set_opacity`)
+- [x] remove `PropagationSequence.waveform_reveal_callback` bypass
+- [x] `WaveformDemoScene` → `animation/teaching_scene.py`
+- [x] `CAPTION_CROSSFADE` rule/doc alignment (0.45s, CJK readability)
+- [x] primitive `.play()` protocol + E2E smoke (Create assertion, SPI construct)
 
 Short-term experiment track: circuitjs1-inspired stamp/doStep exploration is
 documented in `docs/circuitjs1-borrowing.md` with an isolated prototype at

@@ -9,7 +9,7 @@ import pytest
 
 pytest.importorskip("manim")
 
-from manim import Scene
+from manim import AnimationGroup, Create, LaggedStart, Scene
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -24,6 +24,14 @@ def _load_module(path: Path):
 
 def _load_rc_module():
     return _load_module(REPO / "examples/analog/01_rc_charge.py")
+
+
+def _contains_create(animation: object) -> bool:
+    if isinstance(animation, Create):
+        return True
+    if isinstance(animation, (LaggedStart, AnimationGroup)):
+        return any(_contains_create(child) for child in animation.animations)
+    return False
 
 
 def test_rc_charge_scene_class_available() -> None:
@@ -49,11 +57,11 @@ def test_play_topology_intro_exported_from_animation_package() -> None:
     assert CaptionTrack is not None
 
 
-def test_rc_shared_imports_package_hud_not_private_symbols() -> None:
+def test_rc_shared_reexports_teaching_scene_from_package() -> None:
     shared = _load_module(REPO / "examples/_shared.py")
+    assert shared.WaveformDemoScene.__module__.startswith("manim_engineering.animation")
+    assert shared.WaveformFixture.__module__.startswith("manim_engineering.animation")
     assert shared.CaptionTrack.__module__.startswith("manim_engineering.animation")
-    assert shared.play_hud_intro.__module__.startswith("manim_engineering.animation")
-    assert shared.make_caption_track.__module__.startswith("manim_engineering.animation")
 
 
 def test_rc_charge_scene_construct_smoke() -> None:
@@ -61,13 +69,12 @@ def test_rc_charge_scene_construct_smoke() -> None:
 
     class _RecordingScene(mod.RCChargeScene):
         def __init__(self) -> None:
-            self._played = 0
+            self.played: list[tuple[tuple[object, ...], dict]] = []
             self._waited = 0
             super().__init__()
 
         def play(self, *animations, **kwargs) -> None:
-            del animations, kwargs
-            self._played += 1
+            self.played.append((animations, dict(kwargs)))
 
         def wait(self, duration: float = 0.0) -> None:
             del duration
@@ -75,5 +82,13 @@ def test_rc_charge_scene_construct_smoke() -> None:
 
     scene = _RecordingScene()
     scene.construct()
-    assert scene._played > 0
+    assert scene.played
     assert scene._waited > 0
+    intro_anims, _ = scene.played[0]
+    assert any(_contains_create(anim) for anim in intro_anims)
+
+
+def test_waveform_demo_scene_lives_in_animation_package() -> None:
+    from manim_engineering.animation import WaveformDemoScene
+
+    assert WaveformDemoScene.__module__.endswith("teaching_scene")
