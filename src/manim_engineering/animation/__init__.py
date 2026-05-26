@@ -8,8 +8,8 @@ and must not be used in production teaching scenes. See ``docs/ROADMAP.md``.
 from manim_engineering.animation.analog_ramp import AnalogRamp
 from manim_engineering.animation.base import AnimationPlan, AnimationPrimitive
 from manim_engineering.animation.beat import play_propagation_beat
-from manim_engineering.animation.errors import BeatAnimationError
 from manim_engineering.animation.beat_factory import TimingMode, build_beat_plans
+from manim_engineering.animation.errors import BeatAnimationError
 from manim_engineering.animation.focus import (
     dim_topology,
     normalize_topology_labels,
@@ -58,16 +58,16 @@ from manim_engineering.animation.signal_flow import (
     DEFAULT_PROPAGATION_DURATION,
     SignalFlow,
 )
-from manim_engineering.animation.style import TeachingStyle
 from manim_engineering.animation.stubs import LogicTransition, VoltagePulse
+from manim_engineering.animation.style import TeachingStyle
 from manim_engineering.animation.teaching_scene import WaveformDemoScene, WaveformFixture
-from manim_engineering.animation.trace import flush_trace, record_stage, reset_tracer, trace_enabled
 from manim_engineering.animation.theme import (
     BACKGROUND_COLORS,
     DEFAULT_BACKGROUND,
     HIGHLIGHT_COLOR,
     MUTED_COLOR,
 )
+from manim_engineering.animation.trace import flush_trace, record_stage, reset_tracer, trace_enabled
 from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
 from manim_engineering.animation.waveform_sync import (
     DEFAULT_TIMING_DURATION,

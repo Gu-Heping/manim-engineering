@@ -10,7 +10,6 @@ from manim import AnimationGroup, FadeOut, VGroup
 from manim_engineering.animation.base import AnimationPlan
 from manim_engineering.animation.beat_factory import TimingMode, build_beat_plans
 from manim_engineering.animation.layers import PROPAGATION_Z_INDEX, PULSE_Z_INDEX
-from manim_engineering.animation.pacing import BEAT_DURATION
 from manim_engineering.animation.purpose import AnimationPurpose
 from manim_engineering.animation.scene_protocol import (
     TeachingSceneProtocol,

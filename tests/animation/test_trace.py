@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 
 import pytest
 
@@ -86,7 +85,10 @@ def test_trace_records_stage_order_and_beat_index(monkeypatch: pytest.MonkeyPatc
     assert payload["stages"][2]["signal_name"] == "clk"
 
 
-def test_trace_stdout_env(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+def test_trace_stdout_env(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     monkeypatch.setenv("ME_ANIMATION_TRACE", "1")
     monkeypatch.setenv("ME_ANIMATION_TRACE_STDOUT", "1")
     reset_tracer()
