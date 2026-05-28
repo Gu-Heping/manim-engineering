@@ -64,15 +64,19 @@ class WaveformPanelRenderer:
         max_beat: int | None = None,
         idle_only: bool = False,
         extend_to_panel: bool | None = None,
+        idle_extend_to_panel: bool = False,
     ) -> VGroup:
         group = VGroup()
+        resolved_extend = extend_to_panel
+        if idle_only and extend_to_panel is None:
+            resolved_extend = idle_extend_to_panel
         points = polyline_for_trace(
             trace,
             spec,
             trace_index,
             max_beat=max_beat,
             idle_only=idle_only,
-            extend_to_panel=extend_to_panel,
+            extend_to_panel=resolved_extend,
         )
         color = _trace_color(trace)
         for start, end in zip(points, points[1:], strict=False):

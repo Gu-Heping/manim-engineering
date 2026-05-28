@@ -9,6 +9,8 @@ from manim_engineering.semantic.enums import LogicLevel
 from manim_engineering.waveform.trace import WaveformBundle, WaveformSample, WaveformTrace
 
 MIN_WAVEFORM_GAP = 0.35
+IDLE_STUB_TIME = 0.12
+"""Semantic time width for idle trace stubs (not full panel hold)."""
 
 
 @dataclass(frozen=True)
@@ -277,11 +279,18 @@ def smooth_polyline(
         return ()
 
     if extend_to_panel is None:
-        extend_to_panel = idle_only or (max_beat is None and hold_through_time is None)
+        extend_to_panel = _default_extend_to_panel(
+            idle_only=idle_only,
+            max_beat=max_beat,
+            hold_through_time=hold_through_time,
+        )
 
     points: list[Point2D] = []
-    for sample in sample_slice:
-        _append_point_if_distinct(points, sample_to_point(sample, spec, trace_index))
+    if idle_only:
+        _append_idle_stub(points, sample_slice[0], spec, trace_index)
+    else:
+        for sample in sample_slice:
+            _append_point_if_distinct(points, sample_to_point(sample, spec, trace_index))
 
     last_pt = sample_to_point(sample_slice[-1], spec, trace_index)
     if hold_through_time is not None:
@@ -321,12 +330,12 @@ def step_polyline(
 ) -> tuple[Point2D, ...]:
     """Orthogonal digital steps: hold level, then vertical edge at next sample.
 
-    ``idle_only``: only the first sample (idle level) extended to panel width.
+    ``idle_only``: first sample as a short horizontal stub (not full panel width).
     ``max_beat``: include edges ``0..max_beat`` (needs ``max_beat + 2`` samples).
     ``max_beat is None``: full trace history.
     ``extend_to_panel``: when ``True``, append a horizontal hold to the panel's
         right edge; when ``False``, stop at the last revealed sample (progressive
-        reveal). Defaults to ``idle_only or max_beat is None``.
+        reveal). Defaults to ``False`` for ``idle_only``; else ``max_beat is None``.
     """
     sample_slice = _sample_slice_for_polyline(
         trace,
@@ -338,18 +347,25 @@ def step_polyline(
         return ()
 
     if extend_to_panel is None:
-        extend_to_panel = idle_only or (max_beat is None and hold_through_time is None)
+        extend_to_panel = _default_extend_to_panel(
+            idle_only=idle_only,
+            max_beat=max_beat,
+            hold_through_time=hold_through_time,
+        )
 
     points: list[Point2D] = []
-    for index, sample in enumerate(sample_slice):
-        pt = sample_to_point(sample, spec, trace_index)
-        if index == 0:
+    if idle_only:
+        _append_idle_stub(points, sample_slice[0], spec, trace_index)
+    else:
+        for index, sample in enumerate(sample_slice):
+            pt = sample_to_point(sample, spec, trace_index)
+            if index == 0:
+                _append_point_if_distinct(points, pt)
+                continue
+            prev = sample_slice[index - 1]
+            corner = Point2D(pt.x, sample_to_point(prev, spec, trace_index).y)
+            _append_point_if_distinct(points, corner)
             _append_point_if_distinct(points, pt)
-            continue
-        prev = sample_slice[index - 1]
-        corner = Point2D(pt.x, sample_to_point(prev, spec, trace_index).y)
-        _append_point_if_distinct(points, corner)
-        _append_point_if_distinct(points, pt)
     last = sample_slice[-1]
     last_y = sample_to_point(last, spec, trace_index).y
     if hold_through_time is not None:
@@ -359,6 +375,32 @@ def step_polyline(
         end_x = spec.origin.x + spec.width
         _append_point_if_distinct(points, Point2D(end_x, last_y))
     return tuple(points)
+
+
+def _append_idle_stub(
+    points: list[Point2D],
+    sample: WaveformSample,
+    spec: WaveformPanelSpec,
+    trace_index: int,
+) -> None:
+    """Append a short horizontal stub from the first sample (teaching idle state)."""
+    start = sample_to_point(sample, spec, trace_index)
+    _append_point_if_distinct(points, start)
+    stub_x = spec.origin.x + IDLE_STUB_TIME * spec.time_scale
+    if stub_x <= start.x + 1e-9:
+        stub_x = start.x + max(spec.width * 0.06, 0.08)
+    _append_point_if_distinct(points, Point2D(stub_x, start.y))
+
+
+def _default_extend_to_panel(
+    *,
+    idle_only: bool,
+    max_beat: int | None,
+    hold_through_time: float | None,
+) -> bool:
+    if idle_only:
+        return False
+    return max_beat is None and hold_through_time is None
 
 
 def _append_point_if_distinct(points: list[Point2D], pt: Point2D) -> None:

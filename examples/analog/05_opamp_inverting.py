@@ -6,15 +6,11 @@ Preview: ``manim -pql examples/analog/05_opamp_inverting.py OpAmpInvertingScene`
 
 from __future__ import annotations
 
-from manim import UP, Scene
-
-from manim_engineering.animation import configure_topology_scene_camera, subtitle_text
 from manim_engineering.components import Ground, InputDriver, OpAmp, Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.layout.presets import layout_from_preset
 from manim_engineering.layout.presets.opamp import inverting_integrator_preset
-from manim_engineering.renderers.minimal import ManimRenderer
 
 
 def build_opamp_inverting_fixture():
@@ -37,16 +33,29 @@ def build_opamp_inverting_fixture():
     return graph, elements, layout
 
 
-class OpAmpInvertingScene(Scene):
-    """运放反相放大器：Vin→Rin→OP(-), Rf反馈, Av = -Rf/Rin。"""
+OpAmpInvertingScene = None
 
-    def construct(self) -> None:
-        graph, elements, layout = build_opamp_inverting_fixture()
-        renderer = ManimRenderer()
-        mobject = renderer.render_circuit(graph, layout, elements)
-        self.add(mobject)
-        configure_topology_scene_camera(self, layout, subtitle_band=0.8)
-        title = subtitle_text("运放反相放大 · Av = -Rf/Rin", role="title")
-        title.to_edge(UP, buff=0.2)
-        self.add(title)
-        self.wait(2)
+try:
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from _shared import TopologyFixture, TopologyTeachingScene
+
+    class OpAmpInvertingScene(TopologyTeachingScene):
+        """运放反相放大器：Vin→Rin→OP(-), Rf反馈, Av = -Rf/Rin。"""
+
+        subtitle_band = 0.8
+
+        def build_fixture(self) -> TopologyFixture:
+            graph, elements, layout = build_opamp_inverting_fixture()
+            return TopologyFixture(graph=graph, elements=elements, layout=layout)
+
+        def hud_texts(self, _fixture: TopologyFixture) -> tuple[str, str]:
+            return (
+                "运放反相放大 · Av = -Rf/Rin",
+                "虚地反相组态：输出与输入反相，增益由电阻比决定",
+            )
+
+except ImportError:
+    OpAmpInvertingScene = None

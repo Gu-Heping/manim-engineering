@@ -71,12 +71,14 @@ def _teaching_beats(signals, records) -> tuple[BeatSpec, ...]:
             record=vin_record,
             wave_beat=0,
             caption="① IN 阶跃 · 输入电压跳变",
+            emphasis="context",
             wire_pulse=False,
         ),
         BeatSpec(
             signal=vc,
             record=vc_record,
             caption="② V_C 指数上升 · τ = R·C",
+            emphasis="key",
             reveal_time=2.0 * RC_PARAMS.tau,
             reveal_scope="signal",
             wire_pulse=False,
@@ -110,8 +112,9 @@ try:
         camera_target_fill = 0.85
         dim_inactive = False
         intro_components_run_time = 0.7
-        intro_total_run_time = 1.4
         intro_pause_offset = 0.6
+        play_waveform_baseline = False
+        extend_waveform_to_panel = False
 
         def build_fixture(self) -> WaveformFixture:
             graph, elements, layout, signals, bundle, records = build_rc_teaching_fixture()

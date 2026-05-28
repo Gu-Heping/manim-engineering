@@ -6,10 +6,13 @@ import importlib.util
 from pathlib import Path
 
 import pytest
+from PIL import ImageChops
 
 pytest.importorskip("manim")
 
-from manim import AnimationGroup, Create, DrawBorderThenFill, LaggedStart, Scene
+from manim import AnimationGroup, Create, DrawBorderThenFill, LaggedStart, Scene, VGroup
+
+from manim_engineering.debug.snapshot import redraw_scene_frame
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -45,6 +48,8 @@ def test_rc_teaching_beats_disable_wire_pulse() -> None:
     _, _, _, signals, _, records = mod.build_rc_teaching_fixture()
     beats = mod._teaching_beats(signals, records)
     assert len(beats) == 2
+    assert beats[0].emphasis == "context"
+    assert beats[1].emphasis == "key"
     assert beats[0].wire_pulse is False
     assert beats[1].wire_pulse is False
 
@@ -98,3 +103,138 @@ def test_waveform_demo_scene_lives_in_animation_package() -> None:
     from manim_engineering.animation import WaveformDemoScene
 
     assert WaveformDemoScene.__module__.endswith("teaching_scene")
+
+
+def test_waveform_demo_scene_default_hud_intro_is_title_only() -> None:
+    mod = _load_rc_module()
+    scene = mod.RCChargeScene()
+    fixture = scene.build_fixture()
+    title_text, _intro_text = scene.hud_texts(fixture)
+    intro_title, intro_copy = scene.hud_intro_texts(fixture)
+    assert intro_title in title_text
+    assert "IN" not in intro_title
+    assert "R1" not in intro_title
+    assert "C1" not in intro_title
+    assert "GND" not in intro_title
+    assert intro_copy == ""
+
+
+def test_rc_intro_static_redraw_matches_live_frame() -> None:
+    mod = _load_rc_module()
+
+    class _ProbeScene(mod.RCChargeScene):
+        def __init__(self) -> None:
+            self.redraw_diff_bbox = None
+            super().__init__()
+
+        def construct(self) -> None:
+            fixture = self.build_fixture()
+            from manim_engineering.animation.scene import configure_waveform_scene_camera
+            from manim_engineering.renderers.minimal import ManimRenderer, WaveformPanelRenderer
+            from manim_engineering.renderers.minimal.labels import detach_label_roots, hide_labels
+
+            topology = ManimRenderer().render_topology(
+                fixture.graph,
+                fixture.layout,
+                dict(fixture.elements),
+            )
+            waveform_panel, panel_spec = WaveformPanelRenderer().render_with_layout(
+                fixture.bundle,
+                fixture.layout,
+                idle_only=True,
+            )
+            topology_labels = VGroup(*detach_label_roots(topology.components))
+            waveform_panel_labels = VGroup(*detach_label_roots(waveform_panel))
+            hide_labels(topology_labels)
+            hide_labels(waveform_panel_labels)
+            content = VGroup(topology.components, topology.wires, waveform_panel)
+
+            configure_waveform_scene_camera(
+                self,
+                fixture.layout,
+                panel_spec,
+                fixture.bundle,
+                target_fill=self.camera_target_fill,
+                subtitle_band=0.0,
+            )
+            self.play_intro(topology, waveform_panel, content)
+            before = self.camera.get_image().copy()
+            redraw_scene_frame(self)
+            after = self.camera.get_image().copy()
+            self.redraw_diff_bbox = ImageChops.difference(before, after).getbbox()
+
+    scene = _ProbeScene()
+    scene.render()
+    assert scene.redraw_diff_bbox is None
+
+
+def test_rc_prebeat_static_redraw_matches_live_frame() -> None:
+    mod = _load_rc_module()
+
+    class _ProbeScene(mod.RCChargeScene):
+        def __init__(self) -> None:
+            self.redraw_diff_bbox = None
+            super().__init__()
+
+        def construct(self) -> None:
+            fixture = self.build_fixture()
+            from manim_engineering.animation.hud import play_hud_intro
+            from manim_engineering.animation.scene import configure_waveform_scene_camera
+            from manim_engineering.animation.teaching_scene import _refresh_static_scene_background
+            from manim_engineering.animation.waveform_controller import WaveformSegmentController
+            from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
+            from manim_engineering.renderers.minimal import ManimRenderer, WaveformPanelRenderer
+            from manim_engineering.renderers.minimal.labels import detach_label_roots, hide_labels
+
+            topology = ManimRenderer().render_topology(
+                fixture.graph,
+                fixture.layout,
+                dict(fixture.elements),
+            )
+            panel_renderer = WaveformPanelRenderer()
+            waveform_panel, panel_spec = panel_renderer.render_with_layout(
+                fixture.bundle,
+                fixture.layout,
+                idle_only=True,
+            )
+            reveal_tracker = WaveformRevealTracker(
+                waveform_panel,
+                fixture.bundle,
+                panel_spec,
+                panel_renderer,
+            )
+            waveform_controller = WaveformSegmentController(reveal_tracker)
+            topology_labels = VGroup(*detach_label_roots(topology.components))
+            waveform_panel_labels = VGroup(*detach_label_roots(waveform_panel))
+            hide_labels(topology_labels)
+            hide_labels(waveform_panel_labels)
+            content = VGroup(topology.components, topology.wires, waveform_panel)
+
+            camera = configure_waveform_scene_camera(
+                self,
+                fixture.layout,
+                panel_spec,
+                fixture.bundle,
+                target_fill=self.camera_target_fill,
+                subtitle_band=0.0,
+            )
+            self.play_intro(topology, waveform_panel, content)
+            hud = self.hud_intro_texts(fixture)
+            if hud is not None:
+                play_hud_intro(self, hud[0], hud[1], camera)
+            self.play_intro_annotations(topology_labels, waveform_panel_labels)
+            self.after_intro_hook(fixture, camera)
+            self.play_waveform_baseline_intro(
+                waveform_panel,
+                waveform_controller,
+                bundle=fixture.bundle,
+            )
+            _refresh_static_scene_background(self)
+            before = self.camera.get_image().copy()
+            redraw_scene_frame(self)
+            after = self.camera.get_image().copy()
+            self.redraw_diff_bbox = ImageChops.difference(before, after).getbbox()
+
+    scene = _ProbeScene()
+    scene.render()
+    assert scene.redraw_diff_bbox is None

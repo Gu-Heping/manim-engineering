@@ -8,6 +8,7 @@ pytest.importorskip("manim")
 
 from manim import AnimationGroup, FadeIn, FadeOut
 from recording_scene import RecordingScene
+from scene_trace import played_role_sets
 
 from manim_engineering.animation import (
     CAPTION_CROSSFADE,
@@ -21,6 +22,7 @@ from manim_engineering.animation import (
 from manim_engineering.components import Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
+from manim_engineering.renderers.minimal.labels import label_role
 from manim_engineering.semantic import LogicLevel, LogicState, Signal
 
 
@@ -69,9 +71,50 @@ def test_play_hud_intro_sets_hud_z_index() -> None:
     scene = RecordingScene()
     title, intro = play_hud_intro(scene, "RC 充电", "观察电容电压爬升", _camera())
     assert title.get_z_index() == HUD_Z_INDEX
+    assert intro is not None
     assert intro.get_z_index() == HUD_Z_INDEX
     assert len(scene.played) == 2
-    assert isinstance(scene.played[0][0], FadeIn)
+    assert title in scene.added
+    assert intro in scene.added
+    assert played_role_sets(scene.played) == [{"hud.title"}, {"hud.intro"}]
+
+
+def test_play_hud_intro_saves_static_background_before_overlay() -> None:
+    scene = RecordingScene()
+
+    class _Renderer:
+        def __init__(self) -> None:
+            self.calls: list[tuple[object, list[object]]] = []
+
+        def save_static_frame_data(self, scene_obj, static_mobjects) -> None:
+            self.calls.append((scene_obj, list(static_mobjects)))
+
+    renderer = _Renderer()
+    scene.renderer = renderer
+    scene.mobjects = [object(), object()]
+    scene.foreground_mobjects = [object()]
+
+    play_hud_intro(scene, "RC 充电", "观察电容电压爬升", _camera())
+
+    assert renderer.calls == [(scene, scene.mobjects + scene.foreground_mobjects)]
+
+
+def test_subtitle_text_uses_hud_label_role_and_zero_stroke() -> None:
+    title = subtitle_text("title", role="title")
+    assert label_role(title) == "hud.title"
+    for sub in title.get_family():
+        if len(sub.points) == 0:
+            continue
+        assert sub.get_stroke_opacity() == 0.0
+
+
+def test_play_hud_intro_skips_empty_intro_line() -> None:
+    scene = RecordingScene()
+    title, intro = play_hud_intro(scene, "RC 鍏呯數", "", _camera())
+    assert title.get_z_index() == HUD_Z_INDEX
+    assert intro is None
+    assert len(scene.played) == 1
+    assert played_role_sets(scene.played) == [{"hud.title"}]
 
 
 def test_caption_crossfade_uses_pacing_constant() -> None:

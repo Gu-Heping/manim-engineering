@@ -64,12 +64,29 @@ When semantic signal state changes, update in the **same beat** (one `scene.play
 
 ### Progressive reveal
 
-Waveform panels in teaching scenes (`WaveformDemoScene` in `examples/_shared.py`)
-start with **idle-only** traces (one horizontal segment per signal). Before each
-propagation pulse, `WaveformRevealTracker` extends the panel to include the edge
-for that beat; `WaveformSync` then flashes that segment while the pulse travels.
+Waveform panels in teaching scenes (`WaveformDemoScene`) start with **idle stubs**
+(a short horizontal segment at the first sample level — not full panel width).
+Topology intro (`play_topology_intro`) draws components and wires only — trace
+polylines stay hidden until `play_waveform_idle_baseline` runs after the HUD intro.
 
-Intro must not draw full signal history upfront; that reads as static parallel lines.
+Use `baseline_traces` on `WaveformDemoScene` to reveal only selected signals at
+intro time (e.g. RC charge: vin stub only; vc appears on its first beat).
+
+Before each propagation pulse, `WaveformRevealTracker` plans new trace segments via
+`SegmentRevealPlan`; `play_propagation_beat` mounts and reveals them with `Create`
+(same beat, same `run_time` as the propagation pulse), then calls
+`restore_waveform_strokes` so lines stay visible after the beat. Prefix segments
+already on screen are preserved (stable-append model). `WaveformSync` then flashes
+the edge segment while the pulse travels.
+
+Intro uses paired `prepare_stroke_reveal` / `restore_stroke_reveal` per stage so
+`Create` / `DrawBorderThenFill` on pre-added mobjects persist without a batch pop at
+intro end.
+
+By default `extend_waveform_to_panel=False`: beats stop at the last taught semantic
+time. Opt in with `extend_waveform_to_panel=True` on the scene class; then
+`finalize_hold_to_panel()` extends the last hold segment to the panel edge without
+adding untaught edges; any new geometry is animated with `Create`, not swapped silently.
 
 ### Per-signal flash isolation
 

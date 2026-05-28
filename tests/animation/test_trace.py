@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
+from scene_trace import trace_payload, trace_stage_entries, trace_stage_names
 
 from manim_engineering.animation.trace import (
     flush_trace,
@@ -75,19 +75,18 @@ def test_trace_records_stage_order_and_beat_index(
 
     path = flush_trace(DemoScene())
     assert path is not None
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = trace_payload(path)
     assert payload["scene"] == "DemoScene"
-    stages = [entry["stage"] for entry in payload["stages"]]
+    stages = trace_stage_names(path)
     assert stages[:2] == ["intro.topology", "hud.intro"]
     assert stages.count("sequence.beat_start") == 2
     assert stages.count("beat.play") == 2
     beat_indices = [
         entry["beat_index"]
-        for entry in payload["stages"]
-        if entry["stage"] == "beat.play"
+        for entry in trace_stage_entries(path, "beat.play")
     ]
     assert beat_indices == [0, 1]
-    assert payload["stages"][2]["signal_name"] == "clk"
+    assert trace_stage_entries(path)[2]["signal_name"] == "clk"
 
 
 def test_trace_stdout_env(

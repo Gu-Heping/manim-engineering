@@ -1,9 +1,9 @@
 """Shared utilities for waveform teaching demos (re-exports + demo-only helpers).
 
 :class:`WaveformDemoScene` and :class:`WaveformFixture` live in
-``manim_engineering.animation.teaching_scene``; this module re-exports them
-for examples that add ``examples/`` to ``sys.path`` and import ``_shared``
-by bare name.
+``manim_engineering.animation.teaching_scene``; :class:`TopologyTeachingScene` and
+:class:`TopologyFixture` are re-exported here as well for examples that add
+``examples/`` to ``sys.path`` and import ``_shared`` by bare name.
 
 Demo-only :func:`capture_camera_frame` stays here (not installed package API).
 """
@@ -15,10 +15,17 @@ from pathlib import Path
 from manim import Scene
 
 from manim_engineering.animation.hud import CaptionTrack
-from manim_engineering.animation.teaching_scene import WaveformDemoScene, WaveformFixture
+from manim_engineering.animation.teaching_scene import (
+    TopologyFixture,
+    TopologyTeachingScene,
+    WaveformDemoScene,
+    WaveformFixture,
+)
 
 __all__ = [
     "CaptionTrack",
+    "TopologyFixture",
+    "TopologyTeachingScene",
     "WaveformDemoScene",
     "WaveformFixture",
     "capture_camera_frame",

@@ -49,6 +49,84 @@ def test_component_label_font_size_uses_point_scale() -> None:
     assert theme.COMPONENT_LABEL_FONT_SIZE >= 16
 
 
+def test_net_labels_are_tagged_with_net_label_role() -> None:
+    import importlib.util
+    from pathlib import Path
+
+    from manim_engineering.renderers.minimal import ManimRenderer
+    from manim_engineering.renderers.minimal.labels import (
+        iter_label_roots,
+        label_category,
+        label_role,
+    )
+
+    repo = Path(__file__).resolve().parents[2]
+    spec = importlib.util.spec_from_file_location(
+        "cmos_inverter",
+        repo / "examples/analog/03_cmos_inverter.py",
+    )
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    graph, elements, layout, *_rest = mod.build_cmos_teaching_fixture()
+    topology = ManimRenderer().render_topology(graph, layout, dict(elements))
+
+    net_labels = [
+        label for label in iter_label_roots(topology.components) if label_role(label) == "net_label"
+    ]
+    assert [label.text for label in net_labels] == ["OUT"]
+    assert {label_category(label) for label in net_labels} == {"net"}
+
+
+def test_detach_label_roots_clears_stale_container_points() -> None:
+    import importlib.util
+    from pathlib import Path
+
+    from manim_engineering.renderers.minimal import ManimRenderer
+    from manim_engineering.renderers.minimal.labels import detach_label_roots, iter_label_roots
+
+    repo = Path(__file__).resolve().parents[2]
+    spec = importlib.util.spec_from_file_location(
+        "cmos_inverter",
+        repo / "examples/analog/03_cmos_inverter.py",
+    )
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    graph, elements, layout, *_rest = mod.build_cmos_teaching_fixture()
+    topology = ManimRenderer().render_topology(graph, layout, dict(elements))
+    label_centers = {
+        label.text: np.array(label.get_center())
+        for label in iter_label_roots(topology.components, roles=("component_label", "net_label"))
+    }
+
+    detach_label_roots(topology.components)
+
+    for center in label_centers.values():
+        assert not any(
+            np.linalg.norm(np.array(mob.get_center()) - center) < 0.35
+            for mob in topology.components.get_family()
+            if mob.__class__.__name__ in {"Group", "VGroup"} and mob.get_num_points() > 0
+        )
+
+
+def test_component_labels_expose_engine_categories() -> None:
+    from manim_engineering.components import PMOS, VCC, Ground, InputDriver
+    from manim_engineering.renderers.minimal.labels import label_category, label_visible
+
+    vcc_label = MinimalRenderer().render(VCC("vcc1", label="VCC")).submobjects[-1]
+    gnd_label = MinimalRenderer().render(Ground("gnd1", label="GND")).submobjects[-1]
+    in_label = MinimalRenderer().render(InputDriver("in1", label="IN")).submobjects[-1]
+    pmos_label = MinimalRenderer().render(PMOS("p1", label="P1")).submobjects[-1]
+
+    assert label_category(vcc_label) == "power"
+    assert label_category(gnd_label) == "power"
+    assert label_category(in_label) == "io"
+    assert label_category(pmos_label) == "device"
+    assert label_visible(vcc_label) is True
+    assert label_visible(pmos_label) is True
+
+
 def test_resistor_label_world_height_readable() -> None:
     """Regression: microscopic font_size (e.g. 0.18 pt) yields near-zero height."""
     mob = MinimalRenderer().render(Resistor("r1", label="R1"))
@@ -340,6 +418,88 @@ def test_refresh_label_strokes_fixes_glyphs_under_partial_opacity() -> None:
         assert sub.get_stroke_opacity() == 0.0
         assert sub.get_stroke_rgbas()[0, 3] == 0.0
         assert str(sub.get_fill_color()).lower() != "#ffffff"
+
+
+def test_label_text_retries_without_svg_cache_after_parse_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from xml.etree.ElementTree import ParseError
+
+    from manim_engineering.renderers.minimal import labels as labels_mod
+
+    calls: list[bool] = []
+    real_text = labels_mod.Text
+
+    def flaky_text(text: str, **kwargs):
+        calls.append(bool(kwargs.get("use_svg_cache", True)))
+        if len(calls) == 1:
+            raise ParseError("empty cache")
+        return real_text(text, **kwargs)
+
+    monkeypatch.setattr(labels_mod, "Text", flaky_text)
+    label = labels_mod.label_text("IN", font_size=12, color="#58C4DD")
+
+    assert label.text == "IN"
+    assert calls == [True, False]
+
+
+def test_label_text_retries_without_svg_cache_after_file_not_found(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from manim_engineering.renderers.minimal import labels as labels_mod
+
+    calls: list[bool] = []
+    real_text = labels_mod.Text
+
+    def flaky_text(text: str, **kwargs):
+        calls.append(bool(kwargs.get("use_svg_cache", True)))
+        if len(calls) == 1:
+            raise FileNotFoundError("missing cached svg")
+        return real_text(text, **kwargs)
+
+    monkeypatch.setattr(labels_mod, "Text", flaky_text)
+    label = labels_mod.label_text("OUT", font_size=12, color="#58C4DD")
+
+    assert label.text == "OUT"
+    assert calls == [True, False]
+
+
+def test_label_text_retries_without_svg_cache_after_permission_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from manim_engineering.renderers.minimal import labels as labels_mod
+
+    calls: list[bool] = []
+
+    class DummyText:
+        def __init__(self, text: str) -> None:
+            self.text = text
+            self.submobjects: list[object] = []
+            self.points = []
+
+        def get_family(self):
+            return [self]
+
+        def set_z_index(self, *_args, **_kwargs):
+            return self
+
+        def set_fill(self, *_args, **_kwargs):
+            return self
+
+        def set_stroke(self, *_args, **_kwargs):
+            return self
+
+    def flaky_text(text: str, **kwargs):
+        calls.append(bool(kwargs.get("use_svg_cache", True)))
+        if len(calls) == 1:
+            raise PermissionError("cached svg locked")
+        return DummyText(text)
+
+    monkeypatch.setattr(labels_mod, "Text", flaky_text)
+    label = labels_mod.label_text("P1", font_size=12, color="#58C4DD")
+
+    assert label.text == "P1"
+    assert calls == [True, False]
 
 
 def test_fade_in_opacity_on_components_then_normalize_fixes_pin_labels() -> None:

@@ -6,9 +6,6 @@ Preview: ``manim -pql examples/analog/09_mos_four_types.py MosFourTypesScene``
 
 from __future__ import annotations
 
-from manim import UP, Scene
-
-from manim_engineering.animation import configure_topology_scene_camera, subtitle_text
 from manim_engineering.components import NMOS, PMOS, NMOSDepletion, PMOSDepletion
 from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import LayoutEngine
@@ -51,37 +48,47 @@ def build_mos_four_types_fixture():
     return graph, elements, layout
 
 
-class MosFourTypesScene(Scene):
-    """增强 vs 耗尽、N vs P 四型 MOSFET 符号对照（默认 textbook_vertical 四端子画法）。"""
+MosFourTypesScene = None
+MosFourTypesArrowOnChannelScene = None
 
-    def construct(self) -> None:
-        graph, elements, layout = build_mos_four_types_fixture()
-        renderer = ManimRenderer()
-        mobject = renderer.render_circuit(graph, layout, elements)
-        self.add(mobject)
-        configure_topology_scene_camera(self, layout, subtitle_band=0.8)
-        title = subtitle_text(
-            "MOSFET 四型 · 增强(沟道断) / 耗尽(沟道通) · N / P",
-            role="title",
-        )
-        title.to_edge(UP, buff=0.2)
-        self.add(title)
-        self.wait(2)
+try:
+    import sys
+    from pathlib import Path
 
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from _shared import TopologyFixture, TopologyTeachingScene
 
-class MosFourTypesArrowOnChannelScene(MosFourTypesScene):
-    """同一四型网格，使用 arrow_on_channel 画法对比。"""
+    class MosFourTypesScene(TopologyTeachingScene):
+        """增强 vs 耗尽、N vs P 四型 MOSFET 符号对照（textbook_vertical）。"""
 
-    def construct(self) -> None:
-        graph, elements, layout = build_mos_four_types_fixture()
-        renderer = ManimRenderer(mosfet_convention=MosfetSymbolConvention.arrow_on_channel)
-        mobject = renderer.render_circuit(graph, layout, elements)
-        self.add(mobject)
-        configure_topology_scene_camera(self, layout, subtitle_band=0.8)
-        title = subtitle_text(
-            "MOSFET 四型 · arrow_on_channel 画法",
-            role="title",
-        )
-        title.to_edge(UP, buff=0.2)
-        self.add(title)
-        self.wait(2)
+        subtitle_band = 0.8
+
+        def build_fixture(self) -> TopologyFixture:
+            graph, elements, layout = build_mos_four_types_fixture()
+            return TopologyFixture(graph=graph, elements=elements, layout=layout)
+
+        def hud_texts(self, _fixture: TopologyFixture) -> tuple[str, str]:
+            return (
+                "MOSFET 四型 · 增强(沟道断) / 耗尽(沟道通) · N / P",
+                "四型符号对照：增强型默认沟道断开，耗尽型默认沟道导通",
+            )
+
+    class MosFourTypesArrowOnChannelScene(MosFourTypesScene):
+        """同一四型网格，使用 arrow_on_channel 画法对比。"""
+
+        def render_topology(self, fixture: TopologyFixture):
+            return ManimRenderer(mosfet_convention=MosfetSymbolConvention.arrow_on_channel).render_topology(
+                fixture.graph,
+                fixture.layout,
+                dict(fixture.elements),
+            )
+
+        def hud_texts(self, _fixture: TopologyFixture) -> tuple[str, str]:
+            return (
+                "MOSFET 四型 · arrow_on_channel 画法",
+                "沟道箭头画法与 textbook_vertical 四端子符号对照",
+            )
+
+except ImportError:
+    MosFourTypesScene = None
+    MosFourTypesArrowOnChannelScene = None

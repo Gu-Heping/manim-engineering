@@ -50,7 +50,7 @@ def subtitle_text(label: str, *, role: str = "caption"):
 
     ``role`` is one of ``"title" | "intro" | "caption"``.
     """
-    from manim import Text
+    from manim_engineering.renderers.minimal.labels import label_text
 
     _sizes = {
         "title": (SUBTITLE_TITLE_FONT_SIZE, SUBTITLE_TITLE_COLOR),
@@ -62,4 +62,10 @@ def subtitle_text(label: str, *, role: str = "caption"):
         msg = f"unknown subtitle role: {role!r}"
         raise ValueError(msg)
     font_size, color = entry
-    return Text(label, font_size=font_size, color=color, font=_cjk_font())
+    return label_text(
+        label,
+        font_size=font_size,
+        color=color,
+        font=_cjk_font(),
+        role=f"hud.{role}",
+    )

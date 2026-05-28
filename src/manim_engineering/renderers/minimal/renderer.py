@@ -40,6 +40,16 @@ _MOS_N_TYPES = (NMOS, NMOSDepletion)
 _MOS_TYPES = _MOS_P_TYPES + _MOS_N_TYPES
 
 
+def _component_label_category(component: CircuitElement) -> str:
+    if isinstance(component, (VCC, Ground)):
+        return "power"
+    if isinstance(component, InputDriver):
+        return "io"
+    if getattr(component, "semantic_type", "") == "interface":
+        return "device"
+    return "device"
+
+
 def _point3(p: Point2D) -> list[float]:
     return [p.x, p.y, 0.0]
 
@@ -109,6 +119,7 @@ class MinimalRenderer:
                 font_size=theme.COMPONENT_LABEL_FONT_SIZE,
                 color=theme.component_stroke_color(),
                 role="component_label",
+                category=_component_label_category(component),
             )
             if isinstance(component, Ground):
                 label.move_to(
@@ -258,7 +269,13 @@ class MinimalRenderer:
         for override in placement.text_overrides:
             if override.role != "net_label" or not override.label:
                 continue
-            label = label_text(override.label, font_size=20, color="white")
+            label = label_text(
+                override.label,
+                font_size=20,
+                color="white",
+                role="net_label",
+                category="net",
+            )
             label.move_to([override.world.x, override.world.y, 0.0])
             label.set_z_index(LABEL_Z_INDEX)
             labels.append(label)
@@ -829,6 +846,7 @@ class MinimalRenderer:
                 font_size=theme.INTERFACE_ROLE_FONT_SIZE,
                 color=theme.component_stroke_color(),
                 role="interface.role",
+                category="device",
             )
             role.move_to(np.array([w * 0.5, h * 0.5, 0.0]))
             body.add(role)
@@ -848,6 +866,7 @@ class MinimalRenderer:
                 font_size=theme.INTERFACE_PIN_FONT_SIZE,
                 color=stroke,
                 role=f"interface.pin.{pin_name}",
+                category="io",
             )
             pin_label.move_to(np.array([pos[0], pos[1], 0.0]))
             body.add(pin_label)

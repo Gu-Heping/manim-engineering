@@ -6,13 +6,9 @@ Preview: ``manim -pql examples/analog/02_diode_rectifier.py HalfWaveRectifierSce
 
 from __future__ import annotations
 
-from manim import UP, Scene
-
-from manim_engineering.animation import configure_topology_scene_camera, subtitle_text
 from manim_engineering.components import Diode, Ground, InputDriver, Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.renderers.minimal import ManimRenderer
 
 
 def build_rectifier_fixture():
@@ -31,16 +27,38 @@ def build_rectifier_fixture():
     return graph, elements, layout
 
 
-class HalfWaveRectifierScene(Scene):
-    """半波整流：交流源 → 二极管 → 负载电阻 → 地。"""
+def main() -> None:
+    graph, elements, layout = build_rectifier_fixture()
+    print(f"nodes={len(graph.nodes)} wires={len(layout.wires)}")
 
-    def construct(self) -> None:
-        graph, elements, layout = build_rectifier_fixture()
-        renderer = ManimRenderer()
-        mobject = renderer.render_circuit(graph, layout, elements)
-        self.add(mobject)
-        configure_topology_scene_camera(self, layout, subtitle_band=0.8)
-        title = subtitle_text("半波整流 · AC→D1→RL→GND", role="title")
-        title.to_edge(UP, buff=0.3)
-        self.add(title)
-        self.wait(2)
+
+if __name__ == "__main__":
+    main()
+
+
+HalfWaveRectifierScene = None
+
+try:
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from _shared import TopologyFixture, TopologyTeachingScene
+
+    class HalfWaveRectifierScene(TopologyTeachingScene):
+        """半波整流：交流源 → 二极管 → 负载电阻 → 地。"""
+
+        subtitle_band = 0.8
+
+        def build_fixture(self) -> TopologyFixture:
+            graph, elements, layout = build_rectifier_fixture()
+            return TopologyFixture(graph=graph, elements=elements, layout=layout)
+
+        def hud_texts(self, _fixture: TopologyFixture) -> tuple[str, str]:
+            return (
+                "半波整流 · AC→D1→RL→GND",
+                "交流源经二极管半波整流，负载电阻上得到脉动直流",
+            )
+
+except ImportError:
+    HalfWaveRectifierScene = None

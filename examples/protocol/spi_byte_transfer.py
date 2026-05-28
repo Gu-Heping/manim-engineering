@@ -128,7 +128,6 @@ try:
         subtitle_band = SPI_SUBTITLE_BAND
         dim_inactive = True
         intro_components_run_time = 0.7
-        intro_total_run_time = 1.4
         intro_pause_offset = 0.6
 
         def build_fixture(self) -> WaveformFixture:
