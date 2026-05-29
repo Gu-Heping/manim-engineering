@@ -94,6 +94,14 @@ def _phase_durations(
     commit_overlay_count: int = 0,
 ) -> _BeatPhaseDurations:
     if has_waveform_commit:
+        if has_playback:
+            return _BeatPhaseDurations(
+                waveform_commit=0.0,
+                commit_settle=0.0,
+                timing_accent=0.0,
+                timing_settle=0.0,
+                playback=beat_duration,
+            )
         if not has_playback:
             return _BeatPhaseDurations(
                 waveform_commit=beat_duration,
@@ -102,26 +110,6 @@ def _phase_durations(
                 timing_settle=0.0,
                 playback=0.0,
             )
-        commit_duration = min(max(beat_duration * 0.35, 0.16), beat_duration * 0.5)
-        if beat_duration - commit_duration < 0.12:
-            commit_duration = max(beat_duration - 0.12, beat_duration * 0.25)
-        remaining = max(beat_duration - commit_duration, 0.0)
-        settle_base = max(beat_duration * 0.05, 0.025)
-        settle_extra = min(max(commit_line_count - 1, 0) * 0.005, 0.015)
-        if commit_overlay_count > 0:
-            settle_extra += 0.01
-        settle_duration = min(
-            settle_base + settle_extra,
-            0.065,
-            max(remaining - 0.12, 0.0),
-        )
-        return _BeatPhaseDurations(
-            waveform_commit=commit_duration,
-            commit_settle=settle_duration,
-            timing_accent=0.0,
-            timing_settle=0.0,
-            playback=max(remaining - settle_duration, 0.0),
-        )
     if has_timing_accent and has_playback:
         accent_duration = min(max(beat_duration * 0.28, 0.16), beat_duration * 0.45)
         if beat_duration - accent_duration < 0.12:
@@ -463,6 +451,9 @@ def _run_execution_plan(
     phase_durations: _BeatPhaseDurations,
     style: TeachingStyle,
 ) -> None:
+    combined_reveal_playback = bool(
+        execution.waveform_commit.reveal_anims and execution.playback.flow_anims
+    )
     timing_group: VGroup | None = None
     if execution.timing_accent.propagation_overlays:
         timing_group = VGroup(*execution.timing_accent.propagation_overlays)
@@ -487,7 +478,7 @@ def _run_execution_plan(
                 mob.set_z_index(PULSE_Z_INDEX)
         scene.add(*execution.playback.overlays)
 
-    if execution.waveform_commit.reveal_anims:
+    if execution.waveform_commit.reveal_anims and not combined_reveal_playback:
         if len(execution.waveform_commit.reveal_anims) == 1:
             scene.play(
                 execution.waveform_commit.reveal_anims[0],
@@ -516,17 +507,22 @@ def _run_execution_plan(
         scene.wait(phase_durations.timing_settle)
 
     if execution.playback.flow_anims:
-        if len(execution.playback.flow_anims) == 1:
-            scene.play(
-                execution.playback.flow_anims[0],
-                run_time=phase_durations.playback,
+        playback_anims: tuple[object, ...]
+        if combined_reveal_playback:
+            playback_anims = (
+                *execution.waveform_commit.reveal_anims,
+                *execution.playback.flow_anims,
             )
         else:
-            scene.play(
-                AnimationGroup(*execution.playback.flow_anims),
-                run_time=phase_durations.playback,
-            )
-    elif not execution.waveform_commit.reveal_anims and not execution.timing_accent.animations:
+            playback_anims = execution.playback.flow_anims
+        scene.play(
+            *playback_anims,
+            run_time=phase_durations.playback,
+        )
+    elif (
+        not execution.waveform_commit.reveal_anims
+        and not execution.timing_accent.animations
+    ):
         scene.wait(beat_duration)
 
     if execution.waveform_commit.new_lines:

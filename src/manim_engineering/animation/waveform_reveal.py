@@ -181,7 +181,8 @@ class WaveformRevealTracker:
                 first_change = len(previous_keys)
 
         if (
-            first_change == 0
+            extend_to_panel
+            and first_change == 0
             and existing_lines
             and new_segments
             and _is_horizontal_extension(existing_lines[0], new_segments[0])

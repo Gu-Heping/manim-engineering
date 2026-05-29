@@ -76,19 +76,45 @@ def test_append_through_beat_preserves_unchanged_prefix_ids() -> None:
     panel = VGroup(renderer.render_trace(trace, spec, 0, idle_only=True))
     tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
     tracker.sync_idle_baselines()
-    prefix_ids = [id(mob) for mob in panel.submobjects[0].submobjects[:-1]]
-
     plan0 = tracker.append_through_beat(clk, 0)
     mount_reveal_plan(plan0)
     after_beat0 = list(panel.submobjects[0].submobjects[:-1])
     assert after_beat0
-    assert id(after_beat0[0]) == prefix_ids[0]
+    prefix_ids = [id(mob) for mob in after_beat0]
 
     plan1 = tracker.append_through_beat(clk, 1)
     mount_reveal_plan(plan1)
     lines_after = list(panel.submobjects[0].submobjects[:-1])
     assert len(lines_after) > len(prefix_ids)
-    assert id(lines_after[0]) == prefix_ids[0]
+    assert [id(mob) for mob in lines_after[: len(prefix_ids)]] == prefix_ids
+
+
+def test_append_through_beat_does_not_extend_idle_stub_in_place() -> None:
+    tracker, trace, bundle, spec, renderer = _panel_fixture()
+    clk = Signal(
+        name="clk",
+        signal_type=SignalType.CLOCK,
+        value=LogicState(level=LogicLevel.LOW),
+    )
+    panel = VGroup(renderer.render_trace(trace, spec, 0, idle_only=True))
+    tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+    tracker.sync_idle_baselines()
+
+    idle_line = tracker._line_children(panel.submobjects[0])[0]
+    idle_end_before = idle_line.get_end().copy()
+
+    plan = tracker.append_through_beat(clk, 0)
+
+    idle_end_after = idle_line.get_end()
+    assert float(idle_end_after[0]) == pytest.approx(float(idle_end_before[0]))
+    assert float(idle_end_after[1]) == pytest.approx(float(idle_end_before[1]))
+    assert plan.removed == (idle_line,)
+    assert len(plan.added) >= 2
+    horizontal, vertical = plan.added[:2]
+    assert float(horizontal.get_start()[0]) == pytest.approx(float(idle_line.get_start()[0]))
+    assert float(horizontal.get_start()[1]) == pytest.approx(float(idle_end_before[1]))
+    assert float(horizontal.get_end()[0]) > float(idle_end_before[0])
+    assert float(vertical.get_start()[0]) == pytest.approx(float(horizontal.get_end()[0]))
 
 
 def test_append_through_time_rebuilds_hold_on_beat_advance() -> None:

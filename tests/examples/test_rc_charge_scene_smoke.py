@@ -6,7 +6,6 @@ import importlib.util
 from pathlib import Path
 
 import pytest
-from PIL import ImageChops
 
 pytest.importorskip("manim")
 pytest.importorskip("PIL")
@@ -120,6 +119,52 @@ def test_waveform_demo_scene_default_hud_intro_is_title_only() -> None:
     assert intro_copy == ""
 
 
+def test_rc_intro_annotations_reveal_waveform_trace_labels() -> None:
+    mod = _load_rc_module()
+    fixture = mod.RCChargeScene().build_fixture()
+
+    from manim_engineering.renderers.minimal import ManimRenderer, WaveformPanelRenderer
+    from manim_engineering.renderers.minimal.labels import (
+        detach_label_roots,
+        hide_labels,
+        iter_label_roots,
+        label_visible,
+    )
+
+    topology = ManimRenderer().render_topology(
+        fixture.graph,
+        fixture.layout,
+        dict(fixture.elements),
+    )
+    waveform_panel, _panel_spec = WaveformPanelRenderer().render_with_layout(
+        fixture.bundle,
+        fixture.layout,
+        idle_only=True,
+    )
+    hide_labels(topology.components)
+    hide_labels(waveform_panel)
+    topology_labels = type(topology.components)(*detach_label_roots(topology.components))
+    waveform_panel_labels = type(waveform_panel)(*detach_label_roots(waveform_panel))
+
+    class _RecordingScene(mod.RCChargeScene):
+        def __init__(self) -> None:
+            self.played: list[tuple[tuple[object, ...], dict]] = []
+            super().__init__()
+
+        def play(self, *animations, **kwargs) -> None:
+            self.played.append((animations, dict(kwargs)))
+
+    scene = _RecordingScene()
+    scene.play_intro_annotations(topology_labels, waveform_panel_labels)
+
+    visible_waveform_labels = {
+        label.text
+        for label in iter_label_roots(VGroup(*scene.mobjects), roles=("waveform_label",))
+        if label_visible(label)
+    }
+    assert visible_waveform_labels == {"vin", "vc"}
+
+
 def test_rc_skip_baseline_restores_idle_stub_visibility() -> None:
     mod = _load_rc_module()
     fixture = mod.RCChargeScene().build_fixture()
@@ -159,6 +204,8 @@ def test_rc_skip_baseline_restores_idle_stub_visibility() -> None:
 
 
 def test_rc_intro_static_redraw_matches_live_frame() -> None:
+    from PIL import ImageChops
+
     mod = _load_rc_module()
 
     class _ProbeScene(mod.RCChargeScene):
@@ -208,6 +255,8 @@ def test_rc_intro_static_redraw_matches_live_frame() -> None:
 
 
 def test_rc_prebeat_static_redraw_matches_live_frame() -> None:
+    from PIL import ImageChops
+
     mod = _load_rc_module()
 
     class _ProbeScene(mod.RCChargeScene):

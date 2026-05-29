@@ -139,9 +139,12 @@ def main() -> None:
             raise RuntimeError(msg)
         print(f"  rendering {stem} ({quality})...")
         mp4 = _render_video(scene_cls, cls_name, quality)
-        dest = OUT_DIR / f"{stem}.mp4"
-        shutil.copy2(mp4, dest)
-        print(f"    -> {dest}")
+        try:
+            dest = OUT_DIR / f"{stem}.mp4"
+            shutil.copy2(mp4, dest)
+            print(f"    -> {dest}")
+        finally:
+            mp4.unlink(missing_ok=True)
 
     readme = OUT_DIR / "README.md"
     readme.write_text(

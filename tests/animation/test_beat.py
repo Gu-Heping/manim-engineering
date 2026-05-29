@@ -264,12 +264,9 @@ def test_reveal_and_flow_run_as_two_ordered_subphases() -> None:
         reveal_targets=((clock, 0),),
     )
     assert used == pytest.approx(BEAT_DURATION)
-    assert len(scene.played) == 3
-    assert len(scene.waited) == 1
-    assert scene.run_times[0] < BEAT_DURATION
-    assert scene.run_times[1] < BEAT_DURATION
-    assert 0.0 < scene.waited[0] < BEAT_DURATION
-    assert scene.run_times[0] + scene.waited[0] + scene.run_times[1] == pytest.approx(BEAT_DURATION)
+    assert len(scene.played) == 2
+    assert not scene.waited
+    assert scene.run_times[0] == pytest.approx(BEAT_DURATION)
 
 
 def test_analog_reveal_uses_single_commit_path() -> None:
@@ -463,11 +460,12 @@ def test_commit_settle_duration_scales_with_commit_shape() -> None:
         commit_line_count=4,
         commit_overlay_count=1,
     )
-    assert dense.commit_settle > sparse.commit_settle
-    assert (
-        dense.waveform_commit + dense.commit_settle + dense.playback
-        == pytest.approx(BEAT_DURATION)
-    )
+    assert sparse.commit_settle == pytest.approx(0.0)
+    assert dense.commit_settle == pytest.approx(0.0)
+    assert sparse.waveform_commit == pytest.approx(0.0)
+    assert dense.waveform_commit == pytest.approx(0.0)
+    assert sparse.playback == pytest.approx(BEAT_DURATION)
+    assert dense.playback == pytest.approx(BEAT_DURATION)
 
 
 def test_waveform_commit_stage_recorded_when_reveal_adds_lines(
@@ -661,22 +659,7 @@ def test_reveal_and_flow_trace_use_split_subphase_durations(
     path = flush_trace(scene)
     assert path is not None
     payload = json.loads(path.read_text(encoding="utf-8"))
-    assert trace_stage_names(path) == ["beat.waveform_commit", "beat.commit_settle", "beat.play"]
-    commit_entry, settle_entry, play_entry = payload["stages"]
-    assert 0.0 < commit_entry["run_time"] < BEAT_DURATION
-    assert 0.0 < settle_entry["run_time"] < BEAT_DURATION
-    assert 0.0 < play_entry["run_time"] < BEAT_DURATION
-    assert settle_entry["run_time"] == pytest.approx(_phase_durations(
-        BEAT_DURATION,
-        has_waveform_commit=True,
-        has_timing_accent=False,
-        has_playback=True,
-        commit_line_count=settle_entry["detail"]["line_count"],
-        commit_overlay_count=settle_entry["detail"]["overlay_count"],
-    ).commit_settle)
-    assert (
-        commit_entry["run_time"]
-        + settle_entry["run_time"]
-        + play_entry["run_time"]
-        == pytest.approx(BEAT_DURATION)
-    )
+    assert trace_stage_names(path) == ["beat.waveform_commit", "beat.play"]
+    commit_entry, play_entry = payload["stages"]
+    assert commit_entry["run_time"] == pytest.approx(0.0)
+    assert play_entry["run_time"] == pytest.approx(BEAT_DURATION)

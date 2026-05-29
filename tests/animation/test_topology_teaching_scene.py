@@ -7,7 +7,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from PIL import ImageChops
 
 pytest.importorskip("manim")
 pytest.importorskip("PIL")
@@ -87,10 +86,18 @@ def test_topology_teaching_scene_does_not_set_components_opacity() -> None:
 
     scene = _Scene()
     topology = scene.render_topology(fixture)
+    call_count = 0
+
+    def _record_set_opacity(*args, **kwargs):
+        nonlocal call_count
+        del args, kwargs
+        call_count += 1
+        return topology.components
+
     with patch.object(scene, "render_topology", return_value=topology):
-        with patch.object(topology.components, "set_opacity") as comp_opacity:
+        with patch.object(topology.components, "set_opacity", _record_set_opacity):
             scene.construct()
-    comp_opacity.assert_not_called()
+    assert call_count == 0
 
 
 def test_half_wave_rectifier_example_exports_topology_scene() -> None:
@@ -122,6 +129,8 @@ def test_topology_teaching_scene_default_hud_intro_is_title_only() -> None:
 
 
 def test_topology_teaching_scene_prehold_redraw_matches_live_frame() -> None:
+    from PIL import ImageChops
+
     class _RectifierScene(TopologyTeachingScene):
         subtitle_band = 0.8
 

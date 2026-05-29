@@ -92,6 +92,8 @@ class WaveformPanelRenderer:
             trace.signal_name,
             font_size=theme.WAVEFORM_LABEL_FONT_SIZE,
             color=color,
+            role="waveform_label",
+            category="io",
         )
         label.move_to(
             [

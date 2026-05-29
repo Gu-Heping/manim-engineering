@@ -6,7 +6,6 @@ import importlib.util
 from pathlib import Path
 
 import pytest
-from PIL import ImageChops
 
 pytest.importorskip("manim")
 pytest.importorskip("PIL")
@@ -305,6 +304,8 @@ def test_refresh_label_strokes_keeps_hidden_device_and_net_labels_hidden() -> No
 
 
 def test_cmos_intro_static_redraw_matches_live_frame() -> None:
+    from PIL import ImageChops
+
     mod = _load_cmos_module()
 
     class _ProbeScene(mod.CMOSInverterScene):
@@ -351,6 +352,8 @@ def test_cmos_intro_static_redraw_matches_live_frame() -> None:
 
 
 def test_cmos_prebeat_static_redraw_matches_live_frame() -> None:
+    from PIL import ImageChops
+
     mod = _load_cmos_module()
 
     class _ProbeScene(mod.CMOSInverterScene):

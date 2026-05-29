@@ -313,6 +313,15 @@ class WaveformDemoScene(Scene, ABC):
             run_time=self.annotation_net_run_time,
             lag_ratio=self.intro_lag_ratio,
         )
+        _play_label_reveal(
+            self,
+            topology_labels,
+            waveform_panel_labels,
+            policy=policy,
+            phase="intro_annotation",
+            run_time=self.annotation_run_time,
+            lag_ratio=self.intro_lag_ratio,
+        )
 
     def construct(self) -> None:
         reset_tracer()
@@ -549,6 +558,15 @@ class TopologyTeachingScene(Scene, ABC):
             policy=policy,
             phase="intro_annotation",
             run_time=self.annotation_net_run_time,
+            lag_ratio=self.intro_lag_ratio,
+        )
+        _play_label_reveal(
+            self,
+            topology_labels,
+            waveform_panel_labels,
+            policy=policy,
+            phase="intro_annotation",
+            run_time=self.annotation_run_time,
             lag_ratio=self.intro_lag_ratio,
         )
 

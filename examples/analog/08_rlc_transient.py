@@ -31,6 +31,13 @@ def build_rlc_transient_fixture():
 
 RLCTransientScene = None
 
+
+def _is_optional_scene_import_error(exc: ImportError) -> bool:
+    name = getattr(exc, "name", None)
+    if not name:
+        return False
+    return name == "manim" or str(name).startswith("manim.")
+
 try:
     import importlib.util
     from pathlib import Path
@@ -58,5 +65,9 @@ try:
                 "二阶 RLC 回路：电阻、电感、电容共同决定暂态与谐振",
             )
 
-except ImportError:
-    RLCTransientScene = None
+except ImportError as exc:
+    if _is_optional_scene_import_error(exc):
+        RLCTransientScene = None
+    else:
+        msg = f"failed to import RLCTransientScene from {__file__}: {exc}"
+        raise ImportError(msg) from exc
