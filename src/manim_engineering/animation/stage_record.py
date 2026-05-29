@@ -57,6 +57,12 @@ def wait_signal_stage(
     record: Callable[..., None] = record_stage,
     **detail: object,
 ) -> None:
+    if run_time <= 0:
+        msg = (
+            "wait_signal_stage requires positive run_time: "
+            f"stage={stage!r} signal={signal_name!r}"
+        )
+        raise ValueError(msg)
     record_signal_stage(
         stage,
         signal_name=signal_name,

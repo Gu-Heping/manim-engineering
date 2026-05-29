@@ -55,10 +55,12 @@ def style_for_emphasis(
         duration_scale = style.context_duration_scale
         gap_scale = style.context_gap_scale
         pulse_scale = style.context_pulse_scale
-    else:
+    elif emphasis == "key":
         duration_scale = style.key_duration_scale
         gap_scale = style.key_gap_scale
         pulse_scale = style.key_pulse_scale
+    else:
+        raise ValueError(f"unknown emphasis: {emphasis!r}")
     return TeachingStyle(
         beat_duration=style.beat_duration * duration_scale,
         beat_gap=style.beat_gap * gap_scale,

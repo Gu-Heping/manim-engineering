@@ -235,7 +235,7 @@ def restore_stroke_reveal(mobjects: tuple[Mobject, ...]) -> None:
             mob.set_fill(opacity=1.0, family=False)
         elif mob.get_stroke_width() > 0:
             mob.set_stroke(opacity=1.0, family=False)
-        elif mob.get_fill_opacity() >= 0.0:
+        elif (fill_opacity := mob.get_fill_opacity()) is not None and fill_opacity > 0.0:
             mob.set_fill(opacity=1.0, family=False)
 
 

@@ -77,7 +77,10 @@ try:
         """同一四型网格，使用 arrow_on_channel 画法对比。"""
 
         def render_topology(self, fixture: TopologyFixture):
-            return ManimRenderer(mosfet_convention=MosfetSymbolConvention.arrow_on_channel).render_topology(
+            renderer = ManimRenderer(
+                mosfet_convention=MosfetSymbolConvention.arrow_on_channel
+            )
+            return renderer.render_topology(
                 fixture.graph,
                 fixture.layout,
                 dict(fixture.elements),

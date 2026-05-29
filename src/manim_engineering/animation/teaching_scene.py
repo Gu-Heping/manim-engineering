@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from manim import AnimationGroup, Create, FadeIn, FadeOut, LaggedStart, Scene, VGroup
+from manim import Create, FadeIn, FadeOut, LaggedStart, Scene, VGroup
 
 if TYPE_CHECKING:
     from manim import Text
@@ -38,6 +38,7 @@ from manim_engineering.animation.scene import (
 )
 from manim_engineering.animation.scene_mobjects import scene_display_mobjects
 from manim_engineering.animation.scene_template import (
+    _iter_trace_line_strokes,
     play_topology_intro,
     play_waveform_idle_baseline,
 )
@@ -107,8 +108,9 @@ def _play_label_reveal(
         scene.play(FadeIn(revealed[0]), run_time=run_time)
     else:
         scene.play(
-            AnimationGroup(
+            LaggedStart(
                 *[FadeIn(label) for label in revealed],
+                lag_ratio=lag_ratio,
             ),
             run_time=run_time,
         )
@@ -262,6 +264,7 @@ class WaveformDemoScene(Scene, ABC):
     ) -> None:
         """Reveal idle trace baselines before the first propagation beat."""
         if not self.play_waveform_baseline:
+            restore_waveform_strokes(_iter_trace_line_strokes(waveform_panel))
             waveform_controller.sync_idle_baselines()
             return
         play_waveform_idle_baseline(

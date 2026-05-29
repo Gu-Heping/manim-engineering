@@ -8,9 +8,14 @@ pytest.importorskip("manim")
 
 from manim import VGroup
 
-from manim_engineering.animation.waveform_reveal import WaveformRevealTracker, mount_reveal_plan
+from manim_engineering.animation.waveform_reveal import (
+    UnknownWaveformSignalError,
+    WaveformRevealTracker,
+    mount_reveal_plan,
+)
 from manim_engineering.core.enums import SignalType
 from manim_engineering.renderers.minimal import WaveformPanelRenderer
+from manim_engineering.semantic import LogicState, Signal
 from manim_engineering.semantic.enums import LogicLevel
 from manim_engineering.waveform.layout import WaveformPanelSpec
 from manim_engineering.waveform.trace import WaveformSample, WaveformTrace
@@ -160,6 +165,13 @@ def test_append_through_time_for_only_updates_named_trace() -> None:
     assert tracker.revealed_time_for("vc") == pytest.approx(2.0)
 
 
+def test_append_through_time_for_unknown_signal_raises_typed_error() -> None:
+    tracker, _trace, _bundle, _spec, _renderer = _panel_fixture()
+
+    with pytest.raises(UnknownWaveformSignalError):
+        tracker.append_through_time_for("missing", 1.0)
+
+
 def test_finalize_hold_extends_short_idle_stub() -> None:
     from manim_engineering.layout.types import Point2D
     from manim_engineering.waveform.trace import WaveformBundle
@@ -195,6 +207,27 @@ def test_finalize_hold_extends_short_idle_stub() -> None:
     assert pending == () or all(
         float(line.get_stroke_opacity()) == pytest.approx(0.0) for line in pending  # type: ignore[attr-defined]
     )
+
+
+def test_mount_reveal_plan_adds_lines_without_label_placeholder() -> None:
+    tracker, trace, bundle, spec, renderer = _panel_fixture()
+
+    clk = Signal(
+        name="clk",
+        signal_type=SignalType.CLOCK,
+        value=LogicState(level=LogicLevel.LOW),
+    )
+    trace_row = renderer.render_trace(trace, spec, 0, idle_only=True)
+    bare_row = VGroup(*tracker._line_children(trace_row))
+    panel = VGroup(bare_row)
+    tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+    tracker.sync_idle_baselines()
+
+    plan = tracker.append_through_beat(clk, 0)
+    mount_reveal_plan(plan)
+
+    assert plan.added
+    assert all(line in bare_row.submobjects for line in plan.added)
 
 
 def test_finalize_hold_extends_partial_reveal_to_panel_edge() -> None:

@@ -9,6 +9,7 @@ import pytest
 from PIL import ImageChops
 
 pytest.importorskip("manim")
+pytest.importorskip("PIL")
 
 from manim import AnimationGroup, Create, DrawBorderThenFill, LaggedStart, Scene, VGroup
 from scene_trace import played_role_sets, scene_visible_label_texts

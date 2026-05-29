@@ -10,8 +10,18 @@ from manim_engineering.animation import BeatSpec
 from manim_engineering.components import Capacitor, Ground, InputDriver, Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.semantic import LogicLevel, LogicState, Signal, record_analog_level_between_pins, record_rising_edge
-from manim_engineering.waveform import RCStepParams, derive_rc_waveform_bundle, rc_charge_level_normalized
+from manim_engineering.semantic import (
+    LogicLevel,
+    LogicState,
+    Signal,
+    record_analog_level_between_pins,
+    record_rising_edge,
+)
+from manim_engineering.waveform import (
+    RCStepParams,
+    derive_rc_waveform_bundle,
+    rc_charge_level_normalized,
+)
 
 RC_SUBTITLE_BAND = 1.25
 RC_PARAMS = RCStepParams(v_src=5.0, tau=1.0, t_step=0.0, t_end=5.0, sample_count=32)
@@ -88,7 +98,10 @@ def _teaching_beats(signals, records) -> tuple[BeatSpec, ...]:
 
 def main() -> None:
     graph, elements, layout, signals, bundle, records = build_rc_teaching_fixture()
-    print(f"nodes={len(graph.nodes)} wires={len(layout.wires)} traces={[t.signal_name for t in bundle.traces]}")
+    print(
+        f"nodes={len(graph.nodes)} wires={len(layout.wires)} "
+        f"traces={[t.signal_name for t in bundle.traces]}"
+    )
     print(f"beats={len(_teaching_beats(signals, records))} vc@2τ={records[1].new_value:.3f}")
 
 

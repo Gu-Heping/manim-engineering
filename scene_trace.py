@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 import json
+from collections.abc import Iterable
 from pathlib import Path
 
 from manim import AnimationGroup, Group, LaggedStart
 
+from manim_engineering.animation.scene_mobjects import scene_display_mobjects
 from manim_engineering.renderers.minimal.labels import iter_label_roots, label_role, label_visible
 
 
@@ -53,8 +54,7 @@ def scene_visible_label_texts(
     roles: tuple[str, ...] | None = None,
 ) -> set[str]:
     """Visible label texts currently attached to a scene-like object's mobjects."""
-    mobjects = getattr(scene, "mobjects", ())
-    root = Group(*mobjects)
+    root = Group(*scene_display_mobjects(scene))
     return {
         label.text
         for label in iter_label_roots(root, roles=roles)

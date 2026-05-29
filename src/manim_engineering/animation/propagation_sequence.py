@@ -137,7 +137,6 @@ class _LabelFocusPlan:
     run_time: float
     label_phase: str
     labels: tuple[object, ...]
-    animation: object
 
 
 @dataclass(frozen=True)
@@ -372,8 +371,7 @@ class PropagationSequence:
         profile: TransitionProfile,
     ) -> _TopologyFocusPlan:
         run_time = self._topology_focus_duration(spec, beat_style)
-        connection_id = connection_id_for_pins(
-            self._graph,
+        connection_id = self._resolve_connection_id(
             spec.record.from_pin_id,
             spec.record.to_pin_id,
         )
@@ -580,19 +578,38 @@ class PropagationSequence:
         if not labels:
             return None
         run_time = self._label_focus_duration(context.style)
-        if len(labels) == 1:
-            animation = labels[0].animate.set_opacity(label_target_opacity(labels[0]))
-        else:
-            animation = LaggedStart(
-                *[label.animate.set_opacity(label_target_opacity(label)) for label in labels],
-                lag_ratio=0.1,
-            )
         return _LabelFocusPlan(
             run_time=run_time,
             label_phase=phase,
             labels=labels,
-            animation=animation,
         )
+
+    def _resolve_connection_id(self, from_pin_id: str, to_pin_id: str) -> str:
+        if self._graph is not None:
+            return connection_id_for_pins(
+                self._graph,
+                from_pin_id,
+                to_pin_id,
+            )
+
+        start = self._layout.pin_positions[from_pin_id]
+        end = self._layout.pin_positions[to_pin_id]
+        pin_keys = {(start.x, start.y), (end.x, end.y)}
+        for wire in self._layout.wires:
+            if len(wire.points) < 2:
+                continue
+            endpoints = {
+                (wire.points[0].x, wire.points[0].y),
+                (wire.points[-1].x, wire.points[-1].y),
+            }
+            if endpoints == pin_keys:
+                return wire.connection_id
+
+        if len(self._layout.wires) == 1:
+            return self._layout.wires[0].connection_id
+
+        msg = "unable to resolve topology focus connection (pass graph=)"
+        raise ValueError(msg)
 
     def _label_focus_settle_duration(
         self,
@@ -738,11 +755,21 @@ class PropagationSequence:
         for label in plan.labels:
             set_label_visible(label, True)
             refresh_label_strokes(label, mode="full")
+        if len(plan.labels) == 1:
+            animation = plan.labels[0].animate.set_opacity(label_target_opacity(plan.labels[0]))
+        else:
+            animation = LaggedStart(
+                *[
+                    label.animate.set_opacity(label_target_opacity(label))
+                    for label in plan.labels
+                ],
+                lag_ratio=0.1,
+            )
         add = getattr(scene, "add", None)
-        self._label_layer.remove(*plan.labels)
         if callable(add):
             add(*plan.labels)
-        play(plan.animation, run_time=plan.run_time)
+        self._label_layer.remove(*plan.labels)
+        play(animation, run_time=plan.run_time)
         for label in plan.labels:
             refresh_label_strokes(label, mode="full")
         return True

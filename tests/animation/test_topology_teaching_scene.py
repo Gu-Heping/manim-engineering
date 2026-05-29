@@ -10,6 +10,7 @@ import pytest
 from PIL import ImageChops
 
 pytest.importorskip("manim")
+pytest.importorskip("PIL")
 
 from manim import AnimationGroup, Create, DrawBorderThenFill, LaggedStart
 
@@ -86,8 +87,9 @@ def test_topology_teaching_scene_does_not_set_components_opacity() -> None:
 
     scene = _Scene()
     topology = scene.render_topology(fixture)
-    with patch.object(topology.components, "set_opacity") as comp_opacity:
-        scene.construct()
+    with patch.object(scene, "render_topology", return_value=topology):
+        with patch.object(topology.components, "set_opacity") as comp_opacity:
+            scene.construct()
     comp_opacity.assert_not_called()
 
 
@@ -163,7 +165,9 @@ def test_topology_teaching_scene_prehold_redraw_matches_live_frame() -> None:
             self.after_intro_hook(fixture, camera)
             _refresh_static_scene_background(self)
             before = self.camera.get_image().copy()
-            self.renderer.update_frame(self, mobjects=list(self.mobjects))
+            from manim_engineering.debug.snapshot import redraw_scene_frame
+
+            redraw_scene_frame(self)
             after = self.camera.get_image().copy()
             self.redraw_diff_bbox = ImageChops.difference(before, after).getbbox()
 

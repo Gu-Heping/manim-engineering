@@ -92,22 +92,30 @@ def _load_module(name: str, path: Path):
 def _render_video(scene_cls: type, cls_name: str, quality: str) -> Path:
     from manim import tempconfig
 
-    tmpdir = tempfile.mkdtemp(prefix="me_example_video_")
-    with tempconfig(
-        {
-            "quality": quality,
-            "disable_caching": True,
-            "media_dir": tmpdir,
-            "write_to_movie": True,
-            "save_last_frame": False,
-        }
-    ):
-        scene_cls().render()
+    with tempfile.TemporaryDirectory(prefix="me_example_video_") as tmpdir:
+        with tempconfig(
+            {
+                "quality": quality,
+                "disable_caching": True,
+                "media_dir": tmpdir,
+                "write_to_movie": True,
+                "save_last_frame": False,
+            }
+        ):
+            scene_cls().render()
 
-    matches = sorted(Path(tmpdir).rglob(f"{cls_name}*.mp4"))
-    if not matches:
-        raise FileNotFoundError(f"no MP4 matching {cls_name!r} under {tmpdir}")
-    return matches[-1]
+        matches = sorted(Path(tmpdir).rglob(f"{cls_name}*.mp4"))
+        if not matches:
+            raise FileNotFoundError(f"no MP4 matching {cls_name!r} under {tmpdir}")
+        source = matches[-1]
+        with tempfile.NamedTemporaryFile(
+            prefix=f"{cls_name}_",
+            suffix=".mp4",
+            delete=False,
+        ) as tmpfile:
+            dest = Path(tmpfile.name)
+        shutil.copy2(source, dest)
+        return dest
 
 
 def main() -> None:
@@ -122,7 +130,13 @@ def main() -> None:
     for stem, rel, cls_name, quality in SCENES:
         path = EXAMPLES / rel
         mod = _load_module(stem, path)
-        scene_cls = getattr(mod, cls_name)
+        scene_cls = getattr(mod, cls_name, None)
+        if scene_cls is None or not callable(scene_cls):
+            msg = (
+                "invalid scene export target: "
+                f"module={path}, class={cls_name!r}, stem={stem!r}, quality={quality!r}"
+            )
+            raise RuntimeError(msg)
         print(f"  rendering {stem} ({quality})...")
         mp4 = _render_video(scene_cls, cls_name, quality)
         dest = OUT_DIR / f"{stem}.mp4"

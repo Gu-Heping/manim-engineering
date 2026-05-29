@@ -8,6 +8,7 @@ from manim import Line, VGroup
 
 from manim_engineering.renderers.minimal import theme
 from manim_engineering.renderers.minimal.labels import (
+    is_label_root,
     prepare_stroke_reveal,
     restore_waveform_strokes,
 )
@@ -21,6 +22,10 @@ from manim_engineering.waveform.layout import WaveformPanelSpec, beat_for_time, 
 from manim_engineering.waveform.trace import WaveformBundle, WaveformTrace
 
 _SegmentKey = tuple[float, float, float, float]
+
+
+class UnknownWaveformSignalError(ValueError):
+    """Raised when a reveal request references a trace name absent from the panel."""
 
 
 @dataclass(frozen=True)
@@ -104,7 +109,7 @@ class WaveformRevealTracker:
                 return index
         known = [trace.signal_name for trace in self._bundle.traces]
         msg = f"unknown waveform trace {name!r}; panel traces={known}"
-        raise ValueError(msg)
+        raise UnknownWaveformSignalError(msg)
 
     def _trace_group_for(self, trace_index: int) -> VGroup:
         if trace_index < 0 or trace_index >= len(self._panel.submobjects):
@@ -133,6 +138,7 @@ class WaveformRevealTracker:
     ) -> SegmentRevealPlan:
         empty = SegmentRevealPlan(trace_group=VGroup())
         if name not in self._revealed:
+            self._trace_index_for(name)
             return empty
 
         trace_index = self._trace_index_for(name)
@@ -290,8 +296,9 @@ class WaveformRevealTracker:
             trace_group.remove(line)
 
         to_animate: list[object] = []
-        label = trace_group.submobjects[-1]
-        trace_group.remove(label)
+        label = self._trace_label(trace_group)
+        if label is not None:
+            trace_group.remove(label)
         for line in new_segments[first_change:]:
             prepare_stroke_reveal((line,))
             line.set_stroke(
@@ -301,7 +308,8 @@ class WaveformRevealTracker:
             )
             to_animate.append(line)
             trace_group.add(line)
-        trace_group.add(label)
+        if label is not None:
+            trace_group.add(label)
         self._segment_snapshots[name] = new_keys
         return tuple(to_animate)
 
@@ -310,7 +318,17 @@ class WaveformRevealTracker:
         return self.finalize_hold_to_panel()
 
     def _line_children(self, trace_group: VGroup) -> list[object]:
-        return list(trace_group.submobjects[:-1])
+        return [
+            mob
+            for mob in trace_group.submobjects
+            if isinstance(mob, Line) and len(mob.points) > 0
+        ]
+
+    def _trace_label(self, trace_group: VGroup) -> object | None:
+        for mob in trace_group.submobjects:
+            if is_label_root(mob):
+                return mob
+        return None
 
     def _line_segments(
         self,
@@ -352,12 +370,20 @@ def mount_reveal_plan(plan: SegmentRevealPlan) -> tuple[Line, ...]:
         return ()
     trace_group = plan.trace_group
     if not trace_group.submobjects:
+        for line in plan.added:
+            trace_group.add(line)
         return plan.added
-    label = trace_group.submobjects[-1]
-    trace_group.remove(label)
+    label = None
+    for mob in trace_group.submobjects:
+        if is_label_root(mob):
+            label = mob
+            break
+    if label is not None:
+        trace_group.remove(label)
     for line in plan.added:
         trace_group.add(line)
-    trace_group.add(label)
+    if label is not None:
+        trace_group.add(label)
     return plan.added
 
 

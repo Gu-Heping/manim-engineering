@@ -6,14 +6,32 @@ Preview: ``manim -pql examples/analog/03_cmos_inverter.py CMOSInverterScene``
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from manim_engineering.animation import BeatSpec, TeachingStyle
-from manim_engineering.components import NMOS, PMOS, VCC, Ground, InputDriver
+from manim_engineering.components import (
+    NMOS,
+    PMOS,
+    VCC,
+    CircuitElement,
+    Ground,
+    InputDriver,
+)
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.layout.presets import layout_from_preset
 from manim_engineering.layout.presets.cmos_inverter import cmos_inverter_preset
-from manim_engineering.semantic import LogicLevel, LogicState, Signal, record_falling_edge, record_rising_edge
+from manim_engineering.layout.types import LayoutResult
+from manim_engineering.semantic import (
+    LogicLevel,
+    LogicState,
+    Signal,
+    record_falling_edge,
+    record_rising_edge,
+)
+from manim_engineering.semantic.propagation import PropagationRecord
 from manim_engineering.waveform import derive_bundle_from_signals
+from manim_engineering.waveform.trace import WaveformBundle
 
 CMOS_SUBTITLE_BAND = 1.2
 
@@ -40,7 +58,14 @@ def build_inverter_fixture():
     return graph, elements, layout
 
 
-def build_cmos_teaching_fixture():
+def build_cmos_teaching_fixture() -> tuple[
+    CircuitGraph,
+    Mapping[str, CircuitElement],
+    LayoutResult,
+    tuple[Signal, Signal],
+    WaveformBundle,
+    tuple[PropagationRecord, PropagationRecord],
+]:
     graph, elements, layout = build_inverter_fixture()
     in_drv = elements["in_drv"]
     pmos = elements["pm1"]
@@ -103,7 +128,10 @@ def _teaching_beats(signals, records) -> tuple[BeatSpec, ...]:
 
 def main() -> None:
     graph, elements, layout, signals, bundle, records = build_cmos_teaching_fixture()
-    print(f"nodes={len(graph.nodes)} wires={len(layout.wires)} traces={[t.signal_name for t in bundle.traces]}")
+    print(
+        f"nodes={len(graph.nodes)} wires={len(layout.wires)} "
+        f"traces={[t.signal_name for t in bundle.traces]}"
+    )
     print(f"beats={len(_teaching_beats(signals, records))}")
 
 

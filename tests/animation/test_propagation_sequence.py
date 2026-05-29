@@ -611,6 +611,68 @@ def test_sequence_adds_short_settle_after_label_focus_before_beat() -> None:
     ]
 
 
+def test_label_focus_computes_opacity_targets_after_visibility_flip(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    mod = _load_cmos_module()
+    graph, elements, layout, signals, _bundle, records = mod.build_cmos_teaching_fixture()
+    topology = ManimRenderer().render_topology(graph, layout, dict(elements))
+    label_layer = type(topology.components)(*detach_label_roots(topology.components))
+    hide_labels(label_layer)
+    beat = mod._teaching_beats(signals, records)[0]
+    scene = RecordingScene()
+    sequence = PropagationSequence(
+        layout=layout,
+        graph=graph,
+        beats=(beat,),
+        topology=topology,
+        label_layer=label_layer,
+    )
+    context = sequence._build_beat_context(beat, beat_index=0)
+    plan = sequence._build_label_focus_plan(context)
+    assert plan is not None
+
+    observed: list[bool] = []
+
+    def _record_visibility(label):
+        observed.append(label_visible(label))
+        return 1.0
+
+    monkeypatch.setattr(
+        "manim_engineering.animation.propagation_sequence.label_target_opacity",
+        _record_visibility,
+    )
+
+    sequence._play_label_focus(scene, context, plan)
+
+    assert observed
+    assert all(observed)
+
+
+def test_topology_focus_falls_back_to_layout_when_graph_missing() -> None:
+    mod = _load_cmos_module()
+    graph, elements, layout, signals, _bundle, records = mod.build_cmos_teaching_fixture()
+    topology = ManimRenderer().render_topology(graph, layout, dict(elements))
+    beat = mod._teaching_beats(signals, records)[0]
+    scene = RecordingScene()
+    sequence = PropagationSequence(
+        layout=layout,
+        graph=None,
+        beats=(beat,),
+        topology=topology,
+    )
+
+    plan = sequence._play_topology_focus(
+        scene,
+        beat,
+        sequence._resolve_style(beat),
+        beat_index=0,
+    )
+
+    assert plan is not None
+    assert plan.animations
+
+
 def test_sequence_trace_records_director_subphases(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

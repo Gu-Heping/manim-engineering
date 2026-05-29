@@ -32,11 +32,16 @@ def build_rlc_transient_fixture():
 RLCTransientScene = None
 
 try:
-    import sys
+    import importlib.util
     from pathlib import Path
 
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from _shared import TopologyFixture, TopologyTeachingScene
+    _SHARED_PATH = Path(__file__).resolve().parents[1] / "_shared.py"
+    _SHARED_SPEC = importlib.util.spec_from_file_location("me_examples_shared", _SHARED_PATH)
+    assert _SHARED_SPEC is not None and _SHARED_SPEC.loader is not None
+    _shared = importlib.util.module_from_spec(_SHARED_SPEC)
+    _SHARED_SPEC.loader.exec_module(_shared)
+    TopologyFixture = _shared.TopologyFixture
+    TopologyTeachingScene = _shared.TopologyTeachingScene
 
     class RLCTransientScene(TopologyTeachingScene):
         """RLC串联暂态：AC源→R→L→C→GND，二阶系统阻尼响应。"""

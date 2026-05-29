@@ -9,6 +9,7 @@ import pytest
 from PIL import ImageChops
 
 pytest.importorskip("manim")
+pytest.importorskip("PIL")
 
 from manim import AnimationGroup, Create, DrawBorderThenFill, LaggedStart, Scene, VGroup
 
@@ -117,6 +118,44 @@ def test_waveform_demo_scene_default_hud_intro_is_title_only() -> None:
     assert "C1" not in intro_title
     assert "GND" not in intro_title
     assert intro_copy == ""
+
+
+def test_rc_skip_baseline_restores_idle_stub_visibility() -> None:
+    mod = _load_rc_module()
+    fixture = mod.RCChargeScene().build_fixture()
+    from manim_engineering.animation.waveform_controller import WaveformSegmentController
+    from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
+    from manim_engineering.renderers.minimal import WaveformPanelRenderer
+
+    panel_renderer = WaveformPanelRenderer()
+    waveform_panel, panel_spec = panel_renderer.render_with_layout(
+        fixture.bundle,
+        fixture.layout,
+        idle_only=True,
+    )
+    tracker = WaveformRevealTracker(
+        waveform_panel,
+        fixture.bundle,
+        panel_spec,
+        panel_renderer,
+    )
+    controller = WaveformSegmentController(tracker)
+    scene = mod.RCChargeScene()
+
+    scene.play_waveform_baseline_intro(
+        waveform_panel,
+        controller,
+        bundle=fixture.bundle,
+    )
+
+    trace_lines = [
+        mob
+        for trace_group in waveform_panel.submobjects[:-1]
+        for mob in trace_group.submobjects[:-1]
+        if mob.__class__.__name__ == "Line"
+    ]
+    assert trace_lines
+    assert all(float(line.get_stroke_opacity()) == pytest.approx(1.0) for line in trace_lines)
 
 
 def test_rc_intro_static_redraw_matches_live_frame() -> None:
