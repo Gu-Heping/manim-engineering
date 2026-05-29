@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 pytest.importorskip("manim")
-pytest.importorskip("PIL")
 
 from manim import AnimationGroup, Create, DrawBorderThenFill, LaggedStart, Scene, VGroup
 
@@ -204,6 +203,7 @@ def test_rc_skip_baseline_restores_idle_stub_visibility() -> None:
 
 
 def test_rc_intro_static_redraw_matches_live_frame() -> None:
+    pytest.importorskip("PIL")
     from PIL import ImageChops
 
     mod = _load_rc_module()
@@ -255,6 +255,7 @@ def test_rc_intro_static_redraw_matches_live_frame() -> None:
 
 
 def test_rc_prebeat_static_redraw_matches_live_frame() -> None:
+    pytest.importorskip("PIL")
     from PIL import ImageChops
 
     mod = _load_rc_module()

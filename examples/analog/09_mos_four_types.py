@@ -51,6 +51,13 @@ def build_mos_four_types_fixture():
 MosFourTypesScene = None
 MosFourTypesArrowOnChannelScene = None
 
+
+def _is_optional_scene_import_error(exc: ImportError) -> bool:
+    name = getattr(exc, "name", None)
+    if not name:
+        return False
+    return name == "manim" or str(name).startswith("manim.")
+
 try:
     import sys
     from pathlib import Path
@@ -92,6 +99,10 @@ try:
                 "沟道箭头画法与 textbook_vertical 四端子符号对照",
             )
 
-except ImportError:
-    MosFourTypesScene = None
-    MosFourTypesArrowOnChannelScene = None
+except ImportError as exc:
+    if _is_optional_scene_import_error(exc):
+        MosFourTypesScene = None
+        MosFourTypesArrowOnChannelScene = None
+    else:
+        msg = f"failed to import MOS four-type scenes from {__file__}: {exc}"
+        raise ImportError(msg) from exc

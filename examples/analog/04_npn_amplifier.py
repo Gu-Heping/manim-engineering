@@ -36,6 +36,13 @@ def build_npn_amplifier_fixture():
 
 NPNAmplifierScene = None
 
+
+def _is_optional_scene_import_error(exc: ImportError) -> bool:
+    name = getattr(exc, "name", None)
+    if not name:
+        return False
+    return name == "manim" or str(name).startswith("manim.")
+
 try:
     import sys
     from pathlib import Path
@@ -58,5 +65,9 @@ try:
                 "共发射极组态：基极小信号控制集电极电流",
             )
 
-except ImportError:
-    NPNAmplifierScene = None
+except ImportError as exc:
+    if _is_optional_scene_import_error(exc):
+        NPNAmplifierScene = None
+    else:
+        msg = f"failed to import NPNAmplifierScene from {__file__}: {exc}"
+        raise ImportError(msg) from exc

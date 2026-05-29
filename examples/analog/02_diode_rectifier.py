@@ -38,6 +38,13 @@ if __name__ == "__main__":
 
 HalfWaveRectifierScene = None
 
+
+def _is_optional_scene_import_error(exc: ImportError) -> bool:
+    name = getattr(exc, "name", None)
+    if not name:
+        return False
+    return name == "manim" or str(name).startswith("manim.")
+
 try:
     import importlib.util
     from pathlib import Path
@@ -65,5 +72,9 @@ try:
                 "交流源经二极管半波整流，负载电阻上得到脉动直流",
             )
 
-except ImportError:
-    HalfWaveRectifierScene = None
+except ImportError as exc:
+    if _is_optional_scene_import_error(exc):
+        HalfWaveRectifierScene = None
+    else:
+        msg = f"failed to import HalfWaveRectifierScene from {__file__}: {exc}"
+        raise ImportError(msg) from exc

@@ -35,6 +35,13 @@ def build_opamp_inverting_fixture():
 
 OpAmpInvertingScene = None
 
+
+def _is_optional_scene_import_error(exc: ImportError) -> bool:
+    name = getattr(exc, "name", None)
+    if not name:
+        return False
+    return name == "manim" or str(name).startswith("manim.")
+
 try:
     import sys
     from pathlib import Path
@@ -57,5 +64,9 @@ try:
                 "虚地反相组态：输出与输入反相，增益由电阻比决定",
             )
 
-except ImportError:
-    OpAmpInvertingScene = None
+except ImportError as exc:
+    if _is_optional_scene_import_error(exc):
+        OpAmpInvertingScene = None
+    else:
+        msg = f"failed to import OpAmpInvertingScene from {__file__}: {exc}"
+        raise ImportError(msg) from exc

@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 pytest.importorskip("manim")
-pytest.importorskip("PIL")
 
 from manim import AnimationGroup, Create, DrawBorderThenFill, LaggedStart, Scene, VGroup
 from scene_trace import played_role_sets, scene_visible_label_texts
@@ -304,6 +303,7 @@ def test_refresh_label_strokes_keeps_hidden_device_and_net_labels_hidden() -> No
 
 
 def test_cmos_intro_static_redraw_matches_live_frame() -> None:
+    pytest.importorskip("PIL")
     from PIL import ImageChops
 
     mod = _load_cmos_module()
@@ -352,6 +352,7 @@ def test_cmos_intro_static_redraw_matches_live_frame() -> None:
 
 
 def test_cmos_prebeat_static_redraw_matches_live_frame() -> None:
+    pytest.importorskip("PIL")
     from PIL import ImageChops
 
     mod = _load_cmos_module()

@@ -141,6 +141,13 @@ if __name__ == "__main__":
 
 CMOSInverterScene = None
 
+
+def _is_optional_scene_import_error(exc: ImportError) -> bool:
+    name = getattr(exc, "name", None)
+    if not name:
+        return False
+    return name == "manim" or str(name).startswith("manim.")
+
 try:
     import sys
     from pathlib import Path
@@ -188,5 +195,9 @@ try:
         def teaching_beats(self, fixture: WaveformFixture) -> tuple[BeatSpec, ...]:
             return _teaching_beats(fixture.signals, self._records)
 
-except ImportError:
-    CMOSInverterScene = None
+except ImportError as exc:
+    if _is_optional_scene_import_error(exc):
+        CMOSInverterScene = None
+    else:
+        msg = f"failed to import CMOSInverterScene from {__file__}: {exc}"
+        raise ImportError(msg) from exc

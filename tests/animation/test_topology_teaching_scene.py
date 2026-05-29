@@ -9,7 +9,6 @@ from unittest.mock import patch
 import pytest
 
 pytest.importorskip("manim")
-pytest.importorskip("PIL")
 
 from manim import AnimationGroup, Create, DrawBorderThenFill, LaggedStart
 
@@ -129,6 +128,7 @@ def test_topology_teaching_scene_default_hud_intro_is_title_only() -> None:
 
 
 def test_topology_teaching_scene_prehold_redraw_matches_live_frame() -> None:
+    pytest.importorskip("PIL")
     from PIL import ImageChops
 
     class _RectifierScene(TopologyTeachingScene):
