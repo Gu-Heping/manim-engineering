@@ -16,8 +16,8 @@ class WaveformSegmentController:
     def tracker(self) -> WaveformRevealTracker:
         return self._tracker
 
-    def sync_idle_baselines(self) -> None:
-        self._tracker.sync_idle_baselines()
+    def sync_idle_baselines(self, signal_names: set[str] | frozenset[str] | None = None) -> None:
+        self._tracker.sync_idle_baselines(signal_names)
 
     def revealed_time_for(self, signal_name: str) -> float:
         return self._tracker.revealed_time_for(signal_name)

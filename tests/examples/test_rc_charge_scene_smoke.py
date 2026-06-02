@@ -202,6 +202,42 @@ def test_rc_skip_baseline_restores_idle_stub_visibility() -> None:
     assert all(float(line.get_stroke_opacity()) == pytest.approx(1.0) for line in trace_lines)
 
 
+def test_rc_scene_style_beat_duration_is_forwarded_to_sequence() -> None:
+    mod = _load_rc_module()
+    from manim_engineering.animation.style import TeachingStyle
+
+    seen: dict[str, float] = {}
+
+    class _RecordingScene(mod.RCChargeScene):
+        style = TeachingStyle(beat_duration=1.7, beat_gap=0.33)
+
+        def __init__(self) -> None:
+            super().__init__()
+
+        def play(self, *animations, **kwargs) -> None:
+            del animations, kwargs
+
+        def wait(self, duration: float = 0.0) -> None:
+            del duration
+
+    import manim_engineering.animation.teaching_scene as teaching_scene_mod
+
+    original_play = teaching_scene_mod.PropagationSequence.play
+
+    def fake_play(self, scene) -> None:
+        del scene
+        seen["beat_duration"] = self._style.beat_duration
+        seen["beat_gap"] = self._style.beat_gap
+
+    teaching_scene_mod.PropagationSequence.play = fake_play
+    try:
+        _RecordingScene().construct()
+    finally:
+        teaching_scene_mod.PropagationSequence.play = original_play
+
+    assert seen == {"beat_duration": pytest.approx(1.7), "beat_gap": pytest.approx(0.33)}
+
+
 def test_rc_intro_static_redraw_matches_live_frame() -> None:
     pytest.importorskip("PIL")
     from PIL import ImageChops

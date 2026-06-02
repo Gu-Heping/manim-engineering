@@ -11,6 +11,7 @@ from manim import VGroup
 from manim_engineering.animation.scene_template import _iter_trace_line_strokes_for_traces
 from manim_engineering.core.enums import SignalType
 from manim_engineering.renderers.minimal import WaveformPanelRenderer
+from manim_engineering.renderers.minimal.labels import detach_label_roots
 from manim_engineering.semantic.enums import LogicLevel
 from manim_engineering.waveform.layout import WaveformPanelSpec
 from manim_engineering.waveform.trace import WaveformSample, WaveformTrace
@@ -56,3 +57,32 @@ def test_baseline_trace_filter_excludes_unlisted_signals() -> None:
 
     assert len(all_lines) == 2
     assert len(vin_only) == 1
+
+
+def test_baseline_trace_filter_keeps_detached_stub_lines() -> None:
+    from manim_engineering.layout.types import Point2D
+
+    vin = WaveformTrace(
+        signal_name="vin",
+        signal_type=SignalType.DIGITAL,
+        pin_id="drv.out",
+        samples=(
+            WaveformSample(time=0.0, level=LogicLevel.LOW),
+            WaveformSample(time=1.0, level=LogicLevel.HIGH),
+        ),
+    )
+    spec = WaveformPanelSpec(
+        origin=Point2D(0.0, -2.0),
+        width=4.0,
+        trace_height=0.4,
+        trace_gap=0.5,
+        time_scale=1.0,
+    )
+    renderer = WaveformPanelRenderer()
+    trace_row = renderer.render_trace(vin, spec, 0, idle_only=True)
+    detach_label_roots(trace_row)
+    panel = VGroup(trace_row)
+
+    lines = _iter_trace_line_strokes_for_traces(panel, frozenset({0}))
+
+    assert len(lines) == 1

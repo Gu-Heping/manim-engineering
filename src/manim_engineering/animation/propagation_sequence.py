@@ -93,7 +93,7 @@ class BeatSpec:
     """
 
     signal: Signal
-    record: PropagationRecord
+    record: PropagationRecord | None = None
     wave_beat: int | None = None
     caption: str | None = None
     reveal_targets: tuple[tuple[Signal, int], ...] | None = None
@@ -111,6 +111,7 @@ class BeatSpec:
 class _BeatContext:
     index: int
     spec: BeatSpec
+    record: PropagationRecord
     style: TeachingStyle
     transition_profile: TransitionProfile
     reveal_time: float | None
@@ -273,6 +274,18 @@ class PropagationSequence:
             return "conclusion"
         return "default"
 
+    def _resolve_record(self, spec: BeatSpec, *, beat_index: int) -> PropagationRecord:
+        if spec.record is not None:
+            return spec.record
+        history = spec.signal.propagation_history
+        if beat_index < len(history):
+            return history[beat_index]
+        msg = (
+            f"BeatSpec for signal {spec.signal.name!r} is missing record and "
+            f"propagation_history has no entry for beat {beat_index}"
+        )
+        raise ValueError(msg)
+
     def _resolve_style(self, spec: BeatSpec) -> TeachingStyle:
         base = spec.style or self._style
         profile = self._resolve_transition_profile(spec)
@@ -365,24 +378,24 @@ class PropagationSequence:
 
     def _build_topology_focus_plan(
         self,
-        spec: BeatSpec,
+        context: _BeatContext,
         beat_style: TeachingStyle,
         *,
         profile: TransitionProfile,
     ) -> _TopologyFocusPlan:
-        run_time = self._topology_focus_duration(spec, beat_style)
+        run_time = self._topology_focus_duration(context.spec, beat_style)
         connection_id = self._resolve_connection_id(
-            spec.record.from_pin_id,
-            spec.record.to_pin_id,
+            context.record.from_pin_id,
+            context.record.to_pin_id,
         )
         wire = wire_path_for_connection(self._layout, connection_id)
         points = oriented_wire_points(
             self._layout,
             wire,
-            spec.record.from_pin_id,
-            spec.record.to_pin_id,
+            context.record.from_pin_id,
+            context.record.to_pin_id,
         )
-        signal_color = renderer_theme.color_for_signal_type(spec.signal.signal_type)
+        signal_color = renderer_theme.color_for_signal_type(context.signal.signal_type)
         focus_path = path_mobject_from_points(points)
         focus_path.set_stroke(
             color=signal_color,
@@ -398,7 +411,7 @@ class PropagationSequence:
         ]
         endpoint_emphasis = profile == "conclusion"
         if endpoint_emphasis:
-            endpoint = self._layout.pin_positions[spec.record.to_pin_id]
+            endpoint = self._layout.pin_positions[context.record.to_pin_id]
             endpoint_path = path_mobject_from_points(
                 (
                     Point2D(endpoint.x - 0.08, endpoint.y),
@@ -446,7 +459,7 @@ class PropagationSequence:
         )
 
     def _context_detail(self, context: _BeatContext) -> dict[str, object]:
-        record = context.spec.record
+        record = context.record
         detail: dict[str, object] = {
             "from_pin_id": record.from_pin_id,
             "to_pin_id": record.to_pin_id,
@@ -506,30 +519,20 @@ class PropagationSequence:
     def _play_topology_focus(
         self,
         scene: object,
-        spec: BeatSpec,
-        beat_style: TeachingStyle,
-        *,
-        beat_index: int,
+        context: _BeatContext,
     ) -> _TopologyFocusPlan | None:
         if self._topology is None:
             return None
-        profile = self._resolve_transition_profile(spec)
+        profile = context.transition_profile
         if not self._dim_inactive and profile not in {"setup", "conclusion"}:
             return None
         if self._dim_inactive:
             restore_topology(self._topology)
-        plan = self._build_topology_focus_plan(spec, beat_style, profile=profile)
+        plan = self._build_topology_focus_plan(context, context.style, profile=profile)
         play = getattr(scene, "play", None)
         if callable(play):
             self._record_context_stage(
-                _BeatContext(
-                    index=beat_index,
-                    spec=spec,
-                    style=beat_style,
-                    transition_profile=profile,
-                    reveal_time=None,
-                    reveal_targets=None,
-                ),
+                context,
                 "sequence.topology_focus",
                 run_time=plan.run_time,
                 purpose=AnimationPurpose.FOCUS.value,
@@ -546,14 +549,7 @@ class PropagationSequence:
         else:
             self._play_wait_plan(
                 scene,
-                _BeatContext(
-                    index=beat_index,
-                    spec=spec,
-                    style=beat_style,
-                    transition_profile=profile,
-                    reveal_time=None,
-                    reveal_targets=None,
-                ),
+                context,
                 _WaitStagePlan(
                     stage="sequence.topology_focus",
                     run_time=plan.run_time,
@@ -780,12 +776,7 @@ class PropagationSequence:
         context: _BeatContext,
     ) -> None:
         spec = context.spec
-        topology_focus_plan = self._play_topology_focus(
-            scene,
-            spec,
-            context.style,
-            beat_index=context.index,
-        )
+        topology_focus_plan = self._play_topology_focus(scene, context)
         pre_caption_plan = self._build_prelude_plan(
             context,
             topology_focus_plan=topology_focus_plan,
@@ -855,6 +846,7 @@ class PropagationSequence:
         return _BeatContext(
             index=beat_index,
             spec=spec,
+            record=self._resolve_record(spec, beat_index=beat_index),
             style=self._resolve_style(spec),
             transition_profile=self._resolve_transition_profile(spec),
             reveal_time=reveal_time,
@@ -873,7 +865,7 @@ class PropagationSequence:
                 spec.signal,
                 layout=self._layout,
                 graph=self._graph,
-                record=spec.record,
+                record=context.record,
                 duration=context.style.beat_duration,
                 bundle=self._bundle,
                 signals=self._sync_signals,

@@ -62,10 +62,12 @@ class WaveformRevealTracker:
     def panel(self) -> VGroup:
         return self._panel
 
-    def sync_idle_baselines(self) -> None:
+    def sync_idle_baselines(self, signal_names: set[str] | frozenset[str] | None = None) -> None:
         """Record idle baseline geometry after :func:`play_waveform_idle_baseline`."""
         for trace_index, trace in enumerate(self._bundle.traces):
             name = trace.signal_name
+            if signal_names is not None and name not in signal_names:
+                continue
             trace_group = self._trace_group_for(trace_index)
             lines = self._line_children(trace_group)
             self._segment_snapshots[name] = tuple(_segment_key(line) for line in lines)

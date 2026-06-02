@@ -230,6 +230,34 @@ def test_sequence_waveform_reveal_runs_during_propagation_beat() -> None:
     assert events == ["reveal", "beat", "reveal", "beat", "reveal", "beat"]
 
 
+def test_sequence_resolves_missing_beatspec_record_from_signal_history() -> None:
+    graph, layout, signal = _three_beat_signal_fixture()
+    seen_records = []
+
+    class Scene:
+        def wait(self, duration: float) -> None:
+            del duration
+
+    def fake_beat(scene, sig, **kwargs):
+        del scene, sig
+        seen_records.append(kwargs["record"])
+
+    import manim_engineering.animation.propagation_sequence as ps_mod
+
+    original = ps_mod.play_propagation_beat
+    ps_mod.play_propagation_beat = fake_beat
+    try:
+        PropagationSequence(
+            layout=layout,
+            graph=graph,
+            beats=(BeatSpec(signal=signal, caption="auto record"),),
+        ).play(Scene())
+    finally:
+        ps_mod.play_propagation_beat = original
+
+    assert seen_records == [signal.propagation_history[0]]
+
+
 def test_sequence_dim_inactive_requires_topology() -> None:
     """``dim_inactive=True`` without ``topology=`` previously no-op'd silently."""
     graph, layout, signal = _three_beat_signal_fixture()
@@ -572,8 +600,9 @@ def test_sequence_adds_short_settle_after_label_focus_before_beat() -> None:
     )
     setup_style = sequence._resolve_style(beats[0])
     conclusion_style = sequence._resolve_style(beats[1])
+    conclusion_context = sequence._build_beat_context(beats[1], beat_index=1)
     conclusion_focus_plan = sequence._build_topology_focus_plan(
-        beats[1],
+        conclusion_context,
         conclusion_style,
         profile=sequence._resolve_transition_profile(beats[1]),
     )
@@ -661,13 +690,9 @@ def test_topology_focus_falls_back_to_layout_when_graph_missing() -> None:
         beats=(beat,),
         topology=topology,
     )
+    context = sequence._build_beat_context(beat, beat_index=0)
 
-    plan = sequence._play_topology_focus(
-        scene,
-        beat,
-        sequence._resolve_style(beat),
-        beat_index=0,
-    )
+    plan = sequence._play_topology_focus(scene, context)
 
     assert plan is not None
     assert plan.animations

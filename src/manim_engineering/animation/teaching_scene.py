@@ -275,7 +275,7 @@ class WaveformDemoScene(Scene, ABC):
             baseline_traces=self.baseline_traces,
             bundle=bundle,
         )
-        waveform_controller.sync_idle_baselines()
+        waveform_controller.sync_idle_baselines(self.baseline_traces)
 
     def finalize_waveform(
         self,
@@ -397,6 +397,7 @@ class WaveformDemoScene(Scene, ABC):
                 bundle=fixture.bundle,
                 sync_signals=fixture.signals,
                 panel_spec=panel_spec,
+                beat_duration=self.style.beat_duration,
                 beat_gap=self.style.beat_gap,
                 topology=topology,
                 label_layer=topology_labels,

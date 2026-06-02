@@ -94,7 +94,7 @@ def _iter_trace_line_strokes(waveform_panel: VGroup) -> tuple[Mobject, ...]:
     for trace_group in waveform_panel.submobjects[:-1]:
         if not isinstance(trace_group, VGroup):
             continue
-        for mob in trace_group.submobjects[:-1]:
+        for mob in trace_group.submobjects:
             if mob.__class__.__name__ == "Line" and len(mob.points) > 0:
                 strokes.append(mob)
     return tuple(strokes)
@@ -122,7 +122,7 @@ def _iter_trace_line_strokes_for_traces(
         trace_group = waveform_panel.submobjects[trace_index]
         if not isinstance(trace_group, VGroup):
             continue
-        for mob in trace_group.submobjects[:-1]:
+        for mob in trace_group.submobjects:
             if mob.__class__.__name__ == "Line" and len(mob.points) > 0:
                 strokes.append(mob)
     return tuple(strokes)

@@ -191,6 +191,51 @@ def test_append_through_time_for_only_updates_named_trace() -> None:
     assert tracker.revealed_time_for("vc") == pytest.approx(2.0)
 
 
+def test_sync_idle_baselines_can_limit_snapshots_to_selected_signals() -> None:
+    from manim_engineering.layout.types import Point2D
+    from manim_engineering.waveform.trace import WaveformBundle
+
+    vin = WaveformTrace(
+        signal_name="vin",
+        signal_type=SignalType.DIGITAL,
+        pin_id="drv.out",
+        samples=(
+            WaveformSample(time=0.0, level=LogicLevel.LOW),
+            WaveformSample(time=1.0, level=LogicLevel.HIGH),
+        ),
+    )
+    vout = WaveformTrace(
+        signal_name="vout",
+        signal_type=SignalType.DIGITAL,
+        pin_id="load.in",
+        samples=(
+            WaveformSample(time=0.0, level=LogicLevel.LOW),
+            WaveformSample(time=1.0, level=LogicLevel.HIGH),
+        ),
+    )
+    bundle = WaveformBundle(traces=(vin, vout))
+    spec = WaveformPanelSpec(
+        origin=Point2D(0.0, -2.0),
+        width=4.0,
+        trace_height=0.4,
+        trace_gap=0.5,
+        time_scale=1.0,
+    )
+    renderer = WaveformPanelRenderer()
+    panel = VGroup(
+        renderer.render_trace(vin, spec, 0, idle_only=True),
+        renderer.render_trace(vout, spec, 1, idle_only=True),
+    )
+    tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+
+    tracker.sync_idle_baselines({"vin"})
+
+    assert tracker._segment_snapshots["vin"]
+    assert tracker._segment_snapshots["vout"] == ()
+    assert tracker._revealed_time["vin"] == pytest.approx(0.0)
+    assert tracker._revealed_time["vout"] == pytest.approx(-1.0)
+
+
 def test_append_through_time_for_unknown_signal_raises_typed_error() -> None:
     tracker, _trace, _bundle, _spec, _renderer = _panel_fixture()
 
