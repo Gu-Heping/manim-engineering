@@ -37,16 +37,16 @@ For the low-level contract, see [component-api.md](component-api.md).
 | `NMOSDepletion` | `manim_engineering.components` | `gate`, `drain`, `source`, `bulk` | `09_mos_four_types.py` |
 | `PMOSDepletion` | `manim_engineering.components` | `gate`, `drain`, `source`, `bulk` | `09_mos_four_types.py` |
 | `NPN` | `manim_engineering.components` | `base`, `collector`, `emitter` | `04_npn_amplifier.py` |
-| `PNP` | `manim_engineering.components` | `base`, `collector`, `emitter` | `09_mos_four_types.py` |
+| `PNP` | `manim_engineering.components` | `base`, `collector`, `emitter` | Library/test-only in current catalog |
 | `OpAmp` | `manim_engineering.components` | `in_p`, `in_n`, `out` | `05_opamp_inverting.py`, `06_opamp_integrator.py` |
 
 ## Digital / interface
 
 | Component | Import | Typical pins | Example |
 |-----------|--------|--------------|---------|
-| `SPIMaster` | `manim_engineering.components` | interface-specific role pins | `examples/protocol/spi_byte_transfer.py` |
-| `SPISlave` | `manim_engineering.components` | interface-specific role pins | `examples/protocol/spi_byte_transfer.py` |
-| `UARTPort` | `manim_engineering.components` | interface-specific role pins | library only; no standalone demo scene |
+| `SPIMaster` | `manim_engineering.components` | `clk`, `mosi`, `miso`, `cs` | `examples/protocol/spi_byte_transfer.py` |
+| `SPISlave` | `manim_engineering.components` | `clk`, `mosi`, `miso`, `cs` | `examples/protocol/spi_byte_transfer.py` |
+| `UARTPort` | `manim_engineering.components` | `tx`, `rx`, `gnd` | Library/test-only; no standalone demo scene |
 
 ## Canonical naming guidance
 

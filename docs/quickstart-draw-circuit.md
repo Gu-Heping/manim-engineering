@@ -83,6 +83,10 @@ Current warning examples:
 If `needs_attention` is true, do not assume the rendered circuit is acceptable
 just because rendering succeeded.
 
+`structured_auto` appears when the quickstart layer detects a branching topology
+with no manual placement overrides and compiles a deterministic multi-row fallback
+before calling `LayoutEngine`.
+
 ## When auto layout is enough
 
 The current automatic path is best for:
@@ -135,7 +139,9 @@ If you also pass `preview=True`, the quickstart layer will attempt to open that
 PNG through the host OS when supported. Current behavior:
 
 - `preview=True` **requires** `output_path=...`
-- Windows environments can use `os.startfile(...)`
+- Windows environments use `os.startfile(...)`
+- macOS uses `open`
+- Linux/other Unix hosts try `xdg-open`
 - unsupported hosts return `preview_available=False` and add
   `preview.open_unavailable`
 

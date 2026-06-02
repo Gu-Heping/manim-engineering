@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import os
 import shutil
+import subprocess
+import sys
 import tempfile
 from collections import deque
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from manim_engineering.components import VCC, Ground, InputDriver
 from manim_engineering.components.element import CircuitElement
@@ -30,6 +32,7 @@ from manim_engineering.layout.types import (
 ElementMap = Mapping[str, CircuitElement]
 ConnectionSpec = tuple[str, str, str, str]
 LayoutWarning = str
+LayoutMode = Literal["semantic_grid", "structured_auto", "manual"]
 
 
 @dataclass(frozen=True)
@@ -46,7 +49,7 @@ class LayoutOutcome:
     """Quickstart layout result plus task-level diagnostics."""
 
     layout: LayoutResult
-    layout_mode: str
+    layout_mode: LayoutMode
     warnings: tuple[LayoutWarning, ...]
     needs_attention: bool
 
@@ -125,12 +128,16 @@ def layout_circuit(
 
     This does not change ``LayoutEngine`` behavior. It wraps the current deterministic
     layout path with machine-readable diagnostics so agents and users can detect
-    layouts that likely need presets or manual refinement.
+    layouts that likely need presets or manual refinement. ``layout_mode`` reports
+    ``"semantic_grid"``, ``"structured_auto"``, or ``"manual"`` depending on whether
+    quickstart kept the default grid, compiled a branching fallback, or honored
+    explicit positional overrides.
     """
 
     layout_engine = engine or LayoutEngine(config)
-    effective_overrides = placement_overrides
-    layout_mode = "manual" if placement_overrides else "semantic_grid"
+    has_manual_positions = bool(placement_overrides)
+    effective_overrides = placement_overrides if has_manual_positions else None
+    layout_mode: LayoutMode = "manual" if has_manual_positions else "semantic_grid"
     if (
         effective_overrides is None
         and net_waypoints is None
@@ -139,7 +146,7 @@ def layout_circuit(
     ):
         effective_overrides = _structured_branching_overrides(
             build,
-            cell_gap=layout_engine._config.cell_gap,
+            cell_gap=layout_engine.config.cell_gap,
         )
         layout_mode = "structured_auto"
 
@@ -259,7 +266,17 @@ def _open_preview(path: Path) -> bool:
     if hasattr(os, "startfile"):
         os.startfile(str(path))
         return True
-    return False
+    opener = "open" if sys.platform == "darwin" else "xdg-open"
+    try:
+        subprocess.run(
+            [opener, str(path)],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return False
+    return True
 
 
 def _normalize_elements(
@@ -308,13 +325,18 @@ def _layout_warnings(
 
 
 def _has_branching_topology(graph: CircuitGraph) -> bool:
+    fanout_by_port: dict[str, int] = {}
     degree_by_node: dict[str, set[str]] = {}
     for connection in graph.connections:
+        fanout_by_port[connection.port_a.id] = fanout_by_port.get(connection.port_a.id, 0) + 1
+        fanout_by_port[connection.port_b.id] = fanout_by_port.get(connection.port_b.id, 0) + 1
         a = connection.port_a.owner_id
         b = connection.port_b.owner_id
         degree_by_node.setdefault(a, set()).add(b)
         degree_by_node.setdefault(b, set()).add(a)
-    return any(len(neighbors) > 2 for neighbors in degree_by_node.values())
+    return any(fanout > 1 for fanout in fanout_by_port.values()) or any(
+        len(neighbors) > 2 for neighbors in degree_by_node.values()
+    )
 
 
 def _structured_branching_overrides(

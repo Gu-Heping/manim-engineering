@@ -4,6 +4,7 @@ import pytest
 
 pytest.importorskip("manim")
 
+import manim_engineering.quickstart as quickstart_module
 from manim_engineering import build_circuit, layout_circuit, render_circuit_diagram
 from manim_engineering.components import Resistor
 
@@ -66,7 +67,8 @@ def test_render_circuit_diagram_attempts_preview_open_when_supported(monkeypatch
 
     opened: list[str] = []
     monkeypatch.setattr(
-        "manim_engineering.quickstart.os.startfile",
+        quickstart_module.os,
+        "startfile",
         lambda path: opened.append(path),
         raising=False,
     )

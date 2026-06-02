@@ -71,6 +71,12 @@ class LayoutEngine:
     def __init__(self, config: LayoutConfig | None = None) -> None:
         self._config = config or LayoutConfig()
 
+    @property
+    def config(self) -> LayoutConfig:
+        """Public access to the immutable layout configuration."""
+
+        return self._config
+
     def solve(
         self,
         graph: CircuitGraph,
