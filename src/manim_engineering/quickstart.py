@@ -245,6 +245,7 @@ def export_circuit_preview(
             self.add(rendered.copy())
 
     with tempfile.TemporaryDirectory(prefix="me_quickstart_preview_") as tmpdir:
+        exported_file: Path | None = None
         with tempconfig(
             {
                 "quality": "low_quality",
@@ -255,14 +256,20 @@ def export_circuit_preview(
                 "background_color": background_color,
             }
         ):
-            _PreviewScene().render()
-        matches = sorted(Path(tmpdir).rglob("_PreviewScene*.png"))
+            scene = _PreviewScene()
+            scene.render()
+            image_file_path = getattr(scene.renderer.file_writer, "image_file_path", None)
+            if image_file_path is not None:
+                exported_file = Path(image_file_path)
+        matches = [exported_file] if exported_file is not None and exported_file.exists() else []
+        if not matches:
+            matches = sorted(Path(tmpdir).rglob("_PreviewScene*.png"))
         if not matches:
             matches = sorted(Path(tmpdir).rglob("*.png"), key=lambda path: path.stat().st_mtime)
         if not matches:
             available = sorted(
-                str(path.relative_to(tmpdir))
-                for path in Path(tmpdir).rglob("*")
+                str(path)
+                for path in Path(tmpdir).parent.rglob("*")
                 if path.is_file()
             )
             raise FileNotFoundError(
