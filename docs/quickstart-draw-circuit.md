@@ -70,7 +70,7 @@ This wraps the current deterministic layout path and gives you diagnostics.
 Return fields:
 
 - `layout`: the underlying `LayoutResult`
-- `layout_mode`: currently `semantic_grid` or `manual`
+- `layout_mode`: currently `semantic_grid`, `structured_auto`, or `manual`
 - `warnings`: machine-readable warning strings
 - `needs_attention`: `True` when the diagram likely needs preset/manual help
 
@@ -78,7 +78,7 @@ Current warning examples:
 
 - `layout.occupancy_above_target`
 - `layout.single_row_auto_grid`
-- `layout.branching_topology_using_auto_grid`
+- `layout.branching_topology_using_auto_grid` (when forcing plain auto-grid on branching topologies)
 
 If `needs_attention` is true, do not assume the rendered circuit is acceptable
 just because rendering succeeded.
