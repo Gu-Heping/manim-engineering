@@ -15,7 +15,7 @@ from typing import Any, Literal
 
 from manim_engineering.components import VCC, Ground, InputDriver
 from manim_engineering.components.element import CircuitElement
-from manim_engineering.core import CircuitGraph, InvalidPortError
+from manim_engineering.core import CircuitGraph, InvalidConnectionError, InvalidPortError
 from manim_engineering.layout import (
     OCCUPANCY_TARGET_MAX,
     LayoutConfig,
@@ -88,21 +88,24 @@ def build_circuit(
         element.attach_to(graph)
 
     for from_id, from_pin, to_id, to_pin in connections:
+        context = f"{from_id}.{from_pin} -> {to_id}.{to_pin}"
         try:
             source = normalized[from_id]
         except KeyError as exc:
-            raise KeyError(f"unknown connection source element: {from_id}") from exc
+            raise InvalidConnectionError(
+                f"invalid connection {context}: unknown source element {from_id!r}"
+            ) from exc
         try:
             target = normalized[to_id]
         except KeyError as exc:
-            raise KeyError(f"unknown connection target element: {to_id}") from exc
+            raise InvalidConnectionError(
+                f"invalid connection {context}: unknown target element {to_id!r}"
+            ) from exc
 
         try:
             graph.connect(source.get_port(from_pin), target.get_port(to_pin))
         except InvalidPortError as exc:
-            raise InvalidPortError(
-                f"invalid connection {from_id}.{from_pin} -> {to_id}.{to_pin}: {exc}"
-            ) from exc
+            raise InvalidPortError(f"invalid connection {context}: {exc}") from exc
 
     return CircuitBuildResult(
         graph=graph,
@@ -255,7 +258,16 @@ def export_circuit_preview(
             _PreviewScene().render()
         matches = sorted(Path(tmpdir).rglob("_PreviewScene*.png"))
         if not matches:
-            raise FileNotFoundError(f"no PNG export produced under {tmpdir}")
+            matches = sorted(Path(tmpdir).rglob("*.png"), key=lambda path: path.stat().st_mtime)
+        if not matches:
+            available = sorted(
+                str(path.relative_to(tmpdir))
+                for path in Path(tmpdir).rglob("*")
+                if path.is_file()
+            )
+            raise FileNotFoundError(
+                f"no PNG export produced under {tmpdir}; files present: {available}"
+            )
         shutil.copy2(matches[-1], destination)
     return destination
 
@@ -264,7 +276,10 @@ def _open_preview(path: Path) -> bool:
     """Best-effort preview opener for exported images."""
 
     if hasattr(os, "startfile"):
-        os.startfile(str(path))
+        try:
+            os.startfile(str(path))
+        except OSError:
+            return False
         return True
     opener = "open" if sys.platform == "darwin" else "xdg-open"
     try:

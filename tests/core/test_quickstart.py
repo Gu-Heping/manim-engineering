@@ -4,7 +4,7 @@ import pytest
 
 from manim_engineering import build_circuit
 from manim_engineering.components import Ground, Resistor
-from manim_engineering.core import InvalidPortError
+from manim_engineering.core import InvalidConnectionError, InvalidPortError
 
 
 def test_build_circuit_registers_elements_and_connections() -> None:
@@ -43,7 +43,10 @@ def test_build_circuit_rejects_element_id_mismatch() -> None:
 def test_build_circuit_rejects_unknown_connection_endpoint() -> None:
     r1 = Resistor("r1")
 
-    with pytest.raises(KeyError, match="unknown connection target element"):
+    with pytest.raises(
+        InvalidConnectionError,
+        match=r"invalid connection r1\.b -> missing\.a: unknown target element 'missing'",
+    ):
         build_circuit({"r1": r1}, [("r1", "b", "missing", "a")])
 
 

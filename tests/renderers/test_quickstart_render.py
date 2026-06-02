@@ -87,6 +87,39 @@ def test_render_circuit_diagram_attempts_preview_open_when_supported(monkeypatch
     assert result.output_path == tmp_path / "preview.png"
 
 
+def test_render_circuit_diagram_handles_preview_open_failure(monkeypatch, tmp_path) -> None:
+    build = build_circuit(
+        {
+            "r1": Resistor("r1"),
+            "r2": Resistor("r2"),
+        },
+        [("r1", "b", "r2", "a")],
+    )
+    layout = layout_circuit(build)
+
+    def _fail_startfile(path: str) -> None:
+        raise OSError(f"cannot open {path}")
+
+    monkeypatch.setattr(
+        quickstart_module.os,
+        "startfile",
+        _fail_startfile,
+        raising=False,
+    )
+
+    result = render_circuit_diagram(
+        build,
+        layout,
+        include_topology=False,
+        output_path=tmp_path / "preview.png",
+        preview=True,
+    )
+
+    assert result.preview_attempted is True
+    assert result.preview_available is False
+    assert "preview.open_unavailable" in result.warnings
+
+
 def test_render_circuit_diagram_preview_requires_output_path() -> None:
     build = build_circuit(
         {
