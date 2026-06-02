@@ -24,7 +24,10 @@
   - per-trace baseline selection,
   - stable segment append reveal,
   - opt-in finalize-to-panel behavior.
-- `WaveformSegmentController` facade exists but is not yet universal call path.
+- `WaveformSegmentController` is now the controller-first orchestration path across
+  scene, sequence, beat, and beat-factory reveal flows.
+- Sequence/beat execution is phased and observable, with static redraw/snapshot/
+  inspector contracts aligned on the same displayed-mobject view of the scene.
 
 ## CI/regression posture
 
@@ -42,4 +45,3 @@
 
 - The codebase is in “stabilized architecture + controlled debt burn-down” mode,
   not in greenfield redesign mode.
-

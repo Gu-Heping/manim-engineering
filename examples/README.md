@@ -10,6 +10,13 @@ pip install -e .
 pip install -e ".[manim]"
 ```
 
+## Fastest way to assemble a static circuit
+
+If you are not trying to render a full teaching scene yet, start with
+[../docs/quickstart-draw-circuit.md](../docs/quickstart-draw-circuit.md). It
+documents the task-level `build_circuit(...) -> layout_circuit(...) ->
+render_circuit_diagram(...)` path.
+
 ## Smoke checks (no Manim render)
 
 ```bash

@@ -42,7 +42,8 @@ flowchart LR
 - `LayoutEngine` computes geometry; renderer never re-solves topology.
 - `MinimalRenderer` projects static geometry only.
 - `WaveformPanelRenderer` draws time traces from `WaveformBundle`, not from ad-hoc scene logic.
-- `WaveformDemoScene` orchestrates intro/HUD/beats/finalize; subclasses provide fixture and beats.
+- `WaveformDemoScene` orchestrates intro/HUD/beats/finalize through a controller-first,
+  phased director; subclasses provide fixture and beats.
 
 ## Object lifecycle (waveform teaching scene)
 
@@ -51,7 +52,8 @@ flowchart LR
 3. Camera framing.
 4. Intro stage (components/wires/panel chrome).
 5. Optional baseline reveal.
-6. Beat loop: propagation + timing + reveal in same beat run_time.
+6. Beat loop: phased sequence/beat director preserves same-beat causal sync for
+   topology focus, label/caption settles, waveform commit/timing, and propagation playback.
 7. Optional finalize hold extension.
 8. Outro fade (gated by env).
 
@@ -63,7 +65,6 @@ flowchart LR
 
 ## Architectural debt currently accepted
 
-- Intro baseline path and beat reveal path are separate orchestration paths.
-- `WaveformSegmentController` exists as facade but full controller-driven call sites are incomplete.
 - Some compatibility APIs remain for transition safety (do not remove without test migration).
-
+- Visual polish still sits above the stabilized contracts; scene-specific pacing
+  refinements should reuse the phased director instead of adding new orchestration paths.

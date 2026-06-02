@@ -56,11 +56,18 @@ Legacy per-primitive `SignalFlow(...).play(scene)` then `WaveformSync(...).play(
 
 ## Waveform sync
 
-When semantic signal state changes, update in the **same beat** (one `scene.play`, one `run_time`):
+When semantic signal state changes, keep waveform and topology in the **same
+teaching beat**. The current implementation uses a phased director
+(`topology_focus`, caption/label settles, `beat.waveform_commit`,
+`beat.timing_accent`, `beat.play`, post-hold), but it still preserves the
+causal contract:
 
 - propagation pulse along wire copy  
-- waveform edge segment flash (`ShowPassingFlash` on trace copy)  
+- waveform reveal/flash for the active signal  
 - dependent component state (when modeled)  
+
+Propagation pulse and newly committed waveform geometry must stay synchronized
+within the same beat; do not split them into separate beats.
 
 ### Progressive reveal
 
@@ -70,14 +77,21 @@ Topology intro (`play_topology_intro`) draws components and wires only — trace
 polylines stay hidden until `play_waveform_idle_baseline` runs after the HUD intro.
 
 Use `baseline_traces` on `WaveformDemoScene` to reveal only selected signals at
-intro time (e.g. RC charge: vin stub only; vc appears on its first beat).
+intro time (e.g. RC charge: `vin` stub only; `vc` appears on its first beat).
+`WaveformDemoScene.play_waveform_baseline_intro()` snapshots idle baselines only
+for those selected traces via `sync_idle_baselines(signal_names=...)`; hidden
+traces are not marked as already revealed.
 
 Before each propagation pulse, `WaveformRevealTracker` plans new trace segments via
-`SegmentRevealPlan`; `play_propagation_beat` mounts and reveals them with `Create`
-(same beat, same `run_time` as the propagation pulse), then calls
-`restore_waveform_strokes` so lines stay visible after the beat. Prefix segments
-already on screen are preserved (stable-append model). `WaveformSync` then flashes
-the edge segment while the pulse travels.
+`SegmentRevealPlan`; `play_propagation_beat` mounts and reveals them in the same
+beat as the propagation pulse, then calls `restore_waveform_strokes` so lines stay
+visible after the beat. Prefix segments already on screen are preserved
+(stable-append model). `WaveformSync` or `AnalogRamp` then accents the active trace
+without taking ownership of newly committed geometry.
+
+Digital beat `0` no longer extends the first horizontal hold segment in place during
+progressive reveal. That extension is only allowed for finalize/hold-to-panel paths
+(`extend_to_panel=True`); normal reveal commits create the new geometry in-beat.
 
 Intro uses paired `prepare_stroke_reveal` / `restore_stroke_reveal` per stage so
 `Create` / `DrawBorderThenFill` on pre-added mobjects persist without a batch pop at
@@ -139,9 +153,11 @@ import them rather than redefining literals (e.g. ``SPI_BEAT_DURATION``).
 | `CAPTION_CROSSFADE` | 0.45s | HUD intro → beat caption crossfade |
 
 `SignalFlow`, `WaveformSync`, and `play_propagation_beat` all default to
-`BEAT_DURATION`. Pre-2025 code referenced `DEFAULT_PROPAGATION_DURATION` and
-`DEFAULT_TIMING_DURATION`; those names now alias `BEAT_DURATION` and exist
-only for backwards compatibility.
+`BEAT_DURATION`. `WaveformDemoScene.style.beat_duration` and `beat_gap` are
+forwarded into `PropagationSequence`, so scene-level pacing overrides affect
+the actual beat director instead of only local helper calls. Pre-2025 code
+referenced `DEFAULT_PROPAGATION_DURATION` and `DEFAULT_TIMING_DURATION`; those
+names now alias `BEAT_DURATION` and exist only for backwards compatibility.
 
 ## Multi-beat protocol scenes
 
@@ -149,6 +165,8 @@ For SPI / UART / clock-data, use `PropagationSequence(beats=...)` with
 explicit `BeatSpec` entries so each beat advances the correct semantic
 signal and caption. The sequence handles `BEAT_GAP` between beats; pair it
 with `subtitle_text(..., role=...)` and a `caption_callback` for HUD swaps.
+`BeatSpec.record` may be omitted when the beat signal already carries
+`propagation_history`; the sequence resolves the matching record for that beat.
 
 ```python
 from manim_engineering.animation import (
@@ -296,3 +314,21 @@ ME_ANIMATION_TRACE=1 ME_ANIMATION_SNAPSHOT=1 manim --disable_caching -pql exampl
 4. Cross-check pacing overrides via `TeachingStyle` / `BeatSpec.style` before editing primitive code.
 
 See [animation-extensibility.md](animation-extensibility.md) for `IntroStyle`, `TeachingStyle`, `BeatSpec.timing_mode`, and registry extension.
+
+Common recorded stages now include:
+
+- `intro.topology`
+- `hud.intro`
+- `sequence.beat_start`
+- `sequence.topology_focus`
+- `sequence.topology_focus_settle`
+- `sequence.caption_settle`
+- `sequence.label_focus`
+- `sequence.label_focus_settle`
+- `beat.waveform_commit`
+- `beat.timing_accent`
+- `beat.commit_settle`
+- `beat.timing_settle`
+- `beat.play`
+- `sequence.beat_end`
+- `sequence.post_hold`
