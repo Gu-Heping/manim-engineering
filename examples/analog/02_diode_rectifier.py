@@ -6,13 +6,9 @@ Preview: ``manim -pql examples/analog/02_diode_rectifier.py HalfWaveRectifierSce
 
 from __future__ import annotations
 
-from manim import UP, Scene
-
-from manim_engineering.animation import configure_topology_scene_camera, subtitle_text
 from manim_engineering.components import Diode, Ground, InputDriver, Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.renderers.minimal import ManimRenderer
 
 
 def build_rectifier_fixture():
@@ -31,16 +27,54 @@ def build_rectifier_fixture():
     return graph, elements, layout
 
 
-class HalfWaveRectifierScene(Scene):
-    """半波整流：交流源 → 二极管 → 负载电阻 → 地。"""
+def main() -> None:
+    graph, elements, layout = build_rectifier_fixture()
+    print(f"nodes={len(graph.nodes)} wires={len(layout.wires)}")
 
-    def construct(self) -> None:
-        graph, elements, layout = build_rectifier_fixture()
-        renderer = ManimRenderer()
-        mobject = renderer.render_circuit(graph, layout, elements)
-        self.add(mobject)
-        configure_topology_scene_camera(self, layout, subtitle_band=0.8)
-        title = subtitle_text("半波整流 · AC→D1→RL→GND", role="title")
-        title.to_edge(UP, buff=0.3)
-        self.add(title)
-        self.wait(2)
+
+if __name__ == "__main__":
+    main()
+
+
+HalfWaveRectifierScene = None
+
+
+def _is_optional_scene_import_error(exc: ImportError) -> bool:
+    name = getattr(exc, "name", None)
+    if not name:
+        return False
+    return name == "manim" or str(name).startswith("manim.")
+
+try:
+    import importlib.util
+    from pathlib import Path
+
+    _SHARED_PATH = Path(__file__).resolve().parents[1] / "_shared.py"
+    _SHARED_SPEC = importlib.util.spec_from_file_location("me_examples_shared", _SHARED_PATH)
+    assert _SHARED_SPEC is not None and _SHARED_SPEC.loader is not None
+    _shared = importlib.util.module_from_spec(_SHARED_SPEC)
+    _SHARED_SPEC.loader.exec_module(_shared)
+    TopologyFixture = _shared.TopologyFixture
+    TopologyTeachingScene = _shared.TopologyTeachingScene
+
+    class HalfWaveRectifierScene(TopologyTeachingScene):
+        """半波整流：交流源 → 二极管 → 负载电阻 → 地。"""
+
+        subtitle_band = 0.8
+
+        def build_fixture(self) -> TopologyFixture:
+            graph, elements, layout = build_rectifier_fixture()
+            return TopologyFixture(graph=graph, elements=elements, layout=layout)
+
+        def hud_texts(self, _fixture: TopologyFixture) -> tuple[str, str]:
+            return (
+                "半波整流 · AC→D1→RL→GND",
+                "交流源经二极管半波整流，负载电阻上得到脉动直流",
+            )
+
+except ImportError as exc:
+    if _is_optional_scene_import_error(exc):
+        HalfWaveRectifierScene = None
+    else:
+        msg = f"failed to import HalfWaveRectifierScene from {__file__}: {exc}"
+        raise ImportError(msg) from exc

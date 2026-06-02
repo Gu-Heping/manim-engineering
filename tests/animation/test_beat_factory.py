@@ -59,6 +59,30 @@ def test_build_beat_plans_default_includes_flow_and_sync() -> None:
     assert flow.animations
 
 
+def test_build_beat_plans_timing_mode_sync_forces_waveform_sync() -> None:
+    graph, layout, clock, bundle, panel_spec = _clock_data_fixture()
+    style = TeachingStyle()
+    _, sync, ramp, purpose = build_beat_plans(
+        clock,
+        layout=layout,
+        graph=graph,
+        record=clock.propagation_history[0],
+        style=style,
+        beat_duration=style.beat_duration,
+        bundle=bundle,
+        signals=(clock,),
+        panel_spec=panel_spec,
+        beat=0,
+        reveal_tracker=None,
+        reveal_time=None,
+        wire_pulse=True,
+        timing_mode="sync",
+    )
+    assert sync is not None
+    assert ramp is None
+    assert purpose == "timing"
+
+
 def test_build_beat_plans_timing_mode_none_skips_waveform() -> None:
     graph, layout, clock, bundle, panel_spec = _clock_data_fixture()
     style = TeachingStyle()

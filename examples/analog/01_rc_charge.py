@@ -10,8 +10,18 @@ from manim_engineering.animation import BeatSpec
 from manim_engineering.components import Capacitor, Ground, InputDriver, Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.semantic import LogicLevel, LogicState, Signal, record_analog_level_between_pins, record_rising_edge
-from manim_engineering.waveform import RCStepParams, derive_rc_waveform_bundle, rc_charge_level_normalized
+from manim_engineering.semantic import (
+    LogicLevel,
+    LogicState,
+    Signal,
+    record_analog_level_between_pins,
+    record_rising_edge,
+)
+from manim_engineering.waveform import (
+    RCStepParams,
+    derive_rc_waveform_bundle,
+    rc_charge_level_normalized,
+)
 
 RC_SUBTITLE_BAND = 1.25
 RC_PARAMS = RCStepParams(v_src=5.0, tau=1.0, t_step=0.0, t_end=5.0, sample_count=32)
@@ -71,12 +81,14 @@ def _teaching_beats(signals, records) -> tuple[BeatSpec, ...]:
             record=vin_record,
             wave_beat=0,
             caption="① IN 阶跃 · 输入电压跳变",
+            emphasis="context",
             wire_pulse=False,
         ),
         BeatSpec(
             signal=vc,
             record=vc_record,
             caption="② V_C 指数上升 · τ = R·C",
+            emphasis="key",
             reveal_time=2.0 * RC_PARAMS.tau,
             reveal_scope="signal",
             wire_pulse=False,
@@ -86,7 +98,10 @@ def _teaching_beats(signals, records) -> tuple[BeatSpec, ...]:
 
 def main() -> None:
     graph, elements, layout, signals, bundle, records = build_rc_teaching_fixture()
-    print(f"nodes={len(graph.nodes)} wires={len(layout.wires)} traces={[t.signal_name for t in bundle.traces]}")
+    print(
+        f"nodes={len(graph.nodes)} wires={len(layout.wires)} "
+        f"traces={[t.signal_name for t in bundle.traces]}"
+    )
     print(f"beats={len(_teaching_beats(signals, records))} vc@2τ={records[1].new_value:.3f}")
 
 
@@ -95,6 +110,13 @@ if __name__ == "__main__":
 
 
 RCChargeScene = None
+
+
+def _is_optional_scene_import_error(exc: ImportError) -> bool:
+    name = getattr(exc, "name", None)
+    if not name:
+        return False
+    return name == "manim" or str(name).startswith("manim.")
 
 try:
     import sys
@@ -110,8 +132,9 @@ try:
         camera_target_fill = 0.85
         dim_inactive = False
         intro_components_run_time = 0.7
-        intro_total_run_time = 1.4
         intro_pause_offset = 0.6
+        play_waveform_baseline = False
+        extend_waveform_to_panel = False
 
         def build_fixture(self) -> WaveformFixture:
             graph, elements, layout, signals, bundle, records = build_rc_teaching_fixture()
@@ -133,5 +156,9 @@ try:
         def teaching_beats(self, fixture: WaveformFixture) -> tuple[BeatSpec, ...]:
             return _teaching_beats(fixture.signals, self._records)
 
-except ImportError:
-    RCChargeScene = None
+except ImportError as exc:
+    if _is_optional_scene_import_error(exc):
+        RCChargeScene = None
+    else:
+        msg = f"failed to import RCChargeScene from {__file__}: {exc}"
+        raise ImportError(msg) from exc

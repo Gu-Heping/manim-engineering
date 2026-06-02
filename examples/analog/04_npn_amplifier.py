@@ -6,15 +6,11 @@ Preview: ``manim -pql examples/analog/04_npn_amplifier.py NPNAmplifierScene``
 
 from __future__ import annotations
 
-from manim import UP, Scene
-
-from manim_engineering.animation import configure_topology_scene_camera, subtitle_text
 from manim_engineering.components import NPN, VCC, Ground, InputDriver, Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.layout.presets import layout_from_preset
 from manim_engineering.layout.presets.npn_ce import common_emitter_preset
-from manim_engineering.renderers.minimal import ManimRenderer
 
 
 def build_npn_amplifier_fixture():
@@ -38,16 +34,40 @@ def build_npn_amplifier_fixture():
     return graph, elements, layout
 
 
-class NPNAmplifierScene(Scene):
-    """NPN共发射极放大电路：VCC→Rc→Q1→Re→GND，基极输入IN。"""
+NPNAmplifierScene = None
 
-    def construct(self) -> None:
-        graph, elements, layout = build_npn_amplifier_fixture()
-        renderer = ManimRenderer()
-        mobject = renderer.render_circuit(graph, layout, elements)
-        self.add(mobject)
-        configure_topology_scene_camera(self, layout, subtitle_band=1.0)
-        title = subtitle_text("NPN共发放大器 · VCC→Rc→Q1→Re→GND", role="title")
-        title.to_edge(UP, buff=0.2)
-        self.add(title)
-        self.wait(2)
+
+def _is_optional_scene_import_error(exc: ImportError) -> bool:
+    name = getattr(exc, "name", None)
+    if not name:
+        return False
+    return name == "manim" or str(name).startswith("manim.")
+
+try:
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from _shared import TopologyFixture, TopologyTeachingScene
+
+    class NPNAmplifierScene(TopologyTeachingScene):
+        """NPN共发射极放大电路：VCC→Rc→Q1→Re→GND，基极输入IN。"""
+
+        subtitle_band = 1.0
+
+        def build_fixture(self) -> TopologyFixture:
+            graph, elements, layout = build_npn_amplifier_fixture()
+            return TopologyFixture(graph=graph, elements=elements, layout=layout)
+
+        def hud_texts(self, _fixture: TopologyFixture) -> tuple[str, str]:
+            return (
+                "NPN共发放大器 · VCC→Rc→Q1→Re→GND",
+                "共发射极组态：基极小信号控制集电极电流",
+            )
+
+except ImportError as exc:
+    if _is_optional_scene_import_error(exc):
+        NPNAmplifierScene = None
+    else:
+        msg = f"failed to import NPNAmplifierScene from {__file__}: {exc}"
+        raise ImportError(msg) from exc

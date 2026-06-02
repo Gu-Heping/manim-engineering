@@ -16,7 +16,8 @@ from manim_engineering.animation.focus import (
     restore_topology,
 )
 from manim_engineering.animation.hud import CaptionTrack, make_caption_track, play_hud_intro
-from manim_engineering.animation.intro_style import IntroStyle
+from manim_engineering.animation.intro_plan import IntroPlan, IntroStagePlan, build_intro_plan
+from manim_engineering.animation.intro_style import IntroStyle, intro_run_time_budget
 from manim_engineering.animation.layers import (
     HUD_Z_INDEX,
     PROPAGATION_Z_INDEX,
@@ -54,14 +55,22 @@ from manim_engineering.animation.scene import (
     resolve_topology_scene_camera,
 )
 from manim_engineering.animation.scene_protocol import TeachingSceneProtocol
-from manim_engineering.animation.scene_template import play_topology_intro
+from manim_engineering.animation.scene_template import (
+    play_topology_intro,
+    play_waveform_idle_baseline,
+)
 from manim_engineering.animation.signal_flow import (
     DEFAULT_PROPAGATION_DURATION,
     SignalFlow,
 )
 from manim_engineering.animation.stubs import LogicTransition, VoltagePulse
-from manim_engineering.animation.style import TeachingStyle
-from manim_engineering.animation.teaching_scene import WaveformDemoScene, WaveformFixture
+from manim_engineering.animation.style import EmphasisLevel, TeachingStyle, style_for_emphasis
+from manim_engineering.animation.teaching_scene import (
+    TopologyFixture,
+    TopologyTeachingScene,
+    WaveformDemoScene,
+    WaveformFixture,
+)
 from manim_engineering.animation.theme import (
     BACKGROUND_COLORS,
     DEFAULT_BACKGROUND,
@@ -69,7 +78,13 @@ from manim_engineering.animation.theme import (
     MUTED_COLOR,
 )
 from manim_engineering.animation.trace import flush_trace, record_stage, reset_tracer, trace_enabled
-from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
+from manim_engineering.animation.waveform_controller import WaveformSegmentController
+from manim_engineering.animation.waveform_reveal import (
+    SegmentRevealPlan,
+    WaveformRevealTracker,
+    commit_beat_reveal,
+    mount_reveal_plan,
+)
 from manim_engineering.animation.waveform_sync import (
     DEFAULT_TIMING_DURATION,
     WaveformSync,
@@ -91,10 +106,14 @@ __all__ = [
     "DEFAULT_BACKGROUND",
     "DEFAULT_PROPAGATION_DURATION",
     "DEFAULT_TIMING_DURATION",
+    "EmphasisLevel",
     "HIGHLIGHT_COLOR",
     "HUD_Z_INDEX",
     "INTRO_PAUSE",
+    "IntroPlan",
+    "IntroStagePlan",
     "IntroStyle",
+    "intro_run_time_budget",
     "LogicTransition",
     "MUTED_COLOR",
     "OUTRO_PAUSE",
@@ -111,7 +130,13 @@ __all__ = [
     "TimingMode",
     "VoltagePulse",
     "WaveformSync",
+    "SegmentRevealPlan",
+    "WaveformSegmentController",
     "WaveformRevealTracker",
+    "commit_beat_reveal",
+    "mount_reveal_plan",
+    "TopologyFixture",
+    "TopologyTeachingScene",
     "WaveformDemoScene",
     "WaveformFixture",
     "build_beat_plans",
@@ -120,11 +145,13 @@ __all__ = [
     "dim_topology",
     "normalize_topology_labels",
     "make_caption_track",
+    "build_intro_plan",
     "flush_trace",
     "get_primitive",
     "play_hud_intro",
     "play_propagation_beat",
     "play_topology_intro",
+    "play_waveform_idle_baseline",
     "primitive_registry_view",
     "record_stage",
     "register_primitive",
@@ -136,4 +163,5 @@ __all__ = [
     "scene_final_fade_enabled",
     "trace_enabled",
     "subtitle_text",
+    "style_for_emphasis",
 ]

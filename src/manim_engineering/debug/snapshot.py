@@ -12,6 +12,8 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from manim_engineering.animation.scene_mobjects import scene_display_mobjects
+
 if TYPE_CHECKING:
     from manim import Mobject, Scene
 
@@ -31,6 +33,27 @@ def _ensure_output_dir(scene: object) -> Path:
     return target
 
 
+def redraw_scene_frame(scene: Scene) -> None:
+    """Redraw the current scene using the displayed-mobject contract.
+
+    This is the authoritative helper for probes that compare a live camera
+    frame with an explicit renderer redraw. It clears ``static_image`` during
+    redraw so cached background pixels do not hide scene-tree/render drift.
+    """
+    renderer = getattr(scene, "renderer", None)
+    update_frame = getattr(renderer, "update_frame", None)
+    if not callable(update_frame):
+        return
+    original_static = getattr(renderer, "static_image", None)
+    try:
+        if hasattr(renderer, "static_image"):
+            renderer.static_image = None
+        update_frame(scene, mobjects=scene_display_mobjects(scene))
+    finally:
+        if hasattr(renderer, "static_image"):
+            renderer.static_image = original_static
+
+
 def snapshot_frame(scene: Scene, label: str) -> Path | None:
     """Save a PNG of the current camera frame with a descriptive label.
 
@@ -40,6 +63,7 @@ def snapshot_frame(scene: Scene, label: str) -> Path | None:
         return None
     target = _ensure_output_dir(scene)
     path = target / f"{label}.png"
+    redraw_scene_frame(scene)
     scene.camera.get_image().save(str(path))
     return path
 
@@ -69,7 +93,7 @@ def snapshot_topology(scene: Scene, label: str) -> dict[str, Any] | None:
     target = _ensure_output_dir(scene)
     path = target / f"{label}.json"
     items: list[dict[str, Any]] = []
-    for i, mob in enumerate(scene.mobjects):
+    for i, mob in enumerate(scene_display_mobjects(scene)):
         bbox = _mobject_bounds(mob)
         if bbox is None:
             continue

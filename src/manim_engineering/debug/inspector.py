@@ -13,6 +13,8 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any
 
+from manim_engineering.animation.scene_mobjects import scene_display_mobjects
+
 if TYPE_CHECKING:
     from manim import Mobject, Scene
 
@@ -26,13 +28,13 @@ class SceneInspector:
     def as_dict(self) -> dict[str, Any]:
         """Return a JSON-serializable dict of the scene mobject tree."""
         items: list[dict[str, Any]] = []
-        for i, mob in enumerate(self._scene.mobjects):
+        for i, mob in enumerate(scene_display_mobjects(self._scene)):
             items.append(self._walk(mob, i))
         return {"scene": type(self._scene).__name__, "objects": items}
 
     def print_tree(self) -> None:
         """Print the mobject tree to stdout."""
-        for i, mob in enumerate(self._scene.mobjects):
+        for i, mob in enumerate(scene_display_mobjects(self._scene)):
             self._print_mob(mob, depth=0, prefix=f"[{i}]")
 
     def dump_json(self, path: str | None = None) -> str:

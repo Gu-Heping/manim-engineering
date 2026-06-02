@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import importlib.util
-import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -12,6 +11,7 @@ import pytest
 pytest.importorskip("manim")
 
 from manim import AnimationGroup, LaggedStart, VGroup
+from scene_trace import trace_stage_entries
 
 from manim_engineering.animation import IntroStyle, play_topology_intro
 from manim_engineering.animation.trace import flush_trace, reset_tracer
@@ -136,8 +136,7 @@ def test_play_topology_intro_records_geometry_trace_detail(
     )
     path = flush_trace(scene)
     assert path is not None
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    detail = payload["stages"][0]["detail"]
+    detail = trace_stage_entries(path, "intro.topology")[0]["detail"]
     assert detail["line_stroke_count"] > 0
     assert detail["filled_stroke_count"] > 0
     assert detail["use_border_fill"] is True

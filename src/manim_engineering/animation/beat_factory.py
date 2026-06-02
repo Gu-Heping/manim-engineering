@@ -10,6 +10,7 @@ from manim_engineering.animation.base import AnimationPlan
 from manim_engineering.animation.purpose import AnimationPurpose
 from manim_engineering.animation.signal_flow import SignalFlow
 from manim_engineering.animation.style import TeachingStyle
+from manim_engineering.animation.waveform_controller import WaveformSegmentController
 from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
 from manim_engineering.animation.waveform_sync import WaveformSync
 from manim_engineering.core.graph import CircuitGraph
@@ -34,9 +35,10 @@ def build_beat_plans(
     signals: Sequence[Signal],
     panel_spec: WaveformPanelSpec | None,
     beat: int | None,
-    reveal_tracker: WaveformRevealTracker | None,
-    reveal_time: float | None,
-    wire_pulse: bool,
+    waveform_controller: WaveformSegmentController | None = None,
+    reveal_tracker: WaveformRevealTracker | None = None,
+    reveal_time: float | None = None,
+    wire_pulse: bool = True,
     timing_mode: TimingMode = "auto",
 ) -> tuple[AnimationPlan, AnimationPlan | None, AnimationPlan | None, str | None]:
     """Return ``(flow_plan, sync_plan, ramp_plan, timing_purpose)`` for one beat."""
@@ -64,8 +66,10 @@ def build_beat_plans(
     ramp_plan = None
     timing_purpose: str | None = None
     ramp_t_start = 0.0
-    if reveal_tracker is not None:
-        ramp_t_start = reveal_tracker.revealed_time_for(signal.name)
+    if waveform_controller is None and reveal_tracker is not None:
+        waveform_controller = WaveformSegmentController(reveal_tracker)
+    if waveform_controller is not None:
+        ramp_t_start = waveform_controller.revealed_time_for(signal.name)
 
     if bundle is not None and panel_spec is not None and signals and timing_mode != "none":
         trace_match = bundle.trace_named(signal.name)

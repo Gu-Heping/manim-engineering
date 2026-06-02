@@ -103,7 +103,7 @@ Deliverables:
 - [x] `AnimationPrimitive` base + minimal registry
 - [x] Stubs: `VoltagePulse`, `LogicTransition` (deferred `build()`)
 - [x] `tests/animation/` — duration, sequencing, topology guard
-- [x] Example `examples/basics/signal_flow_demo.py`
+- [x] Example teaching scenes: `examples/analog/01_rc_charge.py`, `examples/protocol/spi_byte_transfer.py` (legacy `examples/basics/signal_flow_demo.py` removed — analog-first catalog)
 
 **Exit criteria**: minimal scene plays propagation; animation tests for sequencing.
 
@@ -121,7 +121,7 @@ Deliverables:
 - [x] `renderers/minimal/waveform.py` — digital step traces aligned below layout
 - [x] `WaveformSync` (`AnimationPurpose.TIMING`) — same beat/duration as `SignalFlow`
 - [x] `tests/waveform/` — derive, propagate alignment, sync contract
-- [x] Example `examples/basics/clock_data_waveform.py`
+- [x] Example `examples/analog/01_rc_charge.py`, `examples/analog/03_cmos_inverter.py` (legacy `examples/basics/clock_data_waveform.py` removed)
 
 **Exit criteria**: waveform state matches signal state in tests.
 
@@ -308,6 +308,31 @@ IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `Circuit
 - [ ] Per-symbol / per-layout-order intro factory (`build_intro_plan`)
 - [ ] Renderer metadata (`element_id` / `connection_id` on mobjects) for semantic wire draw order
 - [ ] Pin-label `Write` intro mode (conflicts with default label stroke pipeline)
+
+**Animation example migration (complete)**
+
+- [x] `TopologyFixture` + `TopologyTeachingScene` for catalog demos without waveforms
+- [x] Analog `02`/`04`–`09` migrated from plain `Scene` + `self.add` to intro/HUD/outro template
+- [x] `03_cmos_inverter` upgraded to `WaveformDemoScene` with digital IN/OUT beats
+- [x] Construct smoke: `test_analog_topology_scene_smoke.py`, `test_cmos_inverter_scene_smoke.py`
+
+**Animation layer waveform reveal (complete)**
+
+- [x] Idle stub contract: short horizontal segment; `idle_only` default `extend_to_panel=False`
+- [x] `baseline_traces` per-signal intro baseline on `WaveformDemoScene`
+- [x] Stable segment append (`SegmentRevealPlan`, prefix line preservation, `mount_reveal_plan`)
+- [x] `WaveformSegmentController` facade over `WaveformRevealTracker`
+- [x] `extend_waveform_to_panel=False` default — opt-in finalize hold to panel edge
+- [x] RC 01: vin-only baseline, teach-to-2τ without silent tail
+
+**Animation layer backlog (P4 + Tier B/C — not started)**
+
+- [ ] `beat_factory` tests: `sync` / `ramp` modes and ramp validation errors
+- [ ] Registry hygiene: stub registration policy + `waveform_sync` registry assertions
+- [ ] Tier B: `build_intro_plan` per-layout-order intro
+- [ ] Tier C: renderer mobject metadata for semantic wire draw order
+- [ ] Scope B/C: implement `VoltagePulse` / `LogicTransition` stubs (replace deferred `build()`)
+- [ ] Docs: align ROADMAP Phase 5–6 example paths with analog-first catalog (`basics/graph_only`, `protocol/spi_byte_transfer`)
 
 Short-term experiment track: circuitjs1-inspired stamp/doStep exploration is
 documented in `docs/circuitjs1-borrowing.md` with an isolated prototype at

@@ -8,9 +8,14 @@ pytest.importorskip("manim")
 
 from manim import VGroup
 
-from manim_engineering.animation.waveform_reveal import WaveformRevealTracker
+from manim_engineering.animation.waveform_reveal import (
+    UnknownWaveformSignalError,
+    WaveformRevealTracker,
+    mount_reveal_plan,
+)
 from manim_engineering.core.enums import SignalType
 from manim_engineering.renderers.minimal import WaveformPanelRenderer
+from manim_engineering.semantic import LogicState, Signal
 from manim_engineering.semantic.enums import LogicLevel
 from manim_engineering.waveform.layout import WaveformPanelSpec
 from manim_engineering.waveform.trace import WaveformSample, WaveformTrace
@@ -46,7 +51,7 @@ def _panel_fixture():
     return tracker, trace, bundle, spec, renderer
 
 
-def test_append_through_beat_starts_new_segments_at_zero_width() -> None:
+def test_append_through_beat_returns_create_ready_segments() -> None:
     tracker, trace, bundle, spec, renderer = _panel_fixture()
     from manim_engineering.semantic import LogicLevel as LL
     from manim_engineering.semantic import LogicState, Signal
@@ -54,10 +59,62 @@ def test_append_through_beat_starts_new_segments_at_zero_width() -> None:
     clk = Signal(name="clk", signal_type=SignalType.CLOCK, value=LogicState(level=LL.LOW))
     panel = VGroup(renderer.render_trace(trace, spec, 0, idle_only=True))
     tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+    tracker.sync_idle_baselines()
 
-    added = tracker.append_through_beat(clk, 0)
-    assert added
-    assert all(line.get_stroke_width() == 0.0 for line in added)  # type: ignore[attr-defined]
+    plan = tracker.append_through_beat(clk, 0)
+    mount_reveal_plan(plan)
+    assert plan.added
+    assert all(float(line.get_stroke_opacity()) == pytest.approx(0.0) for line in plan.added)  # type: ignore[attr-defined]
+
+
+def test_append_through_beat_preserves_unchanged_prefix_ids() -> None:
+    tracker, trace, bundle, spec, renderer = _panel_fixture()
+    from manim_engineering.semantic import LogicLevel as LL
+    from manim_engineering.semantic import LogicState, Signal
+
+    clk = Signal(name="clk", signal_type=SignalType.CLOCK, value=LogicState(level=LL.LOW))
+    panel = VGroup(renderer.render_trace(trace, spec, 0, idle_only=True))
+    tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+    tracker.sync_idle_baselines()
+    plan0 = tracker.append_through_beat(clk, 0)
+    mount_reveal_plan(plan0)
+    after_beat0 = list(panel.submobjects[0].submobjects[:-1])
+    assert after_beat0
+    prefix_ids = [id(mob) for mob in after_beat0]
+
+    plan1 = tracker.append_through_beat(clk, 1)
+    mount_reveal_plan(plan1)
+    lines_after = list(panel.submobjects[0].submobjects[:-1])
+    assert len(lines_after) > len(prefix_ids)
+    assert [id(mob) for mob in lines_after[: len(prefix_ids)]] == prefix_ids
+
+
+def test_append_through_beat_does_not_extend_idle_stub_in_place() -> None:
+    tracker, trace, bundle, spec, renderer = _panel_fixture()
+    clk = Signal(
+        name="clk",
+        signal_type=SignalType.CLOCK,
+        value=LogicState(level=LogicLevel.LOW),
+    )
+    panel = VGroup(renderer.render_trace(trace, spec, 0, idle_only=True))
+    tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+    tracker.sync_idle_baselines()
+
+    idle_line = tracker._line_children(panel.submobjects[0])[0]
+    idle_end_before = idle_line.get_end().copy()
+
+    plan = tracker.append_through_beat(clk, 0)
+
+    idle_end_after = idle_line.get_end()
+    assert float(idle_end_after[0]) == pytest.approx(float(idle_end_before[0]))
+    assert float(idle_end_after[1]) == pytest.approx(float(idle_end_before[1]))
+    assert plan.removed == (idle_line,)
+    assert len(plan.added) >= 2
+    horizontal, vertical = plan.added[:2]
+    assert float(horizontal.get_start()[0]) == pytest.approx(float(idle_line.get_start()[0]))
+    assert float(horizontal.get_start()[1]) == pytest.approx(float(idle_end_before[1]))
+    assert float(horizontal.get_end()[0]) > float(idle_end_before[0])
+    assert float(vertical.get_start()[0]) == pytest.approx(float(horizontal.get_end()[0]))
 
 
 def test_append_through_time_rebuilds_hold_on_beat_advance() -> None:
@@ -68,12 +125,14 @@ def test_append_through_time_rebuilds_hold_on_beat_advance() -> None:
     clk = Signal(name="clk", signal_type=SignalType.CLOCK, value=LogicState(level=LL.LOW))
     panel = VGroup(renderer.render_trace(trace, spec, 0, idle_only=True))
     tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+    tracker.sync_idle_baselines()
 
-    tracker.append_through_beat(clk, 0)
+    mount_reveal_plan(tracker.append_through_beat(clk, 0))
     lines_after_beat0 = list(tracker.panel.submobjects[0].submobjects[:-1])
     assert lines_after_beat0
 
-    tracker.append_through_time(2.0)
+    for plan in tracker.append_through_time(2.0):
+        mount_reveal_plan(plan)
     lines_after_t2 = list(tracker.panel.submobjects[0].submobjects[:-1])
     assert len(lines_after_t2) >= len(lines_after_beat0)
     hold_end = max(
@@ -120,18 +179,71 @@ def test_append_through_time_for_only_updates_named_trace() -> None:
         renderer.render_trace(vc, spec, 1, idle_only=True),
     )
     tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+    tracker.sync_idle_baselines()
 
     vin_before = len(panel.submobjects[0].submobjects) - 1
     vc_before = len(panel.submobjects[1].submobjects) - 1
 
-    tracker.append_through_time_for("vc", 2.0)
+    mount_reveal_plan(tracker.append_through_time_for("vc", 2.0))
 
     assert len(panel.submobjects[0].submobjects) - 1 == vin_before
     assert len(panel.submobjects[1].submobjects) - 1 > vc_before
     assert tracker.revealed_time_for("vc") == pytest.approx(2.0)
 
 
-def test_reveal_all_extends_analog_trace_to_end_time() -> None:
+def test_sync_idle_baselines_can_limit_snapshots_to_selected_signals() -> None:
+    from manim_engineering.layout.types import Point2D
+    from manim_engineering.waveform.trace import WaveformBundle
+
+    vin = WaveformTrace(
+        signal_name="vin",
+        signal_type=SignalType.DIGITAL,
+        pin_id="drv.out",
+        samples=(
+            WaveformSample(time=0.0, level=LogicLevel.LOW),
+            WaveformSample(time=1.0, level=LogicLevel.HIGH),
+        ),
+    )
+    vout = WaveformTrace(
+        signal_name="vout",
+        signal_type=SignalType.DIGITAL,
+        pin_id="load.in",
+        samples=(
+            WaveformSample(time=0.0, level=LogicLevel.LOW),
+            WaveformSample(time=1.0, level=LogicLevel.HIGH),
+        ),
+    )
+    bundle = WaveformBundle(traces=(vin, vout))
+    spec = WaveformPanelSpec(
+        origin=Point2D(0.0, -2.0),
+        width=4.0,
+        trace_height=0.4,
+        trace_gap=0.5,
+        time_scale=1.0,
+    )
+    renderer = WaveformPanelRenderer()
+    panel = VGroup(
+        renderer.render_trace(vin, spec, 0, idle_only=True),
+        renderer.render_trace(vout, spec, 1, idle_only=True),
+    )
+    tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+
+    tracker.sync_idle_baselines({"vin"})
+
+    assert tracker._segment_snapshots["vin"]
+    assert tracker._segment_snapshots["vout"] == ()
+    assert tracker._revealed_time["vin"] == pytest.approx(0.0)
+    assert tracker._revealed_time["vout"] == pytest.approx(-1.0)
+
+
+def test_append_through_time_for_unknown_signal_raises_typed_error() -> None:
+    tracker, _trace, _bundle, _spec, _renderer = _panel_fixture()
+
+    with pytest.raises(UnknownWaveformSignalError):
+        tracker.append_through_time_for("missing", 1.0)
+
+
+def test_finalize_hold_extends_short_idle_stub() -> None:
     from manim_engineering.layout.types import Point2D
     from manim_engineering.waveform.trace import WaveformBundle
 
@@ -157,10 +269,71 @@ def test_reveal_all_extends_analog_trace_to_end_time() -> None:
     renderer = WaveformPanelRenderer()
     panel = VGroup(renderer.render_trace(vc, spec, 0, idle_only=True))
     tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+    tracker.sync_idle_baselines()
 
-    tracker.reveal_all()
-
+    pending = tracker.finalize_hold_to_panel()
     lines = list(panel.submobjects[0].submobjects[:-1])
-    assert lines
     hold_end = max(max(line.get_start()[0], line.get_end()[0]) for line in lines)  # type: ignore[attr-defined]
     assert hold_end == pytest.approx(spec.origin.x + spec.width)
+    assert pending == () or all(
+        float(line.get_stroke_opacity()) == pytest.approx(0.0) for line in pending  # type: ignore[attr-defined]
+    )
+
+
+def test_mount_reveal_plan_adds_lines_without_label_placeholder() -> None:
+    tracker, trace, bundle, spec, renderer = _panel_fixture()
+
+    clk = Signal(
+        name="clk",
+        signal_type=SignalType.CLOCK,
+        value=LogicState(level=LogicLevel.LOW),
+    )
+    trace_row = renderer.render_trace(trace, spec, 0, idle_only=True)
+    bare_row = VGroup(*tracker._line_children(trace_row))
+    panel = VGroup(bare_row)
+    tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+    tracker.sync_idle_baselines()
+
+    plan = tracker.append_through_beat(clk, 0)
+    mount_reveal_plan(plan)
+
+    assert plan.added
+    assert all(line in bare_row.submobjects for line in plan.added)
+
+
+def test_finalize_hold_extends_partial_reveal_to_panel_edge() -> None:
+    from manim_engineering.layout.types import Point2D
+    from manim_engineering.waveform.trace import WaveformBundle
+
+    vc = WaveformTrace(
+        signal_name="vc",
+        signal_type=SignalType.ANALOG,
+        pin_id="c1.a",
+        samples=(
+            WaveformSample(time=0.0, level=0.0),
+            WaveformSample(time=2.0, level=0.63),
+            WaveformSample(time=5.0, level=0.99),
+        ),
+        is_discrete=False,
+    )
+    bundle = WaveformBundle(traces=(vc,))
+    spec = WaveformPanelSpec(
+        origin=Point2D(0.0, -2.0),
+        width=4.0,
+        trace_height=0.4,
+        trace_gap=0.5,
+        time_scale=1.0,
+    )
+    renderer = WaveformPanelRenderer()
+    panel = VGroup(renderer.render_trace(vc, spec, 0, idle_only=True))
+    tracker = WaveformRevealTracker(panel, bundle, spec, renderer)
+    tracker.sync_idle_baselines()
+    mount_reveal_plan(tracker.append_through_time_for("vc", 2.0))
+
+    pending = tracker.finalize_hold_to_panel()
+    lines = list(panel.submobjects[0].submobjects[:-1])
+    hold_end = max(max(line.get_start()[0], line.get_end()[0]) for line in lines)  # type: ignore[attr-defined]
+    assert hold_end == pytest.approx(spec.origin.x + spec.width)
+    assert pending == () or all(
+        float(line.get_stroke_opacity()) == pytest.approx(0.0) for line in pending  # type: ignore[attr-defined]
+    )

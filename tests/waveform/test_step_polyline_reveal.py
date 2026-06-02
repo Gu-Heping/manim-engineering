@@ -24,6 +24,16 @@ def _trace() -> WaveformTrace:
     )
 
 
+def test_step_polyline_idle_only_is_short_stub() -> None:
+    spec = WaveformPanelSpec(
+        origin=_origin(), width=4.0, trace_height=0.4, trace_gap=0.5, time_scale=1.0
+    )
+    pts = step_polyline(_trace(), spec, 0, idle_only=True)
+    ys = {p.y for p in pts}
+    assert len(ys) == 1
+    assert pts[-1].x < spec.origin.x + spec.width - 1e-6
+
+
 def test_step_polyline_idle_only_is_flat() -> None:
     spec = WaveformPanelSpec(origin=_origin(), width=4.0, trace_height=0.4, trace_gap=0.5)
     pts = step_polyline(_trace(), spec, 0, idle_only=True)

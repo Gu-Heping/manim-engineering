@@ -6,15 +6,11 @@ Preview: ``manim -pql examples/analog/06_opamp_integrator.py OpAmpIntegratorScen
 
 from __future__ import annotations
 
-from manim import UP, Scene
-
-from manim_engineering.animation import configure_topology_scene_camera, subtitle_text
 from manim_engineering.components import Capacitor, Ground, InputDriver, OpAmp, Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
 from manim_engineering.layout.presets import layout_from_preset
 from manim_engineering.layout.presets.opamp import inverting_integrator_preset
-from manim_engineering.renderers.minimal import ManimRenderer
 
 
 def build_opamp_integrator_fixture():
@@ -37,16 +33,40 @@ def build_opamp_integrator_fixture():
     return graph, elements, layout
 
 
-class OpAmpIntegratorScene(Scene):
-    """运放积分电路：Vin→Rin→OP(-), Cf反馈, Vout = -1/(RC)∫Vin dt。"""
+OpAmpIntegratorScene = None
 
-    def construct(self) -> None:
-        graph, elements, layout = build_opamp_integrator_fixture()
-        renderer = ManimRenderer()
-        mobject = renderer.render_circuit(graph, layout, elements)
-        self.add(mobject)
-        configure_topology_scene_camera(self, layout, subtitle_band=0.8)
-        title = subtitle_text("运放积分器 · Vout = -1/RC ∫ Vin dt", role="title")
-        title.to_edge(UP, buff=0.2)
-        self.add(title)
-        self.wait(2)
+
+def _is_optional_scene_import_error(exc: ImportError) -> bool:
+    name = getattr(exc, "name", None)
+    if not name:
+        return False
+    return name == "manim" or str(name).startswith("manim.")
+
+try:
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from _shared import TopologyFixture, TopologyTeachingScene
+
+    class OpAmpIntegratorScene(TopologyTeachingScene):
+        """运放积分电路：Vin→Rin→OP(-), Cf反馈, Vout = -1/(RC)∫Vin dt。"""
+
+        subtitle_band = 0.8
+
+        def build_fixture(self) -> TopologyFixture:
+            graph, elements, layout = build_opamp_integrator_fixture()
+            return TopologyFixture(graph=graph, elements=elements, layout=layout)
+
+        def hud_texts(self, _fixture: TopologyFixture) -> tuple[str, str]:
+            return (
+                "运放积分器 · Vout = -1/RC ∫ Vin dt",
+                "电容反馈将输入积分到输出，常用于波形整形",
+            )
+
+except ImportError as exc:
+    if _is_optional_scene_import_error(exc):
+        OpAmpIntegratorScene = None
+    else:
+        msg = f"failed to import OpAmpIntegratorScene from {__file__}: {exc}"
+        raise ImportError(msg) from exc

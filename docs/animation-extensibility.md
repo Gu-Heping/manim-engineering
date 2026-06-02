@@ -21,13 +21,19 @@ class CMOSDemo(WaveformDemoScene):
 
 | Field | Default | Effect |
 |-------|---------|--------|
-| `border_fill_run_time` | 0.5s | Per-`Polygon`/`Dot` `DrawBorderThenFill` duration (capped; avoids Manim 2s default) |
+| `border_fill_run_time` | 0.5s | Legacy cap for filled-body timing (stage budget scales via `per_stroke_run_time`) |
 | `create_lag_ratio` | 0.1 | Lag between stroke animations within each bulk stage |
 | `use_border_fill` | `True` | `False` → all bodies use `Create` (legacy stroke-only intro) |
+| `per_stroke_run_time` | 0.10s | Budget per drawable stroke in a stage |
+| `min_stage_run_time` | 0.5s | Minimum duration for one intro stage |
+| `max_stage_run_time` | 4.0s | Cap for one intro stage |
 
 `play_topology_intro` partitions strokes via `partition_symbol_strokes`: `Line` →
-`Create`; filled bodies → `DrawBorderThenFill` when enabled. Bulk order unchanged:
-components → wires → waveform panel.
+`Create`; filled bodies → `DrawBorderThenFill` when enabled. Stages play
+sequentially (components → wires → panel chrome) with per-stage budgets from
+`intro_run_time_budget`. Each stage calls `restore_stroke_reveal` after `Create` so
+pre-added mobjects stay visible. Waveform trace polylines are excluded by default
+(`include_panel_traces=False`); use `play_waveform_idle_baseline` + `restore_waveform_strokes`.
 
 Override `WaveformDemoScene.play_intro()` for per-demo reveal order without
 replacing the full `construct()` template.
@@ -138,6 +144,32 @@ Subclass `WaveformDemoScene` and implement `build_fixture()`. Optional hooks:
 - `play_intro(topology, waveform_panel, content)` → override for custom reveal order
 
 `construct()` resets/flushes the tracer automatically when trace env is set.
+
+## TopologyTeachingScene contract
+
+For catalog demos **without** a `WaveformBundle` or propagation beats (most static
+analog symbol/layout examples):
+
+```python
+from manim_engineering.animation import TopologyFixture, TopologyTeachingScene
+
+class HalfWaveRectifierScene(TopologyTeachingScene):
+    subtitle_band = 0.8
+
+    def build_fixture(self) -> TopologyFixture:
+        graph, elements, layout = build_rectifier_fixture()
+        return TopologyFixture(graph=graph, elements=elements, layout=layout)
+
+    def hud_texts(self, _fixture) -> tuple[str, str]:
+        return ("半波整流 · AC→D1→RL→GND", "交流源 → 二极管 → 负载")
+```
+
+- Uses `configure_topology_scene_camera` (no waveform panel).
+- Default `play_intro()` passes an empty panel `VGroup`; set `intro_panel_run_time = 0.0`.
+- Override `render_topology(fixture)` for renderer options (e.g. MOSFET convention).
+- Hooks: `after_intro_hook`, `after_hold_hook` (no `PropagationSequence`).
+
+Examples re-export via `examples/_shared.py` for `sys.path` imports.
 
 ## What not to do
 

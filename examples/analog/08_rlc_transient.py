@@ -6,13 +6,9 @@ Preview: ``manim -pql examples/analog/08_rlc_transient.py RLCTransientScene``
 
 from __future__ import annotations
 
-from manim import UP, Scene
-
-from manim_engineering.animation import configure_topology_scene_camera, subtitle_text
 from manim_engineering.components import Capacitor, Ground, Inductor, InputDriver, Resistor
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.renderers.minimal import ManimRenderer
 
 
 def build_rlc_transient_fixture():
@@ -33,16 +29,45 @@ def build_rlc_transient_fixture():
     return graph, elements, layout
 
 
-class RLCTransientScene(Scene):
-    """RLC串联暂态：AC源→R→L→C→GND，二阶系统阻尼响应。"""
+RLCTransientScene = None
 
-    def construct(self) -> None:
-        graph, elements, layout = build_rlc_transient_fixture()
-        renderer = ManimRenderer()
-        mobject = renderer.render_circuit(graph, layout, elements)
-        self.add(mobject)
-        configure_topology_scene_camera(self, layout, subtitle_band=0.8)
-        title = subtitle_text("RLC串联暂态 · AC→R→L→C→GND", role="title")
-        title.to_edge(UP, buff=0.2)
-        self.add(title)
-        self.wait(2)
+
+def _is_optional_scene_import_error(exc: ImportError) -> bool:
+    name = getattr(exc, "name", None)
+    if not name:
+        return False
+    return name == "manim" or str(name).startswith("manim.")
+
+try:
+    import importlib.util
+    from pathlib import Path
+
+    _SHARED_PATH = Path(__file__).resolve().parents[1] / "_shared.py"
+    _SHARED_SPEC = importlib.util.spec_from_file_location("me_examples_shared", _SHARED_PATH)
+    assert _SHARED_SPEC is not None and _SHARED_SPEC.loader is not None
+    _shared = importlib.util.module_from_spec(_SHARED_SPEC)
+    _SHARED_SPEC.loader.exec_module(_shared)
+    TopologyFixture = _shared.TopologyFixture
+    TopologyTeachingScene = _shared.TopologyTeachingScene
+
+    class RLCTransientScene(TopologyTeachingScene):
+        """RLC串联暂态：AC源→R→L→C→GND，二阶系统阻尼响应。"""
+
+        subtitle_band = 0.8
+
+        def build_fixture(self) -> TopologyFixture:
+            graph, elements, layout = build_rlc_transient_fixture()
+            return TopologyFixture(graph=graph, elements=elements, layout=layout)
+
+        def hud_texts(self, _fixture: TopologyFixture) -> tuple[str, str]:
+            return (
+                "RLC串联暂态 · AC→R→L→C→GND",
+                "二阶 RLC 回路：电阻、电感、电容共同决定暂态与谐振",
+            )
+
+except ImportError as exc:
+    if _is_optional_scene_import_error(exc):
+        RLCTransientScene = None
+    else:
+        msg = f"failed to import RLCTransientScene from {__file__}: {exc}"
+        raise ImportError(msg) from exc
