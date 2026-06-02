@@ -1,12 +1,12 @@
 # KNOWN_PROBLEMS (for AI engineers)
 
-## 1) Animation reveal path is still partially transitional
+## 1) Reveal persistence still has compatibility surface
 
-- Intro baseline path and beat reveal path are separate orchestration paths.
 - `restore_waveform_strokes` still participates in reveal persistence logic.
-- Controller facade exists but not all orchestration paths are controller-native.
+- Backward-compatible entry points remain around the canonical controller-first path.
 
-Impact: cognitive complexity for maintainers; higher risk of reintroducing reveal regressions.
+Impact: cognitive complexity for maintainers; higher risk of patching compatibility
+surface instead of the primary reveal contract.
 
 ## 2) Legacy compatibility surface increases navigation cost
 
@@ -40,4 +40,3 @@ Impact: false debugging conclusions unless `--disable_caching` is used.
 - Group opacity/fade shortcuts on mixed mobject trees can break stroke/fill persistence.
 
 Impact: abrupt pops, ghost labels, and non-deterministic appearance bugs.
-

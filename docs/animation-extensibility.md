@@ -74,6 +74,24 @@ Fields: `beat_duration`, `beat_gap`, `caption_crossfade`, `dim_opacity`,
 Default `TeachingStyle()` matches pacing constants in `animation.pacing` — no
 visual change unless you override fields.
 
+`WaveformDemoScene.style.beat_duration` and `beat_gap` are forwarded into the
+underlying `PropagationSequence`, so scene-level pacing overrides affect the
+actual beat director instead of only local helper code.
+
+## Transition profiles
+
+`BeatSpec.transition_profile` is the preferred beat-authoring entry for motion
+layering:
+
+| Value | Behavior |
+|-------|----------|
+| `default` | Standard beat flow with minimal extra focus staging |
+| `setup` | Context-building beat; lighter label/path emphasis before the main play |
+| `conclusion` | Result/closure beat; stronger endpoint focus and longer post-hold |
+
+`BeatSpec.emphasis` remains for compatibility and maps into transition profiles.
+Prefer `transition_profile` for new scene authoring.
+
 ## BeatSpec timing dispatch
 
 `BeatSpec.timing_mode` selects waveform timing for one beat:
@@ -129,8 +147,13 @@ ME_ANIMATION_TRACE=1 ME_ANIMATION_SNAPSHOT=1 manim --disable_caching -pql exampl
 3. If a beat raises, read `BeatAnimationError` for `stage`, `beat_index`, and
    `signal_name`; inspect `cause` for the underlying exception.
 
-Stages recorded: `intro.topology`, `hud.intro`, `hud.caption`, `sequence.beat_start`,
-`beat.play`, `sequence.beat_end`.
+Stages recorded include `intro.topology`, `hud.intro`, `hud.caption`,
+`sequence.beat_start`, `sequence.topology_focus`,
+`sequence.topology_focus_settle`, `sequence.caption_settle`,
+`sequence.label_focus`, `sequence.label_focus_settle`,
+`beat.waveform_commit`, `beat.timing_accent`, `beat.commit_settle`,
+`beat.timing_settle`, `beat.play`, `sequence.beat_end`, and
+`sequence.post_hold`.
 
 ## WaveformDemoScene contract
 
@@ -142,6 +165,16 @@ Subclass `WaveformDemoScene` and implement `build_fixture()`. Optional hooks:
 - `intro_style` class attribute → passed to `play_intro()` / `play_topology_intro`
 - `propagation_options()` → extra `PropagationSequence` kwargs (`dim_inactive`, etc.)
 - `play_intro(topology, waveform_panel, content)` → override for custom reveal order
+
+Additional scene-level contracts:
+
+- `baseline_traces` controls which waveform traces get intro-time idle stubs.
+  `sync_idle_baselines(signal_names=...)` snapshots only those selected traces.
+- `play_intro_annotations()` is phase-based; it can reveal phase-allowed labels
+  beyond `component_label` / `net_label`, including waveform trace labels and
+  other role-tagged labels.
+- `BeatSpec.record` may be omitted when the signal's propagation history already
+  provides the matching record.
 
 `construct()` resets/flushes the tracer automatically when trace env is set.
 
@@ -174,6 +207,7 @@ Examples re-export via `examples/_shared.py` for `sys.path` imports.
 ## What not to do
 
 - Do not call `FadeIn(topology.components)` or `set_opacity` on mixed symbol groups.
-- Do not serialise `SignalFlow` then `WaveformSync` as separate full-duration plays.
+- Do not serialise `SignalFlow` then waveform timing/reveal as separate beats or
+  separate full-duration plays.
 - Do not inject arbitrary Python callbacks into beats — use `BeatSpec` fields and registry.
 - Do not import `animation/` from `debug/` (layer direction is one-way).

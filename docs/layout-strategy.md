@@ -28,6 +28,16 @@ not a fixed textbook schematic shape.
   and GND (bottom under the last signal element).
 - Still deterministic; still overrideable per element if needed.
 
+If the result is task-generated through the quickstart API, treat these warnings
+as a signal that grid placement is the wrong tool for the job:
+
+- ``layout.occupancy_above_target``
+- ``layout.single_row_auto_grid``
+- ``layout.branching_topology_using_auto_grid``
+
+These warnings mean "render succeeded, but the layout likely needs preset or
+manual help", not "the current geometry is acceptable".
+
 ### Preset (`layout/presets/`)
 
 Use when the scene needs a **canonical schematic shape** that grid placement

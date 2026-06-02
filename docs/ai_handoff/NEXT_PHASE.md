@@ -1,36 +1,15 @@
 # NEXT_PHASE (for AI engineers)
 
-## Focus: remove orchestration ambiguity without destabilizing catalog behavior
+## Focus: polish on stabilized contracts without reopening animation architecture
 
-This phase is not about adding many new examples. It is about reducing hidden
-complexity in the animation orchestration core.
+This phase is not about rebuilding orchestration again. Controller-first reveal
+flow, phased beat/sequence execution, and redraw/debug contracts are already in
+place. The next phase is about using those stable contracts to improve breadth
+and visual polish safely.
 
 ## System bottlenecks
 
-## 1) Reveal orchestration split-brain
-
-Current state:
-- Intro baseline logic, beat reveal logic, and finalize logic are managed by
-  related but partially separate pathways.
-
-Bottleneck:
-- Small visual changes can require touching multiple modules with non-obvious coupling.
-
-Direction:
-- Consolidate reveal semantics around segment plans and explicit mount/commit phases.
-
-## 2) Facade not yet first-class in orchestration
-
-Current state:
-- `WaveformSegmentController` exists, but orchestration mostly still passes tracker directly.
-
-Bottleneck:
-- API intent and implementation reality diverge.
-
-Direction:
-- Move sequence/beat orchestration toward controller-centered contracts.
-
-## 3) Intro tier backlog still blocks richer teaching pacing
+## 1) Intro tier backlog still blocks richer teaching pacing
 
 Current state:
 - Tier A intro is complete; Tier B/C features (layout-order intro factory,
@@ -42,7 +21,7 @@ Bottleneck:
 Direction:
 - Implement tiered intro planning without breaking deterministic stage budgets.
 
-## 4) Protocol/renderer roadmap asymmetry
+## 2) Protocol/renderer roadmap asymmetry
 
 Current state:
 - Protocol layer supports SPI/UART semantics, but renderer variants (IEC) and
@@ -54,7 +33,7 @@ Bottleneck:
 Direction:
 - New vertical slices must reuse stabilized contracts, not fork orchestration.
 
-## 5) Physics fidelity pressure vs teaching abstraction boundary
+## 3) Physics fidelity pressure vs teaching abstraction boundary
 
 Current state:
 - RC analog slice is educationally useful, not physically complete.
@@ -64,4 +43,3 @@ Bottleneck:
 
 Direction:
 - Any fidelity increase should start from semantic model contracts, not visual hacks.
-

@@ -1,0 +1,103 @@
+from __future__ import annotations
+
+import pytest
+
+pytest.importorskip("manim")
+
+from manim_engineering import build_circuit, layout_circuit, render_circuit_diagram
+from manim_engineering.components import Resistor
+
+
+def test_render_circuit_diagram_returns_rendered_group_and_topology() -> None:
+    build = build_circuit(
+        {
+            "r1": Resistor("r1", label="R1"),
+            "r2": Resistor("r2", label="R2"),
+        },
+        [("r1", "b", "r2", "a")],
+    )
+    layout = layout_circuit(build)
+
+    result = render_circuit_diagram(build, layout)
+
+    assert len(result.rendered.submobjects) >= 3
+    assert result.topology is not None
+    assert result.topology.n_components == 2
+    assert result.output_path is None
+    assert result.preview_attempted is False
+    assert result.preview_available is False
+    assert result.warnings == ()
+
+
+def test_render_circuit_diagram_exports_png_preview(tmp_path) -> None:
+    build = build_circuit(
+        {
+            "r1": Resistor("r1"),
+            "r2": Resistor("r2"),
+        },
+        [("r1", "b", "r2", "a")],
+    )
+    layout = layout_circuit(build)
+
+    result = render_circuit_diagram(
+        build,
+        layout,
+        include_topology=False,
+        output_path=tmp_path / "preview.png",
+    )
+
+    assert result.topology is None
+    assert result.output_path == tmp_path / "preview.png"
+    assert result.output_path.exists()
+    assert result.preview_attempted is False
+    assert result.preview_available is False
+    assert result.warnings == ()
+
+
+def test_render_circuit_diagram_attempts_preview_open_when_supported(monkeypatch, tmp_path) -> None:
+    build = build_circuit(
+        {
+            "r1": Resistor("r1"),
+            "r2": Resistor("r2"),
+        },
+        [("r1", "b", "r2", "a")],
+    )
+    layout = layout_circuit(build)
+
+    opened: list[str] = []
+    monkeypatch.setattr(
+        "manim_engineering.quickstart.os.startfile",
+        lambda path: opened.append(path),
+        raising=False,
+    )
+
+    result = render_circuit_diagram(
+        build,
+        layout,
+        include_topology=False,
+        output_path=tmp_path / "preview.png",
+        preview=True,
+    )
+
+    assert opened == [str(tmp_path / "preview.png")]
+    assert result.preview_attempted is True
+    assert result.preview_available is True
+    assert result.output_path == tmp_path / "preview.png"
+
+
+def test_render_circuit_diagram_preview_requires_output_path() -> None:
+    build = build_circuit(
+        {
+            "r1": Resistor("r1"),
+            "r2": Resistor("r2"),
+        },
+        [("r1", "b", "r2", "a")],
+    )
+    layout = layout_circuit(build)
+
+    result = render_circuit_diagram(build, layout, preview=True, include_topology=False)
+
+    assert result.output_path is None
+    assert result.preview_attempted is True
+    assert result.preview_available is False
+    assert "preview.requires_output_path" in result.warnings
