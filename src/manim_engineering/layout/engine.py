@@ -71,6 +71,12 @@ class LayoutEngine:
     def __init__(self, config: LayoutConfig | None = None) -> None:
         self._config = config or LayoutConfig()
 
+    @property
+    def config(self) -> LayoutConfig:
+        """Public access to the immutable layout configuration."""
+
+        return self._config
+
     def solve(
         self,
         graph: CircuitGraph,
@@ -209,9 +215,20 @@ class LayoutEngine:
                 pin_positions[pin.id] = pin_world_position(placement, element, pin_name)
 
         wires: list[WirePath] = []
-        from manim_engineering.layout.nets import collect_junction_nodes, route_nets
+        from manim_engineering.layout.nets import (
+            apply_track_spacing,
+            apply_wire_detours,
+            build_routing_report,
+            collect_junction_nodes,
+            route_nets,
+        )
 
         net_wp = net_waypoints or {}
+        junction_nodes = collect_junction_nodes(
+            graph.connections,
+            pin_positions,
+            net_waypoints=net_wp,
+        )
         wires.extend(
             route_nets(
                 graph.connections,
@@ -222,10 +239,29 @@ class LayoutEngine:
                 placements=placements,
             )
         )
-        junction_nodes = collect_junction_nodes(
-            graph.connections,
-            pin_positions,
-            net_waypoints=net_wp,
+        connections_by_id = {connection.id: connection for connection in graph.connections}
+        wires, detoured_path_count = apply_wire_detours(
+            wires,
+            placements=placements,
+            pin_positions=pin_positions,
+            connections_by_id=connections_by_id,
+            junction_nodes=junction_nodes,
+        )
+        wires, spaced_track_count = apply_track_spacing(
+            wires,
+            placements=placements,
+            pin_positions=pin_positions,
+            connections_by_id=connections_by_id,
+            junction_nodes=junction_nodes,
+        )
+        routing_report = build_routing_report(
+            wires,
+            junction_nodes=junction_nodes,
+            placements=placements,
+            pin_positions=pin_positions,
+            connections_by_id=connections_by_id,
+            detoured_path_count=detoured_path_count,
+            spaced_track_count=spaced_track_count,
         )
 
         bbox = layout_bbox(placements)
@@ -240,6 +276,7 @@ class LayoutEngine:
             occupancy_ratio=ratio,
             layout_bbox=bbox,
             scene_bbox=scene,
+            routing_report=routing_report,
             junction_nodes=junction_nodes,
         )
 

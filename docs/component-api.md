@@ -2,6 +2,13 @@
 
 Executable contract for `components/`. Rules: [`.cursor/rules/70-component-authoring.md`](../.cursor/rules/70-component-authoring.md).
 
+If your task is "draw a circuit diagram", start with
+[quickstart-draw-circuit.md](quickstart-draw-circuit.md) first. This file is the
+low-level component contract, not the shortest user path.
+
+To see which components already exist and which pin names they use, see
+[component-catalog.md](component-catalog.md).
+
 ## Base class
 
 ```python

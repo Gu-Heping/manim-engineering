@@ -14,6 +14,8 @@ On conflict, `.cursor/rules/` wins. Visual geometry invariants: `31-visual-geome
 
 | File | Contents |
 |------|----------|
+| [quickstart-draw-circuit.md](quickstart-draw-circuit.md) | Fastest task-driven path from components + connections to a diagram |
+| [component-catalog.md](component-catalog.md) | Available components, typical pin names, and example index |
 | [architecture.md](architecture.md) | Layer diagram, directory map, dependency rules |
 | [component-api.md](component-api.md) | `CircuitElement` required API |
 | [visual-theme.md](visual-theme.md) | Semantic colors, backgrounds, line hierarchy |
