@@ -230,11 +230,12 @@ class MinimalRenderer:
                 for pt in (segment.start, segment.end):
                     key = (round(pt.x, 6), round(pt.y, 6))
                     junction_points[key] = junction_points.get(key, 0) + 1
+        crossing_masks = self._render_non_junction_crossings(layout_result)
         junction_dots = self._render_node_junctions(
             junction_points,
             layout_result.junction_nodes,
         )
-        return VGroup(*placed, *wire_lines, *junction_dots)
+        return VGroup(*placed, *wire_lines, *crossing_masks, *junction_dots)
 
     def _place_component(
         self,
@@ -393,6 +394,30 @@ class MinimalRenderer:
             _add_dot(px, py)
 
         return dots
+
+    def _render_non_junction_crossings(self, layout_result: LayoutResult) -> list[Dot]:
+        """Background masks for wire crossings that are not electrical junctions."""
+        masks: list[Dot] = []
+        seen: set[tuple[float, float]] = set()
+
+        for issue in layout_result.routing_report.issues:
+            if issue.kind != "crossing_without_junction" or issue.location is None:
+                continue
+            key = (round(issue.location.x, 6), round(issue.location.y, 6))
+            if key in seen:
+                continue
+            seen.add(key)
+            mask = Dot(
+                point=[issue.location.x, issue.location.y, 0.0],
+                radius=theme.JUNCTION_DOT_RADIUS * 0.9,
+                color=theme.INTERFACE_PANEL_FILL,
+                fill_opacity=1.0,
+                stroke_width=0.0,
+            )
+            mask.set_z_index(WIRE_Z_INDEX + 0.5)
+            masks.append(mask)
+
+        return masks
 
     def _resistor_symbol(self, component: Resistor) -> VGroup:
         bounds = component.get_bounds()
