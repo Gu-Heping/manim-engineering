@@ -205,6 +205,7 @@ def test_layout_circuit_detects_fanout_branching_topology() -> None:
 
 
 def test_layout_circuit_rejects_engine_and_config_together() -> None:
+def test_layout_circuit_rejects_engine_and_config_together() -> None:
     result = build_circuit(
         {
             "r1": Resistor("r1"),

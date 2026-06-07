@@ -769,6 +769,10 @@ def _detour_wire_once(
     junction_nodes: frozenset[Point2D],
 ) -> WirePath:
     if wire.connection_id.startswith("net-"):
+        # Canonical hub/spoke branches intentionally keep their generated geometry.
+        # Local doglegs on those synthetic branches can easily fight the shared
+        # backbone semantics, so this pass leaves them untouched and surfaces any
+        # residual hazards through routing diagnostics instead.
         return wire
 
     owner_ids = _wire_owner_ids(wire, connections_by_id)

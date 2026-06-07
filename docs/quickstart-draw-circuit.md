@@ -66,6 +66,9 @@ This is the recommended path for agents because it avoids pin-object plumbing.
 ### `layout_circuit(...)`
 
 This wraps the current deterministic layout path and gives you diagnostics.
+If you pass both `engine=` and `config=`, quickstart uses the supplied engine
+and ignores `config`; pass `config` only when you want quickstart to construct
+the engine for you.
 
 Return fields:
 

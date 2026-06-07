@@ -136,7 +136,13 @@ class RoutingIssue:
 
 @dataclass(frozen=True)
 class RoutingReport:
-    """Summary of routed-wire spacing and conflict diagnostics."""
+    """Summary of routed-wire spacing and conflict diagnostics.
+
+    ``detoured_path_count`` counts unique wire paths that were rewritten by the
+    local detour pass. ``spaced_track_count`` counts total segment-shift rewrites
+    performed by the spacing/shared-segment passes, so one wire can contribute
+    more than once there.
+    """
 
     issues: tuple[RoutingIssue, ...] = ()
 

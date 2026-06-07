@@ -47,3 +47,10 @@ def test_all_exports_are_importable() -> None:
         if name == "ManimRenderer" and importlib.util.find_spec("manim") is None:
             continue
         assert getattr(me, name, None) is not None, f"__all__ member {name!r} not importable"
+
+
+def test_layout_package_reexports_label_and_routing_types() -> None:
+    from manim_engineering.layout import LabelPlacementMode, RoutingIssueSeverity
+
+    assert LabelPlacementMode.AUTO.value == "auto"
+    assert RoutingIssueSeverity.__args__ == ("cosmetic", "ambiguous", "blocking")

@@ -82,7 +82,10 @@ def build_circuit(
     Build a registered ``CircuitGraph`` from task-level element and connection specs.
 
     ``elements`` accepts either a mapping or an ordered ``[(id, element)]`` sequence.
-    Each element id must match ``element.element_id``.
+    Each element id must match ``element.element_id``. When callers use a mapping,
+    normal Python dict semantics apply, so duplicate keys are already collapsed
+    before quickstart sees them; use the ordered sequence form if duplicate-id
+    detection matters during construction.
 
     ``connections`` uses ``(from_element_id, from_pin, to_element_id, to_pin)``
     tuples so callers do not need to manually ``attach_to`` components or plumb
@@ -142,8 +145,9 @@ def layout_circuit(
     layouts that likely need presets or manual refinement. ``layout_mode`` reports
     ``"semantic_grid"``, ``"structured_auto"``, or ``"manual"`` depending on whether
     quickstart kept the default grid, compiled a branching fallback, or honored
-    explicit positional overrides. Pass either ``engine`` or ``config``. Use
-    ``config`` only when you want quickstart to construct the engine for you.
+    explicit positional overrides. Pass either ``engine`` or ``config``, not
+    both. Use ``config`` only when you want quickstart to construct the engine
+    for you.
     """
     if engine is not None and config is not None:
         raise BuildParameterError("layout_circuit accepts only one of engine= or config=")
@@ -493,6 +497,8 @@ def _bfs_depths(root: str, adjacency: Mapping[str, Sequence[str]]) -> dict[str, 
                 continue
             depths[neighbor] = base_depth + 1
             queue.append(neighbor)
+    # Keep disconnected islands deterministic by assigning them one layer after the
+    # explored component, then relying on node_id ordering for a stable tie-break.
     for node_id in adjacency:
         depths.setdefault(node_id, max(depths.values(), default=0) + 1)
     return depths
