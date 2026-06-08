@@ -13,7 +13,6 @@ from manim_engineering.components import (
 from manim_engineering.core import SignalType
 from manim_engineering.layout import LayoutConfig, LayoutEngine, Point2D
 from manim_engineering.quickstart import BuildParameterError
-from manim_engineering.quickstart import BuildParameterError
 
 
 def test_layout_circuit_reports_clean_small_chain() -> None:
