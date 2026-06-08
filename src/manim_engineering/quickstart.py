@@ -499,6 +499,7 @@ def _bfs_depths(root: str, adjacency: Mapping[str, Sequence[str]]) -> dict[str, 
             queue.append(neighbor)
     # Keep disconnected islands deterministic by assigning them one layer after the
     # explored component, then relying on node_id ordering for a stable tie-break.
+    fallback_depth = max(depths.values(), default=0) + 1
     for node_id in adjacency:
-        depths.setdefault(node_id, max(depths.values(), default=0) + 1)
+        depths.setdefault(node_id, fallback_depth)
     return depths

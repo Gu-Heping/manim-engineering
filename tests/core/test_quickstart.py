@@ -5,6 +5,7 @@ import pytest
 from manim_engineering import build_circuit
 from manim_engineering.components import Ground, Resistor
 from manim_engineering.core import InvalidConnectionError, InvalidPortError
+from manim_engineering.quickstart import BuildParameterError
 
 
 def test_build_circuit_registers_elements_and_connections() -> None:
@@ -36,8 +37,13 @@ def test_build_circuit_accepts_ordered_sequence_input() -> None:
 
 
 def test_build_circuit_rejects_element_id_mismatch() -> None:
-    with pytest.raises(ValueError, match="element id mismatch"):
+    with pytest.raises(BuildParameterError, match="element id mismatch"):
         build_circuit([("alias", Resistor("r1"))], [])
+
+
+def test_build_circuit_rejects_duplicate_element_id_sequence() -> None:
+    with pytest.raises(BuildParameterError, match="duplicate element id"):
+        build_circuit([("r1", Resistor("r1")), ("r1", Resistor("r1"))], [])
 
 
 def test_build_circuit_rejects_unknown_connection_endpoint() -> None:

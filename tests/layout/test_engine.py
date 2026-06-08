@@ -138,7 +138,7 @@ def test_layout_full_override_skips_grid() -> None:
     assert len(result.wires) == 1
 
 
-def test_layout_engine_offsets_overlapping_single_segment_wires() -> None:
+def test_layout_reports_overlapping_wires_and_wire_through_component() -> None:
     graph = CircuitGraph()
     elements = {f"r{i}": Resistor(f"r{i}") for i in range(1, 5)}
     for element in elements.values():

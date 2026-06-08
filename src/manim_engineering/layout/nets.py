@@ -222,13 +222,17 @@ def _wire_connected_pin_points(
 
 def _wire_net_branch_pin_ids(wire: WirePath) -> frozenset[str]:
     connection_id = wire.connection_id
-    if not connection_id.startswith("net-") or "/" not in connection_id:
+    if not _is_synthetic_net_branch_id(connection_id):
         return frozenset()
     net_label, _pin_id = connection_id.rsplit("/", 1)
     encoded = net_label[len("net-") :]
     if not encoded:
         return frozenset()
     return frozenset(part for part in encoded.split("--") if part)
+
+
+def _is_synthetic_net_branch_id(connection_id: str) -> bool:
+    return connection_id.startswith("net-") and "/" in connection_id
 
 
 def _pin_owner_id(pin_id: str) -> str:
@@ -768,7 +772,7 @@ def _detour_wire_once(
     connections_by_id: Mapping[str, Connection],
     junction_nodes: frozenset[Point2D],
 ) -> WirePath:
-    if wire.connection_id.startswith("net-"):
+    if _is_synthetic_net_branch_id(wire.connection_id):
         # Canonical hub/spoke branches intentionally keep their generated geometry.
         # Local doglegs on those synthetic branches can easily fight the shared
         # backbone semantics, so this pass leaves them untouched and surfaces any

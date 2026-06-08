@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import sys
+from typing import get_args
 
 
 def test_top_level_exports_cover_task_level_diagram_path() -> None:
@@ -50,7 +51,14 @@ def test_all_exports_are_importable() -> None:
 
 
 def test_layout_package_reexports_label_and_routing_types() -> None:
-    from manim_engineering.layout import LabelPlacementMode, RoutingIssueSeverity
+    from manim_engineering.layout import (
+        LabelPlacementMode,
+        RoutingIssueKind,
+        RoutingIssueSeverity,
+        RoutingSegmentAxis,
+    )
 
     assert LabelPlacementMode.AUTO.value == "auto"
-    assert RoutingIssueSeverity.__args__ == ("cosmetic", "ambiguous", "blocking")
+    assert get_args(RoutingIssueSeverity) == ("cosmetic", "ambiguous", "blocking")
+    assert get_args(RoutingIssueKind)
+    assert get_args(RoutingSegmentAxis)

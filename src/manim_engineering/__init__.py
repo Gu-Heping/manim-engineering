@@ -26,12 +26,15 @@ from manim_engineering.components import (
 )
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import (
+    LabelPlacementMode,
     LayoutConfig,
     LayoutEngine,
     Point2D,
+    RoutingIssueSeverity,
     TextPlacementOverride,
 )
 from manim_engineering.quickstart import (
+    BuildParameterError,
     CircuitBuildResult,
     DiagramRenderResult,
     LayoutOutcome,
@@ -47,6 +50,7 @@ if TYPE_CHECKING:
 __version__ = "0.1.0"
 
 __all__ = [
+    "BuildParameterError",
     "Capacitor",
     "CircuitBuildResult",
     "CircuitGraph",
@@ -55,6 +59,7 @@ __all__ = [
     "Ground",
     "Inductor",
     "InputDriver",
+    "LabelPlacementMode",
     "LayoutConfig",
     "LayoutEngine",
     "LayoutOutcome",
@@ -68,6 +73,7 @@ __all__ = [
     "PNP",
     "Point2D",
     "Resistor",
+    "RoutingIssueSeverity",
     "SignalType",
     "SPIMaster",
     "SPISlave",

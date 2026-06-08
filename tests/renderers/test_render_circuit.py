@@ -59,4 +59,4 @@ def test_render_layout_adds_crossing_mask_for_non_junction_wire_crossing() -> No
 
     assert any(issue.kind == "crossing_without_junction" for issue in layout.routing_report.issues)
     assert len(top_level_dots) == 1
-    assert str(top_level_dots[0].get_color()).lower() == theme.INTERFACE_PANEL_FILL
+    assert top_level_dots[0].get_color().to_hex().lower() == theme.INTERFACE_PANEL_FILL

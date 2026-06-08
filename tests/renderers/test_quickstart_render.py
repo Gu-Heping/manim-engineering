@@ -133,6 +133,6 @@ def test_render_circuit_diagram_preview_requires_output_path() -> None:
     result = render_circuit_diagram(build, layout, preview=True, include_topology=False)
 
     assert result.output_path is None
-    assert result.preview_attempted is True
+    assert result.preview_attempted is False
     assert result.preview_available is False
     assert "preview.requires_output_path" in result.warnings

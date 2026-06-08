@@ -13,6 +13,7 @@ from manim_engineering.components import (
 from manim_engineering.core import SignalType
 from manim_engineering.layout import LayoutConfig, LayoutEngine, Point2D
 from manim_engineering.quickstart import BuildParameterError
+from manim_engineering.quickstart import BuildParameterError
 
 
 def test_layout_circuit_reports_clean_small_chain() -> None:
@@ -204,7 +205,6 @@ def test_layout_circuit_detects_fanout_branching_topology() -> None:
     assert outcome.recommended_action == "review_routing"
 
 
-def test_layout_circuit_rejects_engine_and_config_together() -> None:
 def test_layout_circuit_rejects_engine_and_config_together() -> None:
     result = build_circuit(
         {
