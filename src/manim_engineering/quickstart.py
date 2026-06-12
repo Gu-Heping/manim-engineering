@@ -22,6 +22,7 @@ from manim_engineering.layout import (
     LayoutEngine,
     LayoutResult,
     Point2D,
+    RoutingReport,
 )
 from manim_engineering.layout.types import (
     ComponentOrientation,
@@ -33,6 +34,11 @@ ElementMap = Mapping[str, CircuitElement]
 ConnectionSpec = tuple[str, str, str, str]
 LayoutWarning = str
 LayoutMode = Literal["semantic_grid", "structured_auto", "manual"]
+RecommendedAction = Literal["accept", "review_routing", "use_preset_or_overrides"]
+
+
+class BuildParameterError(ValueError):
+    """Quickstart build input violated the public element-id contract."""
 
 
 @dataclass(frozen=True)
@@ -50,8 +56,10 @@ class LayoutOutcome:
 
     layout: LayoutResult
     layout_mode: LayoutMode
+    routing_report: RoutingReport
     warnings: tuple[LayoutWarning, ...]
     needs_attention: bool
+    recommended_action: RecommendedAction
 
 
 @dataclass(frozen=True)
@@ -74,7 +82,10 @@ def build_circuit(
     Build a registered ``CircuitGraph`` from task-level element and connection specs.
 
     ``elements`` accepts either a mapping or an ordered ``[(id, element)]`` sequence.
-    Each element id must match ``element.element_id``.
+    Each element id must match ``element.element_id``. When callers use a mapping,
+    normal Python dict semantics apply, so duplicate keys are already collapsed
+    before quickstart sees them; use the ordered sequence form if duplicate-id
+    detection matters during construction.
 
     ``connections`` uses ``(from_element_id, from_pin, to_element_id, to_pin)``
     tuples so callers do not need to manually ``attach_to`` components or plumb
@@ -134,8 +145,12 @@ def layout_circuit(
     layouts that likely need presets or manual refinement. ``layout_mode`` reports
     ``"semantic_grid"``, ``"structured_auto"``, or ``"manual"`` depending on whether
     quickstart kept the default grid, compiled a branching fallback, or honored
-    explicit positional overrides.
+    explicit positional overrides. Pass either ``engine`` or ``config``, not
+    both. Use ``config`` only when you want quickstart to construct the engine
+    for you.
     """
+    if engine is not None and config is not None:
+        raise BuildParameterError("layout_circuit accepts only one of engine= or config=")
 
     layout_engine = engine or LayoutEngine(config)
     has_manual_positions = bool(placement_overrides)
@@ -173,8 +188,10 @@ def layout_circuit(
     return LayoutOutcome(
         layout=layout,
         layout_mode=layout_mode,
+        routing_report=layout.routing_report,
         warnings=warnings,
         needs_attention=bool(warnings),
+        recommended_action=_recommended_action(layout.routing_report, warnings),
     )
 
 
@@ -208,9 +225,11 @@ def render_circuit_diagram(
     warnings = layout_outcome.warnings
     exported_path: Path | None = None
     preview_available = False
+    preview_attempted = False
     if output_path is not None:
         exported_path = export_circuit_preview(rendered, output_path)
         if preview:
+            preview_attempted = True
             preview_available = _open_preview(exported_path)
             if not preview_available:
                 warnings = (*warnings, "preview.open_unavailable")
@@ -221,7 +240,7 @@ def render_circuit_diagram(
         rendered=rendered,
         topology=topology,
         output_path=exported_path,
-        preview_attempted=preview,
+        preview_attempted=preview_attempted,
         preview_available=preview_available,
         warnings=warnings,
     )
@@ -267,11 +286,7 @@ def export_circuit_preview(
         if not matches:
             matches = sorted(Path(tmpdir).rglob("*.png"), key=lambda path: path.stat().st_mtime)
         if not matches:
-            available = sorted(
-                str(path)
-                for path in Path(tmpdir).parent.rglob("*")
-                if path.is_file()
-            )
+            available = sorted(str(path) for path in Path(tmpdir).rglob("*") if path.is_file())
             raise FileNotFoundError(
                 f"no PNG export produced under {tmpdir}; files present: {available}"
             )
@@ -312,9 +327,9 @@ def _normalize_elements(
     normalized: dict[str, CircuitElement] = {}
     for element_id, element in items:
         if element_id in normalized:
-            raise ValueError(f"duplicate element id in build_circuit: {element_id}")
+            raise BuildParameterError(f"duplicate element id in build_circuit: {element_id}")
         if element.element_id != element_id:
-            raise ValueError(
+            raise BuildParameterError(
                 "element id mismatch in build_circuit: "
                 f"key {element_id!r} does not match element.element_id {element.element_id!r}"
             )
@@ -343,9 +358,37 @@ def _layout_warnings(
     if auto_layout and _has_branching_topology(build.graph):
         warnings.append("layout.branching_topology_using_auto_grid")
 
+    issue_kinds = {issue.kind for issue in layout.routing_report.issues}
+    if "parallel_overlap" in issue_kinds:
+        warnings.append("layout.routing_parallel_overlap")
+    if "shared_segment" in issue_kinds:
+        warnings.append("layout.routing_shared_segment")
+    if "crossing_without_junction" in issue_kinds:
+        warnings.append("layout.routing_crossing_without_junction")
+    if "wire_through_component" in issue_kinds:
+        warnings.append("layout.routing_wire_through_component")
+    if "wire_near_unconnected_pin" in issue_kinds:
+        warnings.append("layout.routing_wire_near_unconnected_pin")
+
     return tuple(warnings)
 
 
+def _recommended_action(
+    routing_report: RoutingReport,
+    warnings: Sequence[LayoutWarning],
+) -> RecommendedAction:
+    if routing_report.highest_severity == "blocking":
+        return "use_preset_or_overrides"
+    if routing_report.highest_severity == "ambiguous":
+        return "review_routing"
+    if any(
+        warning in {"layout.single_row_auto_grid", "layout.branching_topology_using_auto_grid"}
+        for warning in warnings
+    ):
+        return "use_preset_or_overrides"
+    if routing_report.highest_severity == "cosmetic" or warnings:
+        return "review_routing"
+    return "accept"
 def _has_branching_topology(graph: CircuitGraph) -> bool:
     fanout_by_port: dict[str, int] = {}
     degree_by_node: dict[str, set[str]] = {}
@@ -454,6 +497,9 @@ def _bfs_depths(root: str, adjacency: Mapping[str, Sequence[str]]) -> dict[str, 
                 continue
             depths[neighbor] = base_depth + 1
             queue.append(neighbor)
+    # Keep disconnected islands deterministic by assigning them one layer after the
+    # explored component, then relying on node_id ordering for a stable tie-break.
+    fallback_depth = max(depths.values(), default=0) + 1
     for node_id in adjacency:
-        depths.setdefault(node_id, max(depths.values(), default=0) + 1)
+        depths.setdefault(node_id, fallback_depth)
     return depths

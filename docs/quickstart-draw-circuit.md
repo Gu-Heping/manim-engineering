@@ -66,19 +66,29 @@ This is the recommended path for agents because it avoids pin-object plumbing.
 ### `layout_circuit(...)`
 
 This wraps the current deterministic layout path and gives you diagnostics.
+Pass either `engine=` or `config=`, not both. Use `config=` only when you want
+quickstart to construct the `LayoutEngine` for you; pass `engine=` when you
+have already built a configured engine instance.
 
 Return fields:
 
 - `layout`: the underlying `LayoutResult`
-- `layout_mode`: currently `semantic_grid`, `structured_auto`, or `manual`
+- `layout_mode`: `semantic_grid`, `structured_auto`, or `manual`
+- `routing_report`: machine-readable routing diagnostics
 - `warnings`: machine-readable warning strings
 - `needs_attention`: `True` when the diagram likely needs preset/manual help
+- `recommended_action`: coarse next-step guidance for agents and callers
 
 Current warning examples:
 
 - `layout.occupancy_above_target`
 - `layout.single_row_auto_grid`
-- `layout.branching_topology_using_auto_grid` (when forcing plain auto-grid on branching topologies)
+- `layout.branching_topology_using_auto_grid`
+- `layout.routing_parallel_overlap`
+- `layout.routing_shared_segment`
+- `layout.routing_crossing_without_junction`
+- `layout.routing_wire_through_component`
+- `layout.routing_wire_near_unconnected_pin`
 
 If `needs_attention` is true, do not assume the rendered circuit is acceptable
 just because rendering succeeded.
@@ -87,6 +97,58 @@ just because rendering succeeded.
 with no manual placement overrides and compiles a deterministic multi-row fallback
 before calling `LayoutEngine`.
 
+`routing_report` is the structured counterpart to those warning strings. It is
+the recommended surface for agents or higher-level tooling that need to decide
+whether the layout is acceptable or should fall back to presets / overrides.
+
+`routing_report.highest_severity` gives a coarse summary of the remaining
+routing risk after current auto-detour and spacing passes:
+
+- `cosmetic`
+- `ambiguous`
+- `blocking`
+
+`recommended_action` is the quickstart layer's higher-level interpretation of
+those residual issues:
+
+- `accept`
+- `review_routing`
+- `use_preset_or_overrides`
+
+Current mapping is intentionally conservative:
+
+- residual `blocking` issues -> `use_preset_or_overrides`
+- residual `ambiguous` issues -> `review_routing`
+- single-row auto-grid stress -> `use_preset_or_overrides`
+- pure occupancy stress without residual routing ambiguity -> `review_routing`
+- clean or fully auto-detoured layouts -> `accept`
+
+In practice this means a layout can be geometrically clean after auto-detour
+and still return `review_routing` if it remains unusually dense. The routing is
+usable, but the task-level helper is warning that human readability may still
+benefit from preset placement or manual refinement.
+
+Current routing issue kinds are:
+
+- `parallel_overlap`
+- `shared_segment`
+- `crossing_without_junction`
+- `wire_through_component`
+- `wire_near_unconnected_pin`
+
+`wire_through_component` means the current orthogonal route passes through the
+interior of another placed component footprint. The layout layer now tries a
+small deterministic dogleg around simple single-segment and two-segment cases;
+this warning only remains when no safe local detour succeeded.
+
+`wire_near_unconnected_pin` means a wire passes close enough to an unrelated pin
+anchor that the diagram may look falsely connected there. The layout layer now
+tries a local deterministic track shift for simple cases; this warning only
+remains when no safe local detour succeeded.
+
+`routing_report` therefore describes **residual routing problems after the
+current auto-detour passes**, not every intermediate hazard the layout engine
+considered while refining the wire geometry.
 ## When auto layout is enough
 
 The current automatic path is best for:
@@ -148,6 +210,14 @@ PNG through the host OS when supported. Current behavior:
 If you only pass `preview=True` without `output_path`, the result adds the
 warning `preview.requires_output_path`.
 
+When the rendered layout contains a non-junction wire crossing, the minimal
+renderer now draws that crossing differently from a true electrical junction:
+
+- junctions still render as solid dots
+- non-junction crossings get a small background-color crossing mask
+
+That visual distinction comes from `layout.routing_report`; it is not inferred
+independently by the renderer.
 ## Where to go next
 
 - Want the low-level layering model: [architecture.md](architecture.md)

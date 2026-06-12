@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Literal
 
 from manim_engineering.components.types import Bounds
 
@@ -104,6 +105,56 @@ class WirePath:
     segments: tuple[Segment, ...]
 
 
+RoutingIssueKind = Literal[
+    "parallel_overlap",
+    "shared_segment",
+    "crossing_without_junction",
+    "wire_through_component",
+    "wire_near_unconnected_pin",
+]
+
+RoutingSegmentAxis = Literal["horizontal", "vertical", "crossing"]
+RoutingIssueSeverity = Literal["cosmetic", "ambiguous", "blocking"]
+
+
+@dataclass(frozen=True)
+class RoutingIssue:
+    """Machine-readable routing concern for one or more wire paths."""
+
+    kind: RoutingIssueKind
+
+    severity: RoutingIssueSeverity
+
+    connection_ids: tuple[str, ...]
+
+    segment_axis: RoutingSegmentAxis
+
+    location: Point2D | None
+
+    detail: str
+
+
+@dataclass(frozen=True)
+class RoutingReport:
+    """Summary of routed-wire spacing and conflict diagnostics.
+
+    ``detoured_path_count`` counts unique wire paths that were rewritten by the
+    local detour pass. ``spaced_track_count`` counts total segment-shift rewrites
+    performed by the spacing/shared-segment passes, so one wire can contribute
+    more than once there.
+    """
+
+    issues: tuple[RoutingIssue, ...] = ()
+
+    highest_severity: RoutingIssueSeverity | None = None
+
+    detoured_path_count: int = 0
+
+    spaced_track_count: int = 0
+
+    has_attention_items: bool = False
+
+
 @dataclass(frozen=True)
 class LayoutBBox:
     """Axis-aligned bounding box in layout world coordinates."""
@@ -149,5 +200,7 @@ class LayoutResult:
     layout_bbox: LayoutBBox
 
     scene_bbox: LayoutBBox
+
+    routing_report: RoutingReport = RoutingReport()
 
     junction_nodes: frozenset[Point2D] = frozenset()
