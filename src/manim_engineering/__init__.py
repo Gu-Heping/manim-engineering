@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import importlib.util
 
 from manim_engineering.components import (
     NMOS,
@@ -44,10 +44,8 @@ from manim_engineering.quickstart import (
     render_circuit_diagram,
 )
 
-if TYPE_CHECKING:
-    from manim_engineering.renderers.minimal import ManimRenderer
-
 __version__ = "0.1.0"
+_HAS_MANIM = importlib.util.find_spec("manim") is not None
 
 __all__ = [
     "BuildParameterError",
@@ -63,7 +61,6 @@ __all__ = [
     "LayoutConfig",
     "LayoutEngine",
     "LayoutOutcome",
-    "ManimRenderer",
     "NMOS",
     "NMOSDepletion",
     "NPN",
@@ -87,11 +84,16 @@ __all__ = [
     "render_circuit_diagram",
 ]
 
+if _HAS_MANIM:
+    __all__.append("ManimRenderer")
+
 
 def __getattr__(name: str) -> object:
     """Lazily expose optional renderer symbols without importing Manim eagerly."""
 
     if name == "ManimRenderer":
+        if not _HAS_MANIM:
+            raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
         from manim_engineering.renderers.minimal import ManimRenderer
 
         return ManimRenderer

@@ -5,6 +5,8 @@ import importlib.util
 import sys
 from typing import get_args
 
+import pytest
+
 
 def test_top_level_exports_cover_task_level_diagram_path() -> None:
     import manim_engineering as me
@@ -45,9 +47,29 @@ def test_all_exports_are_importable() -> None:
     import manim_engineering as me
 
     for name in me.__all__:
-        if name == "ManimRenderer" and importlib.util.find_spec("manim") is None:
-            continue
         assert getattr(me, name, None) is not None, f"__all__ member {name!r} not importable"
+
+
+def test_top_level_module_hides_optional_renderer_symbols_when_manim_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sys.modules.pop("manim_engineering", None)
+    sys.modules.pop("manim_engineering.renderers", None)
+    sys.modules.pop("manim_engineering.renderers.minimal", None)
+
+    original_find_spec = importlib.util.find_spec
+
+    def fake_find_spec(name: str, package: str | None = None):
+        if name == "manim":
+            return None
+        return original_find_spec(name, package)
+
+    monkeypatch.setattr(importlib.util, "find_spec", fake_find_spec)
+    me = importlib.import_module("manim_engineering")
+
+    assert "ManimRenderer" not in me.__all__
+    with pytest.raises(AttributeError):
+        _ = me.ManimRenderer
 
 
 def test_layout_package_reexports_label_and_routing_types() -> None:
