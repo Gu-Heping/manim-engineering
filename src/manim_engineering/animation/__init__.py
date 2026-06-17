@@ -1,9 +1,4 @@
-"""Animation layer: motion, highlights, propagation visuals.
-
-Deferred stubs ``VoltagePulse`` and ``LogicTransition`` (from ``stubs``) are
-exported for registry compatibility only — they raise ``NotImplementedError``
-and must not be used in production teaching scenes. See ``docs/ROADMAP.md``.
-"""
+"""Animation layer: motion, highlights, propagation visuals."""
 
 from manim_engineering.animation.analog_ramp import AnalogRamp
 from manim_engineering.animation.base import AnimationPlan, AnimationPrimitive
@@ -16,7 +11,12 @@ from manim_engineering.animation.focus import (
     restore_topology,
 )
 from manim_engineering.animation.hud import CaptionTrack, make_caption_track, play_hud_intro
-from manim_engineering.animation.intro_plan import IntroPlan, IntroStagePlan, build_intro_plan
+from manim_engineering.animation.intro_plan import (
+    ComponentIntroOrder,
+    IntroPlan,
+    IntroStagePlan,
+    build_intro_plan,
+)
 from manim_engineering.animation.intro_style import IntroStyle, intro_run_time_budget
 from manim_engineering.animation.layers import (
     HUD_Z_INDEX,
@@ -100,6 +100,7 @@ __all__ = [
     "BEAT_DURATION",
     "BEAT_GAP",
     "CAPTION_CROSSFADE",
+    "ComponentIntroOrder",
     "BeatAnimationError",
     "BeatSpec",
     "CaptionTrack",

@@ -43,17 +43,13 @@ def test_dim_restore_round_trip_on_rendered_topology() -> None:
     for stroke in iter_symbol_strokes(topology.components):
         assert stroke.get_stroke_opacity() == pytest.approx(DEFAULT_DIM_OPACITY)
     for label in iter_label_roots(topology.components):
-        label_opacity = label.get_opacity()
-        if label_opacity is None:
-            label_opacity = label.get_fill_opacity()
+        label_opacity = label.get_fill_opacity()
         assert label_opacity == pytest.approx(DEFAULT_DIM_OPACITY)
     restore_topology(topology)
     for stroke in iter_symbol_strokes(topology.components):
         assert stroke.get_stroke_opacity() == pytest.approx(1.0)
     for label in iter_label_roots(topology.components):
-        label_opacity = label.get_opacity()
-        if label_opacity is None:
-            label_opacity = label.get_fill_opacity()
+        label_opacity = label.get_fill_opacity()
         assert label_opacity == pytest.approx(1.0)
 
 

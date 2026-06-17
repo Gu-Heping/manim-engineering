@@ -10,14 +10,14 @@ import pytest
 
 pytest.importorskip("manim")
 
-from manim import AnimationGroup, Create, DrawBorderThenFill, LaggedStart
+from manim import AnimationGroup, Create, DrawBorderThenFill, FadeIn, LaggedStart, Write
 
 from manim_engineering.animation.teaching_scene import (
     TopologyFixture,
     TopologyTeachingScene,
     _refresh_static_scene_background,
 )
-from manim_engineering.components import Diode, Ground, InputDriver, Resistor
+from manim_engineering.components import Diode, Ground, InputDriver, Resistor, SPIMaster, SPISlave
 from manim_engineering.core import CircuitGraph, SignalType
 from manim_engineering.layout import LayoutEngine
 
@@ -46,6 +46,28 @@ def _contains_intro_reveal(animation: object) -> bool:
     if isinstance(animation, (LaggedStart, AnimationGroup)):
         return any(_contains_intro_reveal(child) for child in animation.animations)
     return False
+
+
+def _contains_animation_type(animation: object, animation_type: type) -> bool:
+    if isinstance(animation, animation_type):
+        return True
+    if isinstance(animation, (LaggedStart, AnimationGroup)):
+        return any(
+            _contains_animation_type(child, animation_type)
+            for child in animation.animations
+        )
+    return False
+
+
+def _spi_fixture() -> TopologyFixture:
+    graph = CircuitGraph()
+    master = SPIMaster("master", label="MCU")
+    slave = SPISlave("slave", label="ADC")
+    master.attach_to(graph)
+    slave.attach_to(graph)
+    elements = {"master": master, "slave": slave}
+    layout = LayoutEngine().solve(graph, elements)
+    return TopologyFixture(graph=graph, elements=elements, layout=layout)
 
 
 def test_topology_teaching_scene_construct_smoke() -> None:
@@ -97,6 +119,51 @@ def test_topology_teaching_scene_does_not_set_components_opacity() -> None:
         with patch.object(topology.components, "set_opacity", _record_set_opacity):
             scene.construct()
     assert call_count == 0
+
+
+@pytest.mark.parametrize(
+    ("pin_label_intro_mode", "expect_write"),
+    [("fade", False), ("write", True)],
+)
+def test_topology_teaching_scene_pin_label_intro_mode(
+    pin_label_intro_mode: str,
+    expect_write: bool,
+) -> None:
+    class _SPIScene(TopologyTeachingScene):
+        annotation_run_time = 0.2
+
+        def build_fixture(self) -> TopologyFixture:
+            return _spi_fixture()
+
+    _SPIScene.pin_label_intro_mode = pin_label_intro_mode  # type: ignore[assignment]
+
+    class _RecordingScene(_SPIScene):
+        def __init__(self) -> None:
+            self.played: list[tuple[tuple[object, ...], dict]] = []
+            super().__init__()
+
+        def play(self, *animations, **kwargs) -> None:
+            self.played.append((animations, dict(kwargs)))
+
+        def wait(self, duration: float = 0.0) -> None:
+            del duration
+
+    scene = _RecordingScene()
+    fixture = scene.build_fixture()
+    topology = scene.render_topology(fixture)
+    from manim import VGroup
+
+    from manim_engineering.renderers.minimal.labels import detach_label_roots, hide_labels
+
+    topology_labels = VGroup(*detach_label_roots(topology.components))
+    hide_labels(topology_labels)
+    scene.play_intro_annotations(topology_labels, VGroup())
+
+    played_animations = [anim for animations, _kwargs in scene.played for anim in animations]
+    if not expect_write:
+        assert any(_contains_animation_type(anim, FadeIn) for anim in played_animations)
+    has_write = any(_contains_animation_type(anim, Write) for anim in played_animations)
+    assert has_write is expect_write
 
 
 def test_half_wave_rectifier_example_exports_topology_scene() -> None:

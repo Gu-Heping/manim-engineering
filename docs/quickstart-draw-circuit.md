@@ -16,12 +16,14 @@ The task-level API now has three stages:
 
 ```python
 from manim_engineering import (
+    Ground,
+    InputDriver,
+    Resistor,
+    SignalType,
     build_circuit,
     layout_circuit,
     render_circuit_diagram,
 )
-from manim_engineering.components import Ground, InputDriver, Resistor
-from manim_engineering.core import SignalType
 
 build = build_circuit(
     {
@@ -45,6 +47,34 @@ warnings = layout.warnings
 These helpers are available from the top-level package, alongside common
 components and layout/rendering primitives such as `Resistor`, `Ground`,
 `LayoutEngine`, and `ManimRenderer`.
+
+## Adding measurement probes
+
+Measurement probes are ordinary `CircuitElement`s, so the same task-level
+connection tuples work for them:
+
+```python
+from manim_engineering import CurrentProbe, Ground, Resistor, VoltageProbe, build_circuit
+
+build = build_circuit(
+    {
+        "ip": CurrentProbe("ip", label="I"),
+        "load": Resistor("load", label="Rload"),
+        "vp": VoltageProbe("vp", label="Vload"),
+        "gnd": Ground("gnd", label="GND"),
+    },
+    [
+        ("ip", "out", "load", "a"),
+        ("load", "b", "gnd", "gnd"),
+        ("vp", "pos", "load", "b"),
+        ("vp", "neg", "gnd", "gnd"),
+    ],
+)
+```
+
+`CurrentProbe` is inline (`in` / `out`). `VoltageProbe` is differential
+(`pos` / `neg`). Neither component performs simulation; they provide semantic
+ports and stable renderer symbols for diagrams.
 
 ## What each stage gives you
 

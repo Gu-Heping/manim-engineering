@@ -22,47 +22,47 @@ class CircuitElement:
 
 All components **must** inherit `CircuitElement`.
 
-## Required surface
+## Required Surface
 
 | Member | Required | Notes |
 |--------|----------|-------|
 | `label` | optional | `Resistor()` and `Resistor(label="R1")` both valid |
 | `pins` | yes for connectable | See pin naming below |
-| `semantic_type` | yes | e.g. `passive`, `analog`, `digital`, `power`, `interface` |
+| `semantic_type` | yes | e.g. `passive`, `analog`, `digital`, `power`, `measurement`, `interface` |
 | `anchor_points` | yes | For layout alignment |
 | `bounds` | yes | For routing and camera |
 
-## Required methods
+## Required Methods
 
 ```python
 def get_pin(self, name: str) -> Pin: ...
 def get_bounds(self) -> Bounds: ...
 ```
 
-`render()` is **not** on the component — use `renderer.render(component)`.
+`render()` is **not** on the component. Use `renderer.render(component)`.
 
-## Pin naming
+## Pin Naming
 
 Lowercase, stable engineering names:
 
 ```text
-gate, source, drain, vcc, gnd, clk, rst, tx, rx, in, out
+gate, source, drain, vcc, gnd, clk, rst, tx, rx, in, out, pos, neg
 ```
 
 ## Categories
 
-| Directory      | Status      | Examples |
-|----------------|-------------|----------|
-| `passive/`     | implemented | Resistor, Capacitor, Inductor |
-| `common/`      | implemented | Ground, VCC, InputDriver (single-pin OUT stimulus marker, `semantic_type="io"`) |
-| `digital/`     | implemented | SPIMaster, SPISlave, UARTPort |
-| `analog/`      | implemented | NMOS, PMOS, Diode, OpAmp, NPN, PNP, ZenerDiode |
-| `measurement/` | planned     | probes, meters |
+| Directory | Status | Examples |
+|-----------|--------|----------|
+| `passive/` | implemented | Resistor, Capacitor, Inductor |
+| `common/` | implemented | Ground, VCC, InputDriver (single-pin OUT stimulus marker, `semantic_type="io"`) |
+| `digital/` | implemented | ANDGate, ORGate, NOTGate, SPIMaster, SPISlave, UARTPort |
+| `analog/` | implemented | NMOS, PMOS, Diode, OpAmp, NPN, PNP, ZenerDiode |
+| `measurement/` | implemented | VoltageProbe, CurrentProbe |
 
-`planned` directories are described in the roadmap backlog and do not yet
-exist in source — do not import from them.
+Meters beyond semantic probes remain backlog. Do not add simulator behavior to
+measurement components; keep physics/fidelity work in semantic contracts first.
 
-## Forbidden on components
+## Forbidden On Components
 
 ```python
 scene.play(...)              # scenes only
@@ -78,7 +78,7 @@ May expose semantic state: `logic_state`, `voltage`, `enabled`, `selected_input`
 
 Must not own: animation state, renderer style, simulation scheduler.
 
-## Tests (per component)
+## Tests
 
 - construction
 - pin existence and names
@@ -90,14 +90,14 @@ Must not own: animation state, renderer style, simulation scheduler.
 
 Prefer `NMOS`, `ANDGate` over `EntireCPU`, `MegaMotherboard`.
 
-## Layout integration
+## Layout Integration
 
 Components supply `anchor_points`, `bounds`, and per-pin `routing_hints` for
-``LayoutEngine``; they do not route wires themselves.
+`LayoutEngine`; they do not route wires themselves.
 
-For scene authors: linear chains use ``LayoutEngine.solve``; canonical teaching
-topologies use ``layout/presets/`` or ``placement_overrides``. MOSFET types expose
+For scene authors: linear chains use `LayoutEngine.solve`; canonical teaching
+topologies use `layout/presets/` or `placement_overrides`. MOSFET types expose
 four pins (`gate`, `drain`, `source`, `bulk`); typical teaching tie-off connects
-``bulk`` to ``source``. Symbol variants use ``MinimalRenderer(mosfet_convention=...)`` — see
-[mosfet-symbols.md](mosfet-symbols.md). Layout strategy:
+`bulk` to `source`. Symbol variants use `MinimalRenderer(mosfet_convention=...)`;
+see [mosfet-symbols.md](mosfet-symbols.md). Layout strategy:
 [layout-strategy.md](layout-strategy.md).

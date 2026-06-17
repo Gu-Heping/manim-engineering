@@ -42,6 +42,44 @@ def test_build_intro_plan_returns_default_stage_order() -> None:
     assert all(stage.strokes for stage in plan.stages)
 
 
+def test_build_intro_plan_can_split_components_by_layout_order() -> None:
+    topology, panel = _rc_fixture()
+    plan = build_intro_plan(topology, panel, component_order="layout")
+    component_stage_names = tuple(
+        stage.name for stage in plan.stages if stage.name.startswith("component:")
+    )
+    assert len(component_stage_names) == topology.n_components
+    assert component_stage_names == tuple(
+        f"component:{index}" for index in range(topology.n_components)
+    )
+    assert plan.stages[-2].name == "wires"
+    assert plan.stages[-1].name == "panel"
+
+
+def test_build_intro_plan_splits_component_run_time_across_layout_order() -> None:
+    topology, panel = _rc_fixture()
+    plan = build_intro_plan(
+        topology,
+        panel,
+        component_order="layout",
+        components_run_time=2.4,
+    )
+    component_stages = tuple(
+        stage for stage in plan.stages if stage.name.startswith("component:")
+    )
+    assert component_stages
+    assert all(
+        stage.run_time_override == pytest.approx(2.4 / topology.n_components)
+        for stage in component_stages
+    )
+
+
+def test_build_intro_plan_rejects_unknown_component_order() -> None:
+    topology, panel = _rc_fixture()
+    with pytest.raises(ValueError, match="component_order"):
+        build_intro_plan(topology, panel, component_order="random")  # type: ignore[arg-type]
+
+
 def test_build_intro_plan_tracks_panel_trace_policy() -> None:
     topology, panel = _rc_fixture()
     chrome_only = build_intro_plan(topology, panel, include_panel_traces=False)

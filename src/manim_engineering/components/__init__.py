@@ -12,18 +12,28 @@ from manim_engineering.components.analog import (
     ZenerDiode,
 )
 from manim_engineering.components.common import VCC, Ground, InputDriver
-from manim_engineering.components.digital import SPIMaster, SPISlave, UARTPort
+from manim_engineering.components.digital import (
+    ANDGate,
+    NOTGate,
+    ORGate,
+    SPIMaster,
+    SPISlave,
+    UARTPort,
+)
 from manim_engineering.components.element import AnchorPoint, CircuitElement
 from manim_engineering.components.exceptions import ComponentError, InvalidBoundsError
+from manim_engineering.components.measurement import CurrentProbe, VoltageProbe
 from manim_engineering.components.passive import Capacitor, Inductor, Resistor
 from manim_engineering.components.types import Bounds
 
 __all__ = [
     "AnchorPoint",
+    "ANDGate",
     "Bounds",
     "Capacitor",
     "CircuitElement",
     "ComponentError",
+    "CurrentProbe",
     "Diode",
     "Ground",
     "Inductor",
@@ -31,8 +41,10 @@ __all__ = [
     "InvalidBoundsError",
     "NMOS",
     "NMOSDepletion",
+    "NOTGate",
     "NPN",
     "OpAmp",
+    "ORGate",
     "PMOS",
     "PMOSDepletion",
     "PNP",
@@ -41,5 +53,6 @@ __all__ = [
     "SPISlave",
     "UARTPort",
     "VCC",
+    "VoltageProbe",
     "ZenerDiode",
 ]

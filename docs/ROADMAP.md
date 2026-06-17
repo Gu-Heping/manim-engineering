@@ -65,7 +65,7 @@ Deliverables:
 - [x] `layout/routing.py` — orthogonal paths from pin world positions + `routing_hints`
 - [x] `layout/engine.py` — `LayoutEngine` places graph nodes and routes connections
 - [x] Occupancy heuristic (60–75% on `DEFAULT_NOMINAL_FRAME`; `tests/layout/`)
-- [x] Example `examples/basics/layout_two_resistors.py` (no render)
+- [x] Example path retired into retained smoke `examples/basics/graph_only.py`
 
 **Exit criteria**: deterministic layout/metric tests; architecture imports pass.
 
@@ -84,7 +84,7 @@ Deliverables:
 - [x] `MinimalRenderer.render_layout(layout_result, graph, elements)` — wires + placements
 - [x] Symbols: Resistor, Capacitor, Ground, VCC (IEEE/IEC deferred)
 - [x] `tests/renderers/` — theme + structure tests (`requires_manim` skip when absent)
-- [x] Example `examples/basics/render_two_resistors.py`
+- [x] Example path retired into analog-first catalog; retained smoke is `examples/basics/graph_only.py`
 
 **Exit criteria**: deterministic structure tests; architecture imports pass.
 
@@ -101,9 +101,9 @@ Deliverables:
 - [x] `AnimationPurpose` enum (`propagation` | `timing` | `focus` | `transition`)
 - [x] `SignalFlow` consuming semantic propagation metadata + layout wire paths
 - [x] `AnimationPrimitive` base + minimal registry
-- [x] Stubs: `VoltagePulse`, `LogicTransition` (deferred `build()`)
+- [x] Local state primitives: `VoltagePulse`, `LogicTransition`
 - [x] `tests/animation/` — duration, sequencing, topology guard
-- [x] Example teaching scenes: `examples/analog/01_rc_charge.py`, `examples/protocol/spi_byte_transfer.py` (legacy `examples/basics/signal_flow_demo.py` removed — analog-first catalog)
+- [x] Example teaching scenes now align with analog-first catalog (`examples/analog/01_rc_charge.py`) plus retained protocol smoke (`examples/protocol/spi_byte_transfer.py`); legacy `examples/basics/signal_flow_demo.py` removed
 
 **Exit criteria**: minimal scene plays propagation; animation tests for sequencing.
 
@@ -121,7 +121,7 @@ Deliverables:
 - [x] `renderers/minimal/waveform.py` — digital step traces aligned below layout
 - [x] `WaveformSync` (`AnimationPurpose.TIMING`) — same beat/duration as `SignalFlow`
 - [x] `tests/waveform/` — derive, propagate alignment, sync contract
-- [x] Example `examples/analog/01_rc_charge.py`, `examples/analog/03_cmos_inverter.py` (legacy `examples/basics/clock_data_waveform.py` removed)
+- [x] Example waveform scenes now align with analog-first catalog (`examples/analog/01_rc_charge.py`, `examples/analog/03_cmos_inverter.py`); legacy `examples/basics/clock_data_waveform.py` removed
 
 **Exit criteria**: waveform state matches signal state in tests.
 
@@ -158,8 +158,13 @@ Deliverables:
 - [x] Per-directory README (purpose, one-concept table, run commands)
 - [x] Master index [examples/README.md](../examples/README.md); root README "Running examples"
 - [x] Analog 01–09 scene catalog (`examples/analog/01_rc_charge.py` … `09_mos_four_types.py`)
+- [x] Digital logic smoke (`examples/digital/logic_gate_chain.py`)
+- [x] Measurement probe smoke (`examples/measurement/probe_chain.py`)
+- [x] IEC renderer smoke (`examples/renderers/iec_resistor.py`)
 - [x] Minimal protocol/basic smoke retained (`examples/protocol/spi_byte_transfer.py`, `examples/basics/graph_only.py`)
-- [ ] Renderer variants (IEC) — deferred until minimal renderer stable
+- [x] Renderer variant start (IEC) reuses minimal projection with IEC-facing API/theme,
+      rectangular resistor symbol, and IEC-facing MOSFET convention
+- [x] Basic digital gates (`ANDGate`, `ORGate`, `NOTGate`) with MinimalRenderer symbols
 
 **Exit criteria**: all existing examples cataloged; smoke-runnable via `python examples/...`; no layer violations in examples.
 
@@ -245,12 +250,12 @@ Deliverables:
 
 ### Stabilization (layout track — complete)
 
-Documentation and CI discipline; topology invariants (`Port.id` contract); post-merge review nits; deferred animation stubs clearly marked. Does **not** add new protocol features or continuous physics.
+Documentation and CI discipline; topology invariants (`Port.id` contract); post-merge review nits. Does **not** add new protocol features or continuous physics.
 
 - [x] ROADMAP / README / examples index synced with SPI, UART, analog Scope A
 - [x] Manim cache + geometry golden update discipline documented
 - [x] `Port.id` invariant documented + tested; `Connection.involves` semantics locked
-- [x] Animation stubs (`VoltagePulse`, `LogicTransition`) marked deferred — not for production scenes
+- [x] Animation primitives (`VoltagePulse`, `LogicTransition`) implemented for local state emphasis
 - [x] **Layout orientation + upright labels**: `ComponentOrientation`, screen-fixed label slots,
       vertical AUTO side-picking, `text_overrides` / `label_mode_overrides`; presets 03–07 via
       `layout_from_preset`; 07 vertical Rs/Dz; coincident cross-element stub routing in
@@ -261,7 +266,7 @@ Documentation and CI discipline; topology invariants (`Port.id` contract); post-
 Layout preset track is stable on `main`; pick the next feature vertical slice in a dedicated
 planning session (Scope B / IEC / I2C — not bundled with stabilization).
 
-IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `CircuitElement` + render symbols; optional rule 6-file merge; analog **Scope C** (remaining continuous physics beyond RC slice, e.g. RLC damping); planned `measurement/` component category; **global netlist auto-placer** (preset-first remains default — see [docs/layout-strategy.md](layout-strategy.md) and `experiments/auto_placer_zener_spike.py`).
+IEC renderer symbol expansion beyond resistor/MOS convention; I2C/CAN protocol + geometry goldens; digital gate expansion beyond basic AND/OR/NOT; optional rule 6-file merge; analog **Scope C** (remaining continuous physics beyond RC slice, e.g. RLC damping); measurement examples/meters beyond `VoltageProbe` / `CurrentProbe`; **global netlist auto-placer** (preset-first remains default — see [docs/layout-strategy.md](layout-strategy.md) and `experiments/auto_placer_zener_spike.py`).
 
 **Scope B (RC slice — complete):**
 
@@ -303,11 +308,11 @@ IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `Circuit
 - [x] `IntroStyle` + `WaveformDemoScene.play_intro()` hook
 - [x] Trace detail: `line_stroke_count`, `filled_stroke_count`, `use_border_fill`
 
-**Intro animation backlog (Tier B/C — not started)**
+**Intro animation backlog (Tier B/C complete)**
 
-- [ ] Per-symbol / per-layout-order intro factory (`build_intro_plan`)
-- [ ] Renderer metadata (`element_id` / `connection_id` on mobjects) for semantic wire draw order
-- [ ] Pin-label `Write` intro mode (conflicts with default label stroke pipeline)
+- [x] Per-symbol / per-layout-order intro factory (`build_intro_plan`)
+- [x] Renderer metadata (`element_id` / `connection_id` on mobjects) for semantic wire draw order
+- [x] Pin-label `Write` intro mode (opt-in via `pin_label_intro_mode="write"`)
 
 **Animation example migration (complete)**
 
@@ -325,14 +330,14 @@ IEC renderer variant; I2C/CAN protocol + geometry goldens; digital gate `Circuit
 - [x] `extend_waveform_to_panel=False` default — opt-in finalize hold to panel edge
 - [x] RC 01: vin-only baseline, teach-to-2τ without silent tail
 
-**Animation layer backlog (P4 + Tier B/C — not started)**
+**Animation layer backlog (P4 complete)**
 
-- [ ] `beat_factory` tests: `sync` / `ramp` modes and ramp validation errors
-- [ ] Registry hygiene: stub registration policy + `waveform_sync` registry assertions
-- [ ] Tier B: `build_intro_plan` per-layout-order intro
-- [ ] Tier C: renderer mobject metadata for semantic wire draw order
-- [ ] Scope B/C: implement `VoltagePulse` / `LogicTransition` stubs (replace deferred `build()`)
-- [ ] Docs: align ROADMAP Phase 5–6 example paths with analog-first catalog (`basics/graph_only`, `protocol/spi_byte_transfer`)
+- [x] `beat_factory` tests: `sync` / `ramp` modes and ramp validation errors
+- [x] Registry hygiene: stub registration policy + `waveform_sync` registry assertions
+- [x] Tier B: `build_intro_plan` per-layout-order intro
+- [x] Tier C: renderer mobject metadata for semantic wire draw order
+- [x] Scope B/C: implement `VoltagePulse` / `LogicTransition` primitives (replace deferred `build()`)
+- [x] Docs: align ROADMAP Phase 5–6 example paths with analog-first catalog (`basics/graph_only`, `protocol/spi_byte_transfer`)
 
 Short-term experiment track: circuitjs1-inspired stamp/doStep exploration is
 documented in `docs/circuitjs1-borrowing.md` with an isolated prototype at

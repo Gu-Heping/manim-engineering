@@ -6,7 +6,7 @@ pytest.importorskip("manim")
 
 import manim_engineering.quickstart as quickstart_module
 from manim_engineering import build_circuit, layout_circuit, render_circuit_diagram
-from manim_engineering.components import Resistor
+from manim_engineering.components import CurrentProbe, Ground, Resistor, VoltageProbe
 
 
 def test_render_circuit_diagram_returns_rendered_group_and_topology() -> None:
@@ -28,6 +28,33 @@ def test_render_circuit_diagram_returns_rendered_group_and_topology() -> None:
     assert result.preview_attempted is False
     assert result.preview_available is False
     assert result.warnings == ()
+
+
+def test_render_circuit_diagram_handles_measurement_probe_circuit() -> None:
+    build = build_circuit(
+        {
+            "ip": CurrentProbe("ip", label="I"),
+            "load": Resistor("load", label="Rload"),
+            "vp": VoltageProbe("vp", label="Vload"),
+            "gnd": Ground("gnd", label="GND"),
+        },
+        [
+            ("ip", "out", "load", "a"),
+            ("load", "b", "gnd", "gnd"),
+            ("vp", "pos", "load", "b"),
+            ("vp", "neg", "gnd", "gnd"),
+        ],
+    )
+    layout = layout_circuit(build)
+
+    result = render_circuit_diagram(build, layout)
+
+    assert result.topology is not None
+    assert result.topology.n_components == 4
+    assert [mob.element_id for mob in result.topology.components.submobjects] == [
+        placement.element_id for placement in layout.layout.placements
+    ]
+    assert result.output_path is None
 
 
 def test_render_circuit_diagram_exports_png_preview(tmp_path) -> None:

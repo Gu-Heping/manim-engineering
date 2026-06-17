@@ -9,10 +9,14 @@ def test_top_level_exports_cover_task_level_diagram_path() -> None:
     import manim_engineering as me
 
     assert me.CircuitGraph is not None
+    assert me.CurrentProbe is not None
     assert me.LayoutEngine is not None
     assert me.Resistor is not None
     assert me.Ground is not None
     assert me.InputDriver is not None
+    assert me.ANDGate is not None
+    assert me.ORGate is not None
+    assert me.NOTGate is not None
     assert me.NMOSDepletion is not None
     assert me.PMOSDepletion is not None
     assert me.SignalType is not None
@@ -20,6 +24,7 @@ def test_top_level_exports_cover_task_level_diagram_path() -> None:
     assert me.SPISlave is not None
     assert me.TextPlacementOverride is not None
     assert me.UARTPort is not None
+    assert me.VoltageProbe is not None
     assert me.build_circuit is not None
     assert me.layout_circuit is not None
     assert me.render_circuit_diagram is not None

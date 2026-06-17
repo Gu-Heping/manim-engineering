@@ -7,7 +7,19 @@ import os
 from collections.abc import Mapping
 
 import numpy as np
-from manim import RIGHT, UP, DashedLine, Dot, Line, Polygon, Rectangle, Text, VGroup, VMobject
+from manim import (
+    RIGHT,
+    UP,
+    Circle,
+    DashedLine,
+    Dot,
+    Line,
+    Polygon,
+    Rectangle,
+    Text,
+    VGroup,
+    VMobject,
+)
 
 from manim_engineering.components.analog import (
     NMOS,
@@ -22,7 +34,9 @@ from manim_engineering.components.analog import (
 )
 from manim_engineering.components.analog.mosfet import ConductionMode
 from manim_engineering.components.common import VCC, Ground, InputDriver
+from manim_engineering.components.digital import ANDGate, NOTGate, ORGate
 from manim_engineering.components.element import CircuitElement
+from manim_engineering.components.measurement import CurrentProbe, VoltageProbe
 from manim_engineering.components.passive import Capacitor, Inductor, Resistor
 from manim_engineering.components.types import Bounds
 from manim_engineering.core.enums import SignalType
@@ -65,6 +79,14 @@ def _line_between(start: Point2D, end: Point2D, *, color: object, width: float) 
     return line
 
 
+def _tag_family(mob: VMobject, **metadata: str) -> VMobject:
+    """Attach semantic renderer metadata to a mobject and its descendants."""
+    for child in mob.get_family():
+        for key, value in metadata.items():
+            setattr(child, key, value)
+    return mob
+
+
 class MinimalRenderer:
     """Projects components and layout results into static Manim geometry."""
 
@@ -101,6 +123,14 @@ class MinimalRenderer:
             body = self._bjt_symbol(component, pnp=False)
         elif isinstance(component, PNP):
             body = self._bjt_symbol(component, pnp=True)
+        elif isinstance(component, ANDGate):
+            body = self._and_gate_symbol(component)
+        elif isinstance(component, ORGate):
+            body = self._or_gate_symbol(component)
+        elif isinstance(component, NOTGate):
+            body = self._not_gate_symbol(component)
+        elif isinstance(component, (VoltageProbe, CurrentProbe)):
+            body = self._measurement_probe_symbol(component)
         elif getattr(component, "semantic_type", "") == "interface":
             body = self._interface_box(component)
         else:
@@ -225,6 +255,7 @@ class MinimalRenderer:
                     color=wire_color,
                     width=theme.WIRE_STROKE_WIDTH,
                 )
+                _tag_family(segment_line, connection_id=wire.connection_id)
                 segment_line.set_z_index(WIRE_Z_INDEX)
                 wire_lines.append(segment_line)
                 for pt in (segment.start, segment.end):
@@ -260,8 +291,8 @@ class MinimalRenderer:
         )
         net_labels = self._render_net_labels(placement)
         if net_labels.submobjects:
-            return VGroup(placed, net_labels)
-        return placed
+            return _tag_family(VGroup(placed, net_labels), element_id=placement.element_id)
+        return _tag_family(placed, element_id=placement.element_id)
 
     def _render_net_labels(self, placement: ComponentPlacement) -> VGroup:
         """Preset-driven net annotations (``role=\"net_label\"`` on ``text_overrides``)."""
@@ -777,6 +808,132 @@ class MinimalRenderer:
     def _bjt_pnp_symbol(self, component: PNP) -> VGroup:
         """PNP: base left, collector bottom-right, emitter top-right (arrow inward)."""
         return self._bjt_symbol(component, pnp=True)
+
+    def _gate_stroke(self, component: CircuitElement) -> dict:
+        """Digital gate stroke follows the output signal color."""
+        return {
+            "stroke_color": theme.color_for_signal_type(component.get_pin("out").signal_type),
+            "stroke_width": theme.component_stroke_width(),
+        }
+
+    def _and_gate_symbol(self, component: ANDGate) -> VGroup:
+        """Two-input AND gate: flat input side, rounded output side approximation."""
+        bounds = component.get_bounds()
+        w, h = bounds.width, bounds.height
+        stroke = self._gate_stroke(component)
+        left_x = 0.16 * w
+        front = [
+            (0.52 * w, 0.82 * h),
+            (0.76 * w, 0.72 * h),
+            (0.88 * w, 0.50 * h),
+            (0.76 * w, 0.28 * h),
+            (0.52 * w, 0.18 * h),
+        ]
+        outline = [
+            Line([left_x, 0.18 * h, 0.0], [left_x, 0.82 * h, 0.0], **stroke),
+            Line([left_x, 0.82 * h, 0.0], [front[0][0], front[0][1], 0.0], **stroke),
+            Line([left_x, 0.18 * h, 0.0], [front[-1][0], front[-1][1], 0.0], **stroke),
+            Line([0.0, 0.72 * h, 0.0], [left_x, 0.72 * h, 0.0], **stroke),
+            Line([0.0, 0.28 * h, 0.0], [left_x, 0.28 * h, 0.0], **stroke),
+            Line([front[2][0], front[2][1], 0.0], [w, 0.50 * h, 0.0], **stroke),
+        ]
+        outline.extend(
+            Line([front[i][0], front[i][1], 0.0], [front[i + 1][0], front[i + 1][1], 0.0], **stroke)
+            for i in range(len(front) - 1)
+        )
+        return VGroup(*outline)
+
+    def _or_gate_symbol(self, component: ORGate) -> VGroup:
+        """Two-input OR gate: concave input side with pointed output approximation."""
+        bounds = component.get_bounds()
+        w, h = bounds.width, bounds.height
+        stroke = self._gate_stroke(component)
+        left_low = (0.16 * w, 0.18 * h)
+        left_mid = (0.32 * w, 0.50 * h)
+        left_high = (0.16 * w, 0.82 * h)
+        tip = (0.90 * w, 0.50 * h)
+        upper = [(0.34 * w, 0.80 * h), (0.66 * w, 0.74 * h), tip]
+        lower = [(0.34 * w, 0.20 * h), (0.66 * w, 0.26 * h), tip]
+        return VGroup(
+            Line([left_low[0], left_low[1], 0.0], [left_mid[0], left_mid[1], 0.0], **stroke),
+            Line([left_mid[0], left_mid[1], 0.0], [left_high[0], left_high[1], 0.0], **stroke),
+            Line([left_high[0], left_high[1], 0.0], [upper[0][0], upper[0][1], 0.0], **stroke),
+            Line([upper[0][0], upper[0][1], 0.0], [upper[1][0], upper[1][1], 0.0], **stroke),
+            Line([upper[1][0], upper[1][1], 0.0], [tip[0], tip[1], 0.0], **stroke),
+            Line([left_low[0], left_low[1], 0.0], [lower[0][0], lower[0][1], 0.0], **stroke),
+            Line([lower[0][0], lower[0][1], 0.0], [lower[1][0], lower[1][1], 0.0], **stroke),
+            Line([lower[1][0], lower[1][1], 0.0], [tip[0], tip[1], 0.0], **stroke),
+            Line([0.0, 0.72 * h, 0.0], [0.26 * w, 0.72 * h, 0.0], **stroke),
+            Line([0.0, 0.28 * h, 0.0], [0.26 * w, 0.28 * h, 0.0], **stroke),
+            Line([tip[0], tip[1], 0.0], [w, 0.50 * h, 0.0], **stroke),
+        )
+
+    def _not_gate_symbol(self, component: NOTGate) -> VGroup:
+        """Inverter: triangle plus output inversion bubble."""
+        bounds = component.get_bounds()
+        w, h = bounds.width, bounds.height
+        stroke = self._gate_stroke(component)
+        bubble_r = 0.055 * max(w, h)
+        triangle = Polygon(
+            [0.12 * w, 0.18 * h, 0.0],
+            [0.12 * w, 0.82 * h, 0.0],
+            [0.72 * w, 0.50 * h, 0.0],
+            fill_opacity=0.0,
+            **stroke,
+        )
+        bubble = Dot(
+            point=[0.78 * w, 0.50 * h, 0.0],
+            radius=bubble_r,
+            color=stroke["stroke_color"],
+            fill_color=theme.INTERFACE_PANEL_FILL,
+            fill_opacity=1.0,
+            stroke_width=theme.component_stroke_width(),
+        )
+        return VGroup(
+            Line([0.0, 0.50 * h, 0.0], [0.12 * w, 0.50 * h, 0.0], **stroke),
+            triangle,
+            bubble,
+            Line([0.78 * w + bubble_r, 0.50 * h, 0.0], [w, 0.50 * h, 0.0], **stroke),
+        )
+
+    def _measurement_probe_symbol(self, component: VoltageProbe | CurrentProbe) -> VGroup:
+        """Meter-style probe symbol with renderer-owned glyph geometry."""
+        bounds = component.get_bounds()
+        w, h = bounds.width, bounds.height
+        stroke = {
+            "stroke_color": theme.color_for_signal_type(SignalType.ANALOG),
+            "stroke_width": theme.component_stroke_width(),
+        }
+        radius = min(w, h) * 0.28
+        circle = Circle(radius=radius, fill_opacity=0.0, **stroke)
+        circle.move_to([w * 0.5, h * 0.5, 0.0])
+
+        lead_segments: list[Line]
+        if isinstance(component, VoltageProbe):
+            pos_y = component.anchor_points["pos"][1] * h
+            neg_y = component.anchor_points["neg"][1] * h
+            left_edge = w * 0.5 - radius
+            lead_segments = [
+                Line([0.0, pos_y, 0.0], [left_edge, h * 0.58, 0.0], **stroke),
+                Line([0.0, neg_y, 0.0], [left_edge, h * 0.42, 0.0], **stroke),
+            ]
+            glyph = "V"
+        else:
+            lead_segments = [
+                Line([0.0, h * 0.5, 0.0], [w * 0.5 - radius, h * 0.5, 0.0], **stroke),
+                Line([w * 0.5 + radius, h * 0.5, 0.0], [w, h * 0.5, 0.0], **stroke),
+            ]
+            glyph = "A"
+
+        label = label_text(
+            glyph,
+            font_size=theme.INTERFACE_ROLE_FONT_SIZE,
+            color=theme.color_for_signal_type(SignalType.ANALOG),
+            role="measurement.glyph",
+            category="device",
+        )
+        label.move_to([w * 0.5, h * 0.5, 0.0])
+        return VGroup(*lead_segments, circle, label)
 
     def _generic_box(self, component: CircuitElement) -> VGroup:
         bounds = component.get_bounds()

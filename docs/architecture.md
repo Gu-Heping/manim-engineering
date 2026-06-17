@@ -42,7 +42,7 @@ semantic (signals, buses, propagation) extends core; animation consumes semantic
 from manim_engineering.components import Resistor
 from manim_engineering.core import CircuitGraph
 from manim_engineering.layout import LayoutEngine
-from manim_engineering.renderers.minimal import ManimRenderer
+from manim_engineering.renderers import ManimRenderer
 
 circuit = CircuitGraph()
 r1 = Resistor("R1")
@@ -90,14 +90,14 @@ src/manim_engineering/
         common/          # implemented (Ground, VCC, InputDriver)
         digital/         # implemented (SPIMaster, SPISlave, UARTPort)
         analog/          # implemented (NMOS, PMOS, Diode, OpAmp)
-        measurement/     # planned
+        measurement/     # implemented (VoltageProbe, CurrentProbe)
     layout/
     protocol/            # spi/, uart/ implemented; i2c/, can/ planned
     waveform/
     renderers/
         minimal/         # implemented
         ieee/            # planned
-        iec/             # planned
+        iec/             # implemented variant start (IEC resistor + MOS convention)
         educational/     # planned
     animation/           # primitives, pacing, scene helpers, theme tokens
 

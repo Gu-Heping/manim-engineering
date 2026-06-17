@@ -61,21 +61,24 @@ src/manim_engineering/
     components/
         passive/         # implemented (Resistor, Capacitor, Inductor)
         common/          # implemented (Ground, VCC, InputDriver)
-        digital/         # implemented (SPIMaster, SPISlave, UARTPort)
+        digital/         # implemented (ANDGate, ORGate, NOTGate, SPIMaster, SPISlave, UARTPort)
         analog/          # implemented (NMOS, PMOS, Diode, OpAmp, NPN, PNP, ZenerDiode)
-        measurement/     # planned (probes, meters)
+        measurement/     # implemented (VoltageProbe, CurrentProbe)
     layout/
     protocol/            # spi/, uart/ implemented; i2c/, can/ planned
     waveform/
     renderers/
         minimal/         # implemented
         ieee/            # planned
-        iec/             # planned
+        iec/             # implemented variant start (IEC resistor + MOS convention)
         educational/     # planned
     animation/           # primitives, pacing, scene helpers, theme tokens
 
 examples/
-    analog/              # primary teaching catalog (01-08)
+    analog/              # primary teaching catalog (01-09)
+    digital/             # basic logic gate smoke
+    measurement/         # measurement probe smoke
+    renderers/           # renderer variant smoke
     basics/              # minimal smoke retained (graph_only)
     protocol/            # minimal smoke retained (spi_byte_transfer)
 tests/

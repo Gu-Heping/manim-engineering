@@ -1,7 +1,7 @@
 """
 齐纳稳压电路：VCC→Rs→ZenerD(反偏)→GND，负载RL并联在齐纳两端。
 
-Preview: ``manim -pql examples/analog/07_zener_regulator.py ZenerRegulatorScene``
+Preview: ``manim --disable_caching -pql examples/analog/07_zener_regulator.py ZenerRegulatorScene``
 """
 
 from __future__ import annotations

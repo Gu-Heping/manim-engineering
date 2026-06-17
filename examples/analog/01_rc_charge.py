@@ -1,7 +1,7 @@
 """
 RC充电演示：InputDriver → R1 → C1 → GND。
 
-Preview: ``manim -pql examples/analog/01_rc_charge.py RCChargeScene``
+Preview: ``manim --disable_caching -pql examples/analog/01_rc_charge.py RCChargeScene``
 """
 
 from __future__ import annotations

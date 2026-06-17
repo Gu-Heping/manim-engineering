@@ -1,7 +1,7 @@
 # Examples
 
 Analog-first teaching examples with minimal protocol/basic smoke retained for
-regression coverage.
+regression coverage. Digital gate examples cover basic logic-symbol rendering.
 
 ## Prerequisites
 
@@ -21,6 +21,9 @@ render_circuit_diagram(...)` path.
 
 ```bash
 python examples/basics/graph_only.py
+python examples/digital/logic_gate_chain.py
+python examples/measurement/probe_chain.py
+python examples/renderers/iec_resistor.py
 python examples/protocol/spi_byte_transfer.py
 ```
 
@@ -30,6 +33,9 @@ python examples/protocol/spi_byte_transfer.py
 manim --disable_caching -pql examples/analog/01_rc_charge.py RCChargeScene
 manim --disable_caching -pql examples/analog/03_cmos_inverter.py CMOSInverterScene
 manim --disable_caching -pql examples/analog/09_mos_four_types.py MosFourTypesScene
+manim --disable_caching -pql examples/digital/logic_gate_chain.py LogicGateChainScene
+manim --disable_caching -pql examples/measurement/probe_chain.py MeasurementProbeScene
+manim --disable_caching -pql examples/renderers/iec_resistor.py IECResistorScene
 manim --disable_caching -pql examples/protocol/spi_byte_transfer.py SPIByteTransferDemo
 ```
 
@@ -39,5 +45,8 @@ manim --disable_caching -pql examples/protocol/spi_byte_transfer.py SPIByteTrans
 ## Catalog
 
 - Analog scene catalog: [analog/README.md](analog/README.md)
+- Digital scene catalog: [digital/README.md](digital/README.md)
+- Measurement scene catalog: [measurement/README.md](measurement/README.md)
+- Renderer variant catalog: [renderers/README.md](renderers/README.md)
 - Minimal protocol smoke: `protocol/spi_byte_transfer.py`
 - Minimal basic smoke: `basics/graph_only.py`

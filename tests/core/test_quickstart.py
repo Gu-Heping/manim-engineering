@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from manim_engineering import build_circuit
-from manim_engineering.components import Ground, Resistor
+from manim_engineering.components import CurrentProbe, Ground, Resistor, VoltageProbe
 from manim_engineering.core import InvalidConnectionError, InvalidPortError
 
 
@@ -33,6 +33,32 @@ def test_build_circuit_accepts_ordered_sequence_input() -> None:
 
     assert set(result.elements) == {"r1", "r2"}
     assert result.graph.are_connected(r1.get_port("b"), r2.get_port("a"))
+
+
+def test_build_circuit_accepts_measurement_probes() -> None:
+    current = CurrentProbe("ip")
+    voltage = VoltageProbe("vp")
+    load = Resistor("load")
+    gnd = Ground("gnd")
+
+    result = build_circuit(
+        {
+            "ip": current,
+            "load": load,
+            "vp": voltage,
+            "gnd": gnd,
+        },
+        [
+            ("ip", "out", "load", "a"),
+            ("load", "b", "gnd", "gnd"),
+            ("vp", "pos", "load", "b"),
+            ("vp", "neg", "gnd", "gnd"),
+        ],
+    )
+
+    assert result.graph.are_connected(current.port_out, load.get_port("a"))
+    assert result.graph.are_connected(voltage.port_pos, load.get_port("b"))
+    assert result.graph.are_connected(voltage.port_neg, gnd.get_port("gnd"))
 
 
 def test_build_circuit_rejects_element_id_mismatch() -> None:

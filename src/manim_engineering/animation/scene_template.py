@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from manim import Animation, Create, DrawBorderThenFill, LaggedStart, Mobject, VGroup
 
-from manim_engineering.animation.intro_plan import IntroPlan, build_intro_plan
+from manim_engineering.animation.intro_plan import (
+    ComponentIntroOrder,
+    IntroPlan,
+    build_intro_plan,
+)
 from manim_engineering.animation.intro_style import IntroStyle, intro_run_time_budget
 from manim_engineering.animation.scene_protocol import require_scene_methods
 from manim_engineering.animation.stage_record import record_plain_stage
@@ -84,6 +88,14 @@ def _play_intro_stage(
     scene.play(_intro_anims_for_strokes(strokes, intro_style=intro_style), run_time=run_time)
     restore_stroke_reveal(strokes)
     return run_time
+
+
+def _stage_strokes_by_prefix(plan: IntroPlan, prefix: str) -> tuple[object, ...]:
+    strokes: list[object] = []
+    for stage in plan.stages:
+        if stage.name == prefix or stage.name.startswith(f"{prefix}:"):
+            strokes.extend(stage.strokes)
+    return tuple(strokes)
 
 
 def _iter_trace_line_strokes(waveform_panel: VGroup) -> tuple[Mobject, ...]:
@@ -187,6 +199,7 @@ def play_topology_intro(
     lag_ratio: float = 0.15,
     total_run_time: float | None = None,
     include_panel_traces: bool = False,
+    component_order: ComponentIntroOrder = "grouped",
     intro_style: IntroStyle | None = None,
     intro_plan: IntroPlan | None = None,
     reveal_component_labels: bool = True,
@@ -212,20 +225,14 @@ def play_topology_intro(
         wires_run_time=wires_run_time,
         panel_run_time=panel_run_time,
         include_panel_traces=include_panel_traces,
+        component_order=component_order,
     )
 
-    component_strokes = next(
-        (stage.strokes for stage in plan.stages if stage.name == "components"),
-        (),
+    component_strokes = _stage_strokes_by_prefix(plan, "component") or _stage_strokes_by_prefix(
+        plan, "components"
     )
-    wire_strokes = next(
-        (stage.strokes for stage in plan.stages if stage.name == "wires"),
-        (),
-    )
-    panel_strokes = next(
-        (stage.strokes for stage in plan.stages if stage.name == "panel"),
-        (),
-    )
+    wire_strokes = _stage_strokes_by_prefix(plan, "wires")
+    panel_strokes = _stage_strokes_by_prefix(plan, "panel")
     if plan.include_panel_traces:
         panel_strokes = iter_symbol_strokes(waveform_panel)
     else:
