@@ -1,7 +1,8 @@
 """
 运放积分电路：Rin→OpAmp(-), C反馈, (+)接地, Vout = -1/(RC)∫Vin dt。
 
-Preview: ``manim -pql examples/analog/06_opamp_integrator.py OpAmpIntegratorScene``
+Preview:
+``manim --disable_caching -pql examples/analog/06_opamp_integrator.py OpAmpIntegratorScene``
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """
 运放反相放大器：Rin→OpAmp(-), Rf反馈, (+)接地, Vout = -Rf/Rin·Vin。
 
-Preview: ``manim -pql examples/analog/05_opamp_inverting.py OpAmpInvertingScene``
+Preview: ``manim --disable_caching -pql examples/analog/05_opamp_inverting.py OpAmpInvertingScene``
 """
 
 from __future__ import annotations

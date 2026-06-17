@@ -9,29 +9,36 @@ and visual polish safely.
 
 ## System bottlenecks
 
-## 1) Intro tier backlog still blocks richer teaching pacing
+## 1) Animation polish now has stable authoring hooks
 
 Current state:
-- Tier A intro is complete; Tier B/C features (layout-order intro factory,
-  renderer metadata-driven draw order, pin-label write mode) remain pending.
+- Tier A/B/C intro work is complete: layout-order intro planning, renderer
+  `element_id` / `connection_id` metadata, and opt-in pin-label `Write` mode.
+- Local state primitives (`VoltagePulse`, `LogicTransition`) now build real
+  `AnimationPlan`s instead of raising deferred errors.
 
 Bottleneck:
-- Intro extensibility is limited without violating current style contracts.
+- The available hooks need to be applied deliberately in catalog or feature
+  slices; ad-hoc scene motion would still bypass the stabilized contracts.
 
 Direction:
-- Implement tiered intro planning without breaking deterministic stage budgets.
+- Use `build_intro_plan`, `pin_label_intro_mode`, renderer metadata, and local
+  state primitives for visual polish; do not reopen orchestration architecture.
 
 ## 2) Protocol/renderer roadmap asymmetry
 
 Current state:
-- Protocol layer supports SPI/UART semantics, but renderer variants (IEC) and
-  additional protocol slices (I2C/CAN) are deferred.
+- Protocol layer supports SPI/UART semantics.
+- Renderer breadth has started with IEC scaffolding and measurement probe symbols,
+  but full IEC symbol parity and additional protocol slices (I2C/CAN) are deferred.
 
 Bottleneck:
 - Extending domain breadth risks reopening architecture debt.
 
 Direction:
 - New vertical slices must reuse stabilized contracts, not fork orchestration.
+- Measurement work beyond `VoltageProbe` / `CurrentProbe` should stay semantic-first;
+  do not add visual-only meters or simulator behavior in components/renderers.
 
 ## 3) Physics fidelity pressure vs teaching abstraction boundary
 

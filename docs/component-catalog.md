@@ -44,9 +44,19 @@ For the low-level contract, see [component-api.md](component-api.md).
 
 | Component | Import | Typical pins | Example |
 |-----------|--------|--------------|---------|
+| `ANDGate` | `manim_engineering.components` | `a`, `b`, `out` | `examples/digital/logic_gate_chain.py` |
+| `ORGate` | `manim_engineering.components` | `a`, `b`, `out` | `examples/digital/logic_gate_chain.py` |
+| `NOTGate` | `manim_engineering.components` | `in`, `out` | `examples/digital/logic_gate_chain.py` |
 | `SPIMaster` | `manim_engineering.components` | `clk`, `mosi`, `miso`, `cs` | `examples/protocol/spi_byte_transfer.py` |
 | `SPISlave` | `manim_engineering.components` | `clk`, `mosi`, `miso`, `cs` | `examples/protocol/spi_byte_transfer.py` |
 | `UARTPort` | `manim_engineering.components` | `tx`, `rx`, `gnd` | Library/test-only; no standalone demo scene |
+
+## Measurement
+
+| Component | Import | Typical pins | Example |
+|-----------|--------|--------------|---------|
+| `VoltageProbe` | `manim_engineering.components` | `pos`, `neg` | `examples/measurement/probe_chain.py` |
+| `CurrentProbe` | `manim_engineering.components` | `in`, `out` | `examples/measurement/probe_chain.py` |
 
 ## Canonical naming guidance
 

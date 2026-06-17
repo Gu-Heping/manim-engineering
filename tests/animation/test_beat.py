@@ -76,7 +76,7 @@ def test_beat_single_play_with_parallel_run_time() -> None:
     root = scene.played[0][0]
     assert root.__class__.__name__ in {"ShowPassingFlash", "AnimationGroup"}
     propagation_groups = [mob for mob in scene.added if hasattr(mob, "get_z_index")]
-    assert any(mob.get_z_index() == PROPAGATION_Z_INDEX for mob in propagation_groups)
+    assert any(mob.z_index == PROPAGATION_Z_INDEX for mob in propagation_groups)
     assert scene.removed
 
 

@@ -1,7 +1,7 @@
 """
 CMOS反相器演示：VCC → PMOS → OUT → NMOS → GND, IN驱动两管栅极。
 
-Preview: ``manim -pql examples/analog/03_cmos_inverter.py CMOSInverterScene``
+Preview: ``manim --disable_caching -pql examples/analog/03_cmos_inverter.py CMOSInverterScene``
 """
 
 from __future__ import annotations

@@ -34,6 +34,9 @@ Install the package, then run smoke scripts from the repo root.
 ```bash
 pip install -e .
 python examples/basics/graph_only.py
+python examples/digital/logic_gate_chain.py
+python examples/measurement/probe_chain.py
+python examples/renderers/iec_resistor.py
 python examples/protocol/spi_byte_transfer.py
 ```
 
@@ -41,8 +44,11 @@ Manim previews need the optional extra:
 
 ```bash
 pip install -e ".[manim]"
-manim -pql examples/basics/signal_flow_demo.py SignalFlowDemo
 manim --disable_caching -pql examples/analog/01_rc_charge.py RCChargeScene
+manim --disable_caching -pql examples/digital/logic_gate_chain.py LogicGateChainScene
+manim --disable_caching -pql examples/measurement/probe_chain.py MeasurementProbeScene
+manim --disable_caching -pql examples/renderers/iec_resistor.py IECResistorScene
+manim --disable_caching -pql examples/protocol/spi_byte_transfer.py SPIByteTransferDemo
 ```
 
 Full catalog, per-directory tables, and all run commands: [examples/README.md](examples/README.md).

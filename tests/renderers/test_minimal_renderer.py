@@ -144,6 +144,59 @@ def test_render_layout_includes_components_and_wires() -> None:
     assert len(scene.submobjects) >= 3
 
 
+def test_render_layout_tags_components_with_element_ids() -> None:
+    graph, r1, r2 = _two_resistor_graph()
+    elements = {"r1": r1, "r2": r2}
+    layout = LayoutEngine().layout(graph, elements)
+    scene = MinimalRenderer().render_layout(layout, graph, elements)
+
+    rendered_components = scene.submobjects[: len(layout.placements)]
+    assert [mob.element_id for mob in rendered_components] == [
+        placement.element_id for placement in layout.placements
+    ]
+    for mob in rendered_components:
+        assert all(
+            getattr(child, "element_id", None) == mob.element_id
+            for child in mob.get_family()
+        )
+
+
+def test_render_layout_tags_wire_segments_with_connection_ids() -> None:
+    graph, r1, r2 = _two_resistor_graph()
+    elements = {"r1": r1, "r2": r2}
+    layout = LayoutEngine().layout(graph, elements)
+    scene = MinimalRenderer().render_layout(layout, graph, elements)
+    wire_mobjects = [
+        mob
+        for mob in scene.submobjects[len(layout.placements) :]
+        if hasattr(mob, "connection_id")
+    ]
+
+    assert wire_mobjects
+    assert {mob.connection_id for mob in wire_mobjects} == {
+        wire.connection_id for wire in layout.wires
+    }
+
+
+def test_topology_projection_preserves_renderer_semantic_metadata() -> None:
+    from manim_engineering.renderers.minimal import ManimRenderer
+
+    graph, r1, r2 = _two_resistor_graph()
+    elements = {"r1": r1, "r2": r2}
+    layout = LayoutEngine().layout(graph, elements)
+    topology = ManimRenderer().render_topology(graph, layout, elements)
+
+    assert [mob.element_id for mob in topology.components.submobjects] == [
+        placement.element_id for placement in layout.placements
+    ]
+    tagged_wire_ids = {
+        getattr(line, "connection_id")
+        for line in topology.wire_lines()
+        if hasattr(line, "connection_id")
+    }
+    assert tagged_wire_ids == {wire.connection_id for wire in layout.wires}
+
+
 def test_render_layout_separates_placed_components() -> None:
     from manim_engineering.components import Capacitor
 
@@ -663,7 +716,7 @@ def test_interface_pin_labels_have_no_text_stroke() -> None:
         glyph_subs = [s for s in label.get_family() if len(s.points) > 0]
         assert glyph_subs
         for sub in glyph_subs:
-            assert sub.get_z_index() == LABEL_Z_INDEX
+            assert sub.z_index == LABEL_Z_INDEX
             assert sub.get_stroke_width() == 0.0
             assert sub.get_stroke_opacity() == 0.0
 

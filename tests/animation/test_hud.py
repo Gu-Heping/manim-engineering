@@ -70,9 +70,9 @@ def test_caption_track_first_beat_fades_title() -> None:
 def test_play_hud_intro_sets_hud_z_index() -> None:
     scene = RecordingScene()
     title, intro = play_hud_intro(scene, "RC 充电", "观察电容电压爬升", _camera())
-    assert title.get_z_index() == HUD_Z_INDEX
+    assert title.z_index == HUD_Z_INDEX
     assert intro is not None
-    assert intro.get_z_index() == HUD_Z_INDEX
+    assert intro.z_index == HUD_Z_INDEX
     assert len(scene.played) == 2
     assert title in scene.added
     assert intro in scene.added
@@ -111,7 +111,7 @@ def test_subtitle_text_uses_hud_label_role_and_zero_stroke() -> None:
 def test_play_hud_intro_skips_empty_intro_line() -> None:
     scene = RecordingScene()
     title, intro = play_hud_intro(scene, "RC 鍏呯數", "", _camera())
-    assert title.get_z_index() == HUD_Z_INDEX
+    assert title.z_index == HUD_Z_INDEX
     assert intro is None
     assert len(scene.played) == 1
     assert played_role_sets(scene.played) == [{"hud.title"}]

@@ -9,6 +9,15 @@ from manim import VGroup, VMobject
 
 from manim_engineering.layout.types import LayoutResult
 
+_SEMANTIC_METADATA_KEYS = ("element_id", "connection_id")
+
+
+def _copy_semantic_metadata(source: VMobject, target: VMobject) -> VMobject:
+    for key in _SEMANTIC_METADATA_KEYS:
+        if hasattr(source, key):
+            setattr(target, key, getattr(source, key))
+    return target
+
 
 def _detach_points(mob: VMobject) -> VMobject:
     """Return a copy whose point arrays are independent of the source."""
@@ -16,7 +25,7 @@ def _detach_points(mob: VMobject) -> VMobject:
     points = np.array(mob.get_all_points(), dtype=float)
     if len(points) > 0:
         copy.set_points(points.copy())
-    return copy
+    return _copy_semantic_metadata(mob, copy)
 
 
 def copy_for_animation(mob: VMobject) -> VMobject:
@@ -27,7 +36,10 @@ def copy_for_animation(mob: VMobject) -> VMobject:
     ``MoveAlongPath`` paths that alias wire geometry, or other mutating primitives.
     """
     if isinstance(mob, VGroup):
-        return VGroup(*(_detach_points(sub) for sub in mob.submobjects))
+        return _copy_semantic_metadata(
+            mob,
+            VGroup(*(_detach_points(sub) for sub in mob.submobjects)),
+        )
     return _detach_points(mob)
 
 

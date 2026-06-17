@@ -1,7 +1,7 @@
 """
 NPN共发射极放大器：VCC→Rc→NPN集电极，NPN发射极→Re→GND, 基极输入。
 
-Preview: ``manim -pql examples/analog/04_npn_amplifier.py NPNAmplifierScene``
+Preview: ``manim --disable_caching -pql examples/analog/04_npn_amplifier.py NPNAmplifierScene``
 """
 
 from __future__ import annotations

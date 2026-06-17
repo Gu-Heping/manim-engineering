@@ -30,9 +30,12 @@ def _load_module(path: Path):
         ("examples/analog/07_zener_regulator.py", "build_zener_regulator_fixture"),
         ("examples/analog/08_rlc_transient.py", "build_rlc_transient_fixture"),
         ("examples/analog/09_mos_four_types.py", "build_mos_four_types_fixture"),
+        ("examples/digital/logic_gate_chain.py", "build_logic_gate_chain_fixture"),
+        ("examples/measurement/probe_chain.py", "build_measurement_probe_fixture"),
+        ("examples/renderers/iec_resistor.py", "build_iec_resistor_fixture"),
     ),
 )
-def test_analog_fixture_builders(rel_path: str, builder: str) -> None:
+def test_catalog_fixture_builders(rel_path: str, builder: str) -> None:
     mod = _load_module(REPO / rel_path)
     fn = getattr(mod, builder)
     graph, elements, layout = fn()
@@ -49,6 +52,21 @@ def test_basic_graph_only_main_smoke() -> None:
     mod.main()
 
 
+def test_digital_logic_gate_chain_main_smoke() -> None:
+    mod = _load_module(REPO / "examples/digital/logic_gate_chain.py")
+    mod.main()
+
+
+def test_measurement_probe_chain_main_smoke() -> None:
+    mod = _load_module(REPO / "examples/measurement/probe_chain.py")
+    mod.main()
+
+
+def test_renderer_iec_resistor_main_smoke() -> None:
+    mod = _load_module(REPO / "examples/renderers/iec_resistor.py")
+    mod.main()
+
+
 def test_protocol_spi_main_smoke() -> None:
     mod = _load_module(REPO / "examples/protocol/spi_byte_transfer.py")
     mod.main()
@@ -62,3 +80,33 @@ def test_protocol_spi_scene_class_available() -> None:
     mod = _load_module(REPO / "examples/protocol/spi_byte_transfer.py")
     assert hasattr(mod, "SPIByteTransferDemo")
     assert issubclass(mod.SPIByteTransferDemo, Scene)
+
+
+@pytest.mark.requires_manim
+def test_digital_logic_gate_scene_class_available() -> None:
+    pytest.importorskip("manim")
+    from manim import Scene
+
+    mod = _load_module(REPO / "examples/digital/logic_gate_chain.py")
+    assert hasattr(mod, "LogicGateChainScene")
+    assert issubclass(mod.LogicGateChainScene, Scene)
+
+
+@pytest.mark.requires_manim
+def test_measurement_probe_scene_class_available() -> None:
+    pytest.importorskip("manim")
+    from manim import Scene
+
+    mod = _load_module(REPO / "examples/measurement/probe_chain.py")
+    assert hasattr(mod, "MeasurementProbeScene")
+    assert issubclass(mod.MeasurementProbeScene, Scene)
+
+
+@pytest.mark.requires_manim
+def test_renderer_iec_resistor_scene_class_available() -> None:
+    pytest.importorskip("manim")
+    from manim import Scene
+
+    mod = _load_module(REPO / "examples/renderers/iec_resistor.py")
+    assert hasattr(mod, "IECResistorScene")
+    assert issubclass(mod.IECResistorScene, Scene)

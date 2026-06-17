@@ -25,12 +25,12 @@ Decorative motion without a tag is disallowed.
 
 ## Progressive reveal order
 
-1. global structure  
-2. subsystem grouping  
-3. active path  
-4. local mechanism  
-5. timing nuance  
-6. edge cases  
+1. global structure
+2. subsystem grouping
+3. active path
+4. local mechanism
+5. timing nuance
+6. edge cases
 
 ## Reusable primitives
 
@@ -62,9 +62,9 @@ teaching beat**. The current implementation uses a phased director
 `beat.timing_accent`, `beat.play`, post-hold), but it still preserves the
 causal contract:
 
-- propagation pulse along wire copy  
-- waveform reveal/flash for the active signal  
-- dependent component state (when modeled)  
+- propagation pulse along wire copy
+- waveform reveal/flash for the active signal
+- dependent component state (when modeled)
 
 Propagation pulse and newly committed waveform geometry must stay synchronized
 within the same beat; do not split them into separate beats.

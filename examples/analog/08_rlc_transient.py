@@ -1,7 +1,7 @@
 """
 RLC串联暂态响应：AC源→R→L→C→GND，二阶电路阻尼响应。
 
-Preview: ``manim -pql examples/analog/08_rlc_transient.py RLCTransientScene``
+Preview: ``manim --disable_caching -pql examples/analog/08_rlc_transient.py RLCTransientScene``
 """
 
 from __future__ import annotations

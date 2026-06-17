@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 from manim import Mobject, VGroup
 
@@ -49,6 +50,45 @@ def _iter_panel_chrome_strokes(waveform_panel: VGroup) -> tuple[Mobject, ...]:
     return iter_symbol_strokes(axis)
 
 
+ComponentIntroOrder = Literal["grouped", "layout"]
+
+
+def _component_intro_stages(
+    topology: TopologyProjection,
+    *,
+    component_order: ComponentIntroOrder,
+    components_run_time: float | None,
+) -> tuple[IntroStagePlan, ...]:
+    if component_order == "grouped":
+        return (
+            IntroStagePlan(
+                name="components",
+                strokes=iter_symbol_strokes(topology.components),
+                run_time_override=components_run_time,
+            ),
+        )
+    if component_order != "layout":
+        msg = "component_order must be 'grouped' or 'layout'"
+        raise ValueError(msg)
+
+    component_groups = tuple(topology.components.submobjects)
+    if not component_groups:
+        return ()
+    per_component_run_time = (
+        components_run_time / len(component_groups)
+        if components_run_time is not None and components_run_time > 0.0
+        else None
+    )
+    return tuple(
+        IntroStagePlan(
+            name=f"component:{index}",
+            strokes=iter_symbol_strokes(component),
+            run_time_override=per_component_run_time,
+        )
+        for index, component in enumerate(component_groups)
+    )
+
+
 def build_intro_plan(
     topology: TopologyProjection,
     waveform_panel: VGroup,
@@ -57,6 +97,7 @@ def build_intro_plan(
     wires_run_time: float | None = None,
     panel_run_time: float | None = None,
     include_panel_traces: bool = False,
+    component_order: ComponentIntroOrder = "grouped",
 ) -> IntroPlan:
     """Build the default stable intro order for teaching scenes."""
 
@@ -66,10 +107,10 @@ def build_intro_plan(
         else _iter_panel_chrome_strokes(waveform_panel)
     )
     stages = (
-        IntroStagePlan(
-            name="components",
-            strokes=iter_symbol_strokes(topology.components),
-            run_time_override=components_run_time,
+        *_component_intro_stages(
+            topology,
+            component_order=component_order,
+            components_run_time=components_run_time,
         ),
         IntroStagePlan(
             name="wires",

@@ -5,9 +5,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
-from manim import Create, FadeIn, FadeOut, LaggedStart, Scene, VGroup
+from manim import Create, FadeIn, FadeOut, LaggedStart, Scene, VGroup, Write
 
 if TYPE_CHECKING:
     from manim import Text
@@ -54,6 +54,7 @@ from manim_engineering.renderers.minimal.labels import (
     detach_label_roots,
     hide_labels,
     iter_label_roots,
+    label_role,
     label_visible,
     refresh_label_strokes,
     restore_waveform_strokes,
@@ -80,8 +81,10 @@ def _play_label_reveal(
     scene: Scene,
     *roots: VGroup,
     roles: tuple[str, ...] | None = None,
+    role_prefixes: tuple[str, ...] = (),
     policy: LabelPhasePolicy | None = None,
     phase: str | None = None,
+    mode: Literal["fade", "write"] = "fade",
     run_time: float = 0.24,
     lag_ratio: float = 0.12,
 ) -> None:
@@ -89,6 +92,11 @@ def _play_label_reveal(
         label
         for root in roots
         for label in iter_label_roots(root, roles=roles)
+        if not role_prefixes
+        or any(
+            (label_role(label) or "").startswith(prefix)
+            for prefix in role_prefixes
+        )
         if phase is None or label_allowed_in_phase(label, phase, policy)
         if not _label_is_visible(label)
     ]
@@ -104,12 +112,13 @@ def _play_label_reveal(
         fresh.set_opacity(0.0)
         revealed.append(fresh)
     scene.add(*revealed)
+    animation_cls = Write if mode == "write" else FadeIn
     if len(revealed) == 1:
-        scene.play(FadeIn(revealed[0]), run_time=run_time)
+        scene.play(animation_cls(revealed[0]), run_time=run_time)
     else:
         scene.play(
             LaggedStart(
-                *[FadeIn(label) for label in revealed],
+                *[animation_cls(label) for label in revealed],
                 lag_ratio=lag_ratio,
             ),
             run_time=run_time,
@@ -175,6 +184,8 @@ class WaveformDemoScene(Scene, ABC):
     typically use 0.6 to account for the title+intro plays."""
     annotation_run_time: float = 0.24
     annotation_net_run_time: float = 0.18
+    pin_label_intro_mode: Literal["fade", "write"] = "fade"
+    """How interface pin labels reveal during intro annotations."""
 
     style: TeachingStyle = TeachingStyle()
     """Scene-level animation tuning passed to beats and HUD crossfades."""
@@ -311,6 +322,16 @@ class WaveformDemoScene(Scene, ABC):
             policy=policy,
             phase="intro_annotation",
             run_time=self.annotation_net_run_time,
+            lag_ratio=self.intro_lag_ratio,
+        )
+        _play_label_reveal(
+            self,
+            topology_labels,
+            role_prefixes=("interface.pin.",),
+            policy=policy,
+            phase="intro_annotation",
+            mode=self.pin_label_intro_mode,
+            run_time=self.annotation_run_time,
             lag_ratio=self.intro_lag_ratio,
         )
         _play_label_reveal(
@@ -462,6 +483,8 @@ class TopologyTeachingScene(Scene, ABC):
     intro_style: IntroStyle = IntroStyle()
     annotation_run_time: float = 0.24
     annotation_net_run_time: float = 0.18
+    pin_label_intro_mode: Literal["fade", "write"] = "fade"
+    """How interface pin labels reveal during intro annotations."""
 
     @abstractmethod
     def build_fixture(self) -> TopologyFixture:
@@ -559,6 +582,16 @@ class TopologyTeachingScene(Scene, ABC):
             policy=policy,
             phase="intro_annotation",
             run_time=self.annotation_net_run_time,
+            lag_ratio=self.intro_lag_ratio,
+        )
+        _play_label_reveal(
+            self,
+            topology_labels,
+            role_prefixes=("interface.pin.",),
+            policy=policy,
+            phase="intro_annotation",
+            mode=self.pin_label_intro_mode,
+            run_time=self.annotation_run_time,
             lag_ratio=self.intro_lag_ratio,
         )
         _play_label_reveal(

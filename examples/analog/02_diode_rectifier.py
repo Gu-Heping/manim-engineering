@@ -1,7 +1,8 @@
 """
 半波整流演示：交流信号源 → Diode → R负载 → GND。
 
-Preview: ``manim -pql examples/analog/02_diode_rectifier.py HalfWaveRectifierScene``
+Preview:
+``manim --disable_caching -pql examples/analog/02_diode_rectifier.py HalfWaveRectifierScene``
 """
 
 from __future__ import annotations

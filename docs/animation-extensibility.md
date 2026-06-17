@@ -38,8 +38,26 @@ pre-added mobjects stay visible. Waveform trace polylines are excluded by defaul
 Override `WaveformDemoScene.play_intro()` for per-demo reveal order without
 replacing the full `construct()` template.
 
-**Backlog (not Tier A):** per-symbol intro factory (Tier B), semantic wire-path
-draw order (Tier C), pin-label `Write` intro mode.
+`build_intro_plan(..., component_order="layout")` splits the component reveal into
+`component:0`, `component:1`, ... stages using renderer placement order. Keep
+`component_order="grouped"` for the default all-components stage. When layout
+order is enabled, `components_run_time` is divided across component stages.
+
+Renderer topology mobjects carry semantic metadata for richer intro planning:
+placed component families expose `element_id`, and routed wire segment mobjects
+expose `connection_id`. These tags are preserved by `ManimRenderer.render_topology`
+and `copy_for_animation`.
+
+Interface pin labels can use a handwriting-style intro without changing the
+default label lifecycle:
+
+```python
+class SPIDemo(TopologyTeachingScene):
+    pin_label_intro_mode = "write"
+```
+
+The default remains `"fade"` for catalog stability. The setting applies only to
+labels whose renderer role starts with `interface.pin.`.
 
 ## TeachingStyle
 
@@ -91,6 +109,25 @@ layering:
 
 `BeatSpec.emphasis` remains for compatibility and maps into transition profiles.
 Prefer `transition_profile` for new scene authoring.
+
+## Local state primitives
+
+`VoltagePulse(center=(x, y, z), ...)` and
+`LogicTransition(center=(x, y, z), ...)` are lightweight registered primitives
+for local emphasis. They return `AnimationPlan` instances and do not mutate
+semantic topology.
+
+- `VoltagePulse` draws a timing-purpose ring for analog voltage emphasis.
+- `LogicTransition` draws a transition-purpose marker for discrete state changes.
+
+## Renderer variants
+
+`IECRenderer` and `IECManimRenderer` are available from
+`manim_engineering.renderers` and provide the first IEC-facing renderer family.
+The variant reuses the stable minimal projection pipeline and exposes a
+separate theme/API surface, rectangular resistor symbol, and IEC-facing MOSFET
+convention. Future IEC symbol expansion should stay inside `renderers/iec/` and
+must not change component semantics or layout ownership.
 
 ## BeatSpec timing dispatch
 

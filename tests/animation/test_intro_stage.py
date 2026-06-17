@@ -111,6 +111,34 @@ def test_play_topology_intro_uses_staged_plays() -> None:
     assert total_run_time >= min_expected * 0.95
 
 
+def test_play_topology_intro_can_play_components_in_layout_order() -> None:
+    topology, panel, content = _rc_fixture()
+    scene = MagicMock()
+    play_topology_intro(
+        scene,
+        topology,
+        panel,
+        content,
+        component_order="layout",
+        components_run_time=1.2,
+        wires_run_time=0.3,
+        panel_run_time=0.2,
+        include_panel_traces=False,
+        intro_style=IntroStyle(),
+    )
+
+    assert scene.play.call_count >= topology.n_components + 2
+    component_stage_run_times = [
+        call.kwargs.get("run_time")
+        for call in scene.play.call_args_list[: topology.n_components]
+    ]
+    assert component_stage_run_times
+    assert all(
+        run_time == pytest.approx(1.2 / topology.n_components)
+        for run_time in component_stage_run_times
+    )
+
+
 def test_play_topology_intro_restores_strokes_after_each_stage() -> None:
     topology, panel, content = _rc_fixture()
     component_strokes = iter_symbol_strokes(topology.components)

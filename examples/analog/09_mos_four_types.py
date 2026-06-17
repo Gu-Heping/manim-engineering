@@ -1,7 +1,7 @@
 """
 MOSFET 四型符号对照：增强/耗尽 × N/P。
 
-Preview: ``manim -pql examples/analog/09_mos_four_types.py MosFourTypesScene``
+Preview: ``manim --disable_caching -pql examples/analog/09_mos_four_types.py MosFourTypesScene``
 """
 
 from __future__ import annotations

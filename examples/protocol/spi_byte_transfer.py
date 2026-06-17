@@ -3,7 +3,7 @@ SPI mode-0 byte transfer: layout, wires, clk/mosi/miso/cs waveforms, teaching be
 
 Requires manim: ``pip install -e ".[manim]"``
 
-Preview: ``manim -pql examples/protocol/spi_byte_transfer.py SPIByteTransferDemo``
+Preview: ``manim --disable_caching -pql examples/protocol/spi_byte_transfer.py SPIByteTransferDemo``
 Acceptance render: ``manim -qm examples/protocol/spi_byte_transfer.py SPIByteTransferDemo``
 """
 
